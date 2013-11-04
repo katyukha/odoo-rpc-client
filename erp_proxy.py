@@ -26,7 +26,8 @@ from getpass import getpass
 
 # TODO : add report interface
 # TODO : add ability to create configurations in home directory
-
+class ERPProxyException(Exception):
+    pass
 
 class AttrDict(dict):
     """ Simple class to make dictionary able to use attribute get operation
@@ -166,9 +167,9 @@ class ERP_Proxy(object):
 
     def __str__(self):
         return "ERP_Proxy object: %(user)s@%(host)s/%(database)s" % dict( user     = self.user,
-                                                        host     = self.host,
-                                                        database =  self.dbname,
-                                                      )
+                                                                          host     = self.host,
+                                                                          database =  self.dbname,
+                                                                        )
     __repr__ = __str__
 
 
@@ -181,15 +182,24 @@ class MethodWraper(object):
     """
     def __init__(self, erp_proxy, object_name, method_name):
         self.__erp_proxy = erp_proxy
-        self.__obj_name  = object_name
-        self.__name      = method_name
+        self.__obj_name = object_name
+        self.__name = method_name
 
     def __call__(self, *args, **kwargs):
-        return self.__erp_proxy.execute(self.__obj_name, self.__name, *args, **kwargs)
+        try:
+            res = self.__erp_proxy.execute(self.__obj_name, self.__name, *args, **kwargs)
+        except xmlrpclib.Fault as exc:
+            raise ERPProxyException("A fault occured\n"
+                                    "Fault code: %s\n"
+                                    "Fault string: %s\n"
+                                    "" % (exc.faultCode,
+                                          exc.faultString))
+        return res
 
     def __str__(self):
         return "ERP Objects Method: ('%s').%s" % (self.__obj_name, self.__name)
     __repr__ = __str__
+
 
 class ERP_Record(AttrDict):
     """ A simple class to wrap OpenERP records
@@ -202,8 +212,9 @@ class ERP_Record(AttrDict):
         self.update(data)
 
     def __str__(self):
-        return "ERP_Record of %s,%s" %(self.__obj, self.id)
+        return "ERP_Record of %s,%s" % (self.__obj, self.id)
     __repr__ = __str__
+
 
 class ERP_Object(object):
     """ A simple class to simplify operations on ERP objects.
@@ -217,7 +228,7 @@ class ERP_Object(object):
 
     def __init__(self, erp_proxy, object_name):
         self.__erp_proxy = erp_proxy
-        self.__obj_name  = object_name
+        self.__obj_name = object_name
 
     def __dir__(self):
         return ['search_records', 'read_records', 'read', 'search', 'write', 'unlink', 'create']
@@ -226,29 +237,28 @@ class ERP_Object(object):
         res = self.search(*args, **kwargs)
         if not res:
             return False
-        if isinstance(res, (int,long)):
+        if isinstance(res, (int, long)):
             return ERP_Record(self, self.read(res))
         if isinstance(res, (list, tuple)):
-            return [ ERP_Record(self, data) for data in self.read(res) ]
+            return [ERP_Record(self, data) for data in self.read(res)]
 
     def read_records(self, ids, *args, **kwargs):
         assert isinstance(ids, (int, long, list, tuple)), "ids must be instance of (int, long, list, tuple)"
-        if isinstance(ids, (int,long)):
+        if isinstance(ids, (int, long)):
             return ERP_Record(self, self.read(ids, *args, **kwargs))
         if isinstance(ids, (list, tuple)):
-            return [ ERP_Record(self, data) for data in self.read(ids, *args, **kwargs) ]
+            return [ERP_Record(self, data) for data in self.read(ids, *args, **kwargs)]
 
     def __getattribute__(self, name):
         try:
             return super(ERP_Object, self).__getattribute__(name)
         except AttributeError:
-            proxy = super(ERP_Object, self).__getattribute__('_ERP_Object__erp_proxy')
-            obj_name = super(ERP_Object, self).__getattribute__('_ERP_Object__obj_name')
             return MethodWraper(self.__erp_proxy, self.__obj_name, name)
 
     def __str__(self):
         return "ERP Object ('%s')" % self.__obj_name
     __repr__ = __str__
+
 
 def connect(dbname=None, host=None, user=None, pwd=None, port=8069, verbose=False):
     """ Wraper aroun ERP_Proxy constructor class to simplify connect from shell.
@@ -270,15 +280,15 @@ def connect(dbname=None, host=None, user=None, pwd=None, port=8069, verbose=Fals
 if __name__ == '__main__':
 
     _locals = {
-        'ERP_Proxy' : ERP_Proxy,
+        'ERP_Proxy': ERP_Proxy,
         'ERP_Object': ERP_Object,
-        'connect'   : connect,
+        'connect': connect,
     }
     try:
         from IPython import embed
-        embed(user_ns = _locals)
+        embed(user_ns=_locals)
     except ImportError:
         from code import interact
         # TODO : Add some function to show simple doc about usage of this module
-        interact(local = _locals)
+        interact(local=_locals)
 
