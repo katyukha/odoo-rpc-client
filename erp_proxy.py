@@ -65,10 +65,11 @@ class ERP_Proxy(object):
             >>> db['sale.order']
                 ERP_Object: 'sale.order'
     """
-    def __init__(self, dbname, host, user, pwd = None, verbose = False):
+    def __init__(self, dbname, host, user, pwd = None, port=8069, verbose=False):
         self.dbname = dbname
         self.host = host
         self.user = user
+        self.port = port
         self.pwd = pwd or getpass('Password: ')
         self.verbose = verbose
 
@@ -87,8 +88,8 @@ class ERP_Proxy(object):
         if self.__registered_objects is not None:
             return self.__registered_objects
         t1, t2 = self.__last_result, self.__last_result_wkf
-        ids       = self.execute('ir.model','search',[])
-        read      = self.execute('ir.model','read',ids,['model'])
+        ids = self.execute('ir.model','search',[])
+        read = self.execute('ir.model','read',ids,['model'])
         self.__registered_objects = [ x['model'] for x in read ]
         self.__last_result, self.__last_result_wkf = t1, t2
         return self.__registered_objects
@@ -112,9 +113,9 @@ class ERP_Proxy(object):
             returns Id of user connected
         """
         # Get the uid
-        self.sock_common = xmlrpclib.ServerProxy ('http://%s:8069/xmlrpc/common' % self.host, verbose = self.verbose)
+        self.sock_common = xmlrpclib.ServerProxy ('http://%s:%s/xmlrpc/common' % (self.host, self.port), verbose=self.verbose)
         self.uid = self.sock_common.login(self.dbname, self.user, self.pwd)
-        self.sock = xmlrpclib.ServerProxy('http://%s:8069/xmlrpc/object' % self.host, verbose = self.verbose)
+        self.sock = xmlrpclib.ServerProxy('http://%s:%s/xmlrpc/object' % (self.host, self.port), verbose=self.verbose)
         return self.uid
 
     def reconnect(self):
@@ -249,14 +250,22 @@ class ERP_Object(object):
         return "ERP Object ('%s')" % self.__obj_name
     __repr__ = __str__
 
-def connect(dbname=None, host=None, user=None, pwd = None, verbose = False):
+def connect(dbname=None, host=None, user=None, pwd=None, port=8069, verbose=False):
     """ Wraper aroun ERP_Proxy constructor class to simplify connect from shell.
+
+        @param dbname: name of database to connect to (will be asked interactvely if not provided)
+        @param host: host name to connect to (will be asked interactvely if not provided)
+        @param user: user name to connect as (will be asked interactvely if not provided)
+        @param pwd: password for selected user (will be asked interactvely if not provided)
+        @param port: port to connect to. (default: 8069)
+        @param verbose: to be verbose, or not to be. (default: False)
+        @return: ERP_Proxy object
     """
     host   = host   or raw_input('Server Host: ')
     dbname = dbname or raw_input('Database name: ')
     user   = user   or raw_input('ERP Login: ')
     pwd    = pwd    or getpass('Password: ')
-    return ERP_Proxy(dbname=dbname, host=host, user=user, pwd = pwd, verbose = verbose)
+    return ERP_Proxy(dbname=dbname, host=host, user=user, pwd=pwd, port=port, verbose=verbose)
 
 if __name__ == '__main__':
 
