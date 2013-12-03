@@ -19,15 +19,24 @@
     >>> so = db['sale.order']
     >>> order_ids = so.search([('state','=','done')])
     >>> order = so.read(order_ids[0])
+
+    Also You can call any method (beside private ones starting with underscore(_)) of any model.
+    For example to check availability of stock move all You need is:
+    >>> db = connect()
+    >>> move_obj = db['stock.move']
+    >>> move_ids = [1234] # IDs of stock moves to be checked
+    >>> move_obj.check_assign(move_ids)
 """
 
 import xmlrpclib
 from getpass import getpass
 
+
 # TODO : add report interface
 # TODO : add ability to create configurations in home directory
 class ERPProxyException(Exception):
     pass
+
 
 class AttrDict(dict):
     """ Simple class to make dictionary able to use attribute get operation
@@ -66,7 +75,8 @@ class ERP_Proxy(object):
             >>> db['sale.order']
                 ERP_Object: 'sale.order'
     """
-    def __init__(self, dbname, host, user, pwd = None, port=8069, verbose=False):
+
+    def __init__(self, dbname, host, user, pwd=None, port=8069, verbose=False):
         self.dbname = dbname
         self.host = host
         self.user = user
@@ -89,12 +99,11 @@ class ERP_Proxy(object):
         if self.__registered_objects is not None:
             return self.__registered_objects
         t1, t2 = self.__last_result, self.__last_result_wkf
-        ids = self.execute('ir.model','search',[])
-        read = self.execute('ir.model','read',ids,['model'])
+        ids = self.execute('ir.model', 'search', [])
+        read = self.execute('ir.model', 'read', ids, ['model'])
         self.__registered_objects = [ x['model'] for x in read ]
         self.__last_result, self.__last_result_wkf = t1, t2
         return self.__registered_objects
-
 
     @property
     def last_result(self):
@@ -114,7 +123,7 @@ class ERP_Proxy(object):
             returns Id of user connected
         """
         # Get the uid
-        self.sock_common = xmlrpclib.ServerProxy ('http://%s:%s/xmlrpc/common' % (self.host, self.port), verbose=self.verbose)
+        self.sock_common = xmlrpclib.ServerProxy('http://%s:%s/xmlrpc/common' % (self.host, self.port), verbose=self.verbose)
         self.uid = self.sock_common.login(self.dbname, self.user, self.pwd)
         self.sock = xmlrpclib.ServerProxy('http://%s:%s/xmlrpc/object' % (self.host, self.port), verbose=self.verbose)
         return self.uid
@@ -152,7 +161,7 @@ class ERP_Proxy(object):
         if object_name not in self.registered_objects:
             raise ValueError("There is no object named '%s' in ERP" % object_name)
 
-        obj =  ERP_Object(self, object_name)
+        obj = ERP_Object(self, object_name)
         self.__objects[object_name] = obj
         return obj
 
@@ -279,6 +288,18 @@ def connect(dbname=None, host=None, user=None, pwd=None, port=8069, verbose=Fals
 
 if __name__ == '__main__':
 
+    header = """
+    Usage:
+        >>> db = connect()
+        >>> so_obj = db['sale.orderl']  # get object
+        >>> dir(so_obj)  # Thid will show all default methods of object
+        >>> so_id = 123 # ID of sale order
+        >>> so_obj.read(so_id)
+        >>> so_obj.write([so_id], {'note': 'Test'})
+        >>> sm_obj = db['stock.move']
+        >>> sm_obj.check_assign([move_id1, move_id2,...])  # check availability of stock move
+    """
+
     _locals = {
         'ERP_Proxy': ERP_Proxy,
         'ERP_Object': ERP_Object,
@@ -286,9 +307,9 @@ if __name__ == '__main__':
     }
     try:
         from IPython import embed
-        embed(user_ns=_locals)
+        embed(user_ns=_locals, header=header)
     except ImportError:
         from code import interact
         # TODO : Add some function to show simple doc about usage of this module
-        interact(local=_locals)
+        interact(local=_locals, banner=header)
 
