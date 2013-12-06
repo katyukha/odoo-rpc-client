@@ -79,6 +79,7 @@ class ERP_Proxy(object):
             >>> db['sale.order']
                 ERP_Object: 'sale.order'
 
+        TODO: describe methods and how to use them
 
     """
 
@@ -334,7 +335,38 @@ class ERP_Session(object):
             with open(self.data_file, 'rt') as json_data:
                 self._databases = json.load(json_data)
 
-    def get_db(self, url):
+        self._db_index = {}  # key: index; value: url
+        self._db_index_rev = {}  # key: url; value: index
+        self._db_index_counter = 0
+
+    @property
+    def index(self):
+        """ Property which returns dict with {index: url}
+        """
+        if not self._db_index:
+            for url in self._databases.keys():
+                self._index_url(url)
+        return dict(self._db_index)
+
+    def _index_url(self, url):
+        if self._db_index_rev.get(url, False):
+            return self._db_index_rev[url]
+
+        self._db_index_counter += 1
+        self._db_index[self._db_index_counter] = url
+        self._db_index_rev[url] = self._db_index_counter
+        return self._db_index_counter
+
+    def _add_db(self, url, db):
+        self._databases[url] = db
+        self._index_url(url)
+
+    def get_db(self, url_or_index):
+        if isinstance(url_or_index, (int, long)):
+            url = self._db_index[url_or_index]
+        else:
+            url = url_or_index
+
         db = self._databases.get(url, False)
         if not db:
             raise ValueError("Bad url %s. not found in history nor databases" % url)
@@ -343,7 +375,7 @@ class ERP_Session(object):
             return db
 
         db = ERP_Proxy(**db)
-        self._databases[url] = db
+        self._add_db(url, db)
         return db
 
     @property
@@ -374,7 +406,7 @@ class ERP_Session(object):
             return db
 
         db = ERP_Proxy(dbname=dbname, host=host, user=user, pwd=pwd, port=port, verbose=verbose)
-        self._databases[url] = db
+        self._add_db(url, db)
         return db
 
     def save(self):
@@ -396,14 +428,16 @@ class ERP_Session(object):
         with open(self.data_file, 'wt') as json_data:
             json.dump(data, json_data)
 
-    def __getitem__(self, url):
-        return self.get_db(url)
+    def __getitem__(self, url_or_index):
+        return self.get_db(url_or_index)
 
 if __name__ == '__main__':
 
     session = ERP_Session()
 
-    header_databases = "\n        - ".join(session.db_list)
+    header_databases = "\n"
+    for index, url in session.index.iteritems():
+        header_databases += "        - [%s] %s\n" % (index, url)
 
     header = """
     Usage:
@@ -428,8 +462,9 @@ if __name__ == '__main__':
                   start, and to connect to them without remembrering hosts, users, ports
                   and other unneccesary information
 
-    Databases You previously worked with:
-        - %(databases)s
+    Databases You previously worked with: %(databases)s
+
+        (Used index or url for session: session[1] or session[url])
     """ % {'databases': header_databases}
 
     _locals = {
