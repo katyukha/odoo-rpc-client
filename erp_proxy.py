@@ -19,11 +19,19 @@
     >>> so = db['sale.order']
     >>> order_ids = so.search([('state','=','done')])
     >>> order = so.read(order_ids[0])
+
+    Also You can call any method (beside private ones starting with underscore(_)) of any model.
+    For example to check availability of stock move all You need is:
+    >>> db = connect()
+    >>> move_obj = db['stock.move']
+    >>> move_ids = [1234] # IDs of stock moves to be checked
+    >>> move_obj.check_assign(move_ids)
 """
 
 import xmlrpclib
 from getpass import getpass
 import functools
+
 
 
 # TODO : add report interface
@@ -69,6 +77,7 @@ class ERP_Proxy(object):
             >>> db['sale.order']
                 ERP_Object: 'sale.order'
     """
+
     def __init__(self, dbname, host, user, pwd=None, port=8069, verbose=False):
         self.dbname = dbname
         self.host = host
@@ -309,6 +318,18 @@ def connect(dbname=None, host=None, user=None, pwd=None, port=8069, verbose=Fals
 
 if __name__ == '__main__':
 
+    header = """
+    Usage:
+        >>> db = connect()
+        >>> so_obj = db['sale.orderl']  # get object
+        >>> dir(so_obj)  # Thid will show all default methods of object
+        >>> so_id = 123 # ID of sale order
+        >>> so_obj.read(so_id)
+        >>> so_obj.write([so_id], {'note': 'Test'})
+        >>> sm_obj = db['stock.move']
+        >>> sm_obj.check_assign([move_id1, move_id2,...])  # check availability of stock move
+    """
+
     _locals = {
         'ERP_Proxy': ERP_Proxy,
         'ERP_Object': ERP_Object,
@@ -316,9 +337,9 @@ if __name__ == '__main__':
     }
     try:
         from IPython import embed
-        embed(user_ns=_locals)
+        embed(user_ns=_locals, header=header)
     except ImportError:
         from code import interact
         # TODO : Add some function to show simple doc about usage of this module
-        interact(local=_locals)
+        interact(local=_locals, banner=header)
 
