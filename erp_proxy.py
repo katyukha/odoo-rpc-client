@@ -7,13 +7,13 @@
     Example ussage of this module:
 
     >>> erp_db = ERP_Proxy('dbname', 'server.com', 'some_user', 'mypassword')
-    >>> sale_obj = ERP_Object(erp_db, 'sale_order')
+    >>> sale_obj = erp_db['sale_order']
     >>> sale_ids = sale_obj.search([('state','not in',['done','cancel'])])
     >>> sale_data = sale_obj.read(sale_ids, ['name'])
     >>> for order in sale_data:
     ...     print "%5s :    %s" % (order['id'],order['name'])
-    >>> tmpl_ids = erp_db.get_obj('product.template').search([('name','ilike','template_name')])
-    >>> print erp_db.get_obj('product.product').search([('product_tmpl_id','in',tmpl_ids)])
+    >>> tmpl_ids = erp_db['product.template'].search([('name','ilike','template_name')])
+    >>> print erp_db['product.product'].search([('product_tmpl_id','in',tmpl_ids)])
 
     >>> db = ERP_Proxy(dbname='jbm0', 'erp.jbm.int', 'your_user')
     >>> so = db['sale.order']
@@ -22,7 +22,7 @@
 
     Also You can call any method (beside private ones starting with underscore(_)) of any model.
     For example to check availability of stock move all You need is:
-    >>> db = connect()
+    >>> db = session.connect()
     >>> move_obj = db['stock.move']
     >>> move_ids = [1234] # IDs of stock moves to be checked
     >>> move_obj.check_assign(move_ids)
@@ -31,6 +31,8 @@
 import xmlrpclib
 from getpass import getpass
 import functools
+import json
+import os.path
 
 
 
@@ -76,6 +78,8 @@ class ERP_Proxy(object):
             >>> db = ERP_Proxy(...)
             >>> db['sale.order']
                 ERP_Object: 'sale.order'
+
+
     """
 
     def __init__(self, dbname, host, user, pwd=None, port=8069, verbose=False):
@@ -316,30 +320,127 @@ def connect(dbname=None, host=None, user=None, pwd=None, port=8069, verbose=Fals
     pwd = pwd or getpass('Password: ')
     return ERP_Proxy(dbname=dbname, host=host, user=user, pwd=pwd, port=port, verbose=verbose)
 
+
+class ERP_Session(object):
+
+    """ Simple session manager which allows to manager databases You worjing with easier
+    """
+
+    def __init__(self, data_file='~/.erp_proxy.json'):
+        self.data_file = os.path.expanduser(data_file)
+        self._databases = {}  # key: url; value: instance of DB or dict with init args
+
+        if os.path.exists(self.data_file):
+            with open(self.data_file, 'rt') as json_data:
+                self._databases = json.load(json_data)
+
+    def get_db(self, url):
+        db = self._databases.get(url, False)
+        if not db:
+            raise ValueError("Bad url %s. not found in history nor databases" % url)
+
+        if isinstance(db, ERP_Proxy):
+            return db
+
+        db = ERP_Proxy(**db)
+        self._databases[url] = db
+        return db
+
+    @property
+    def db_list(self):
+        return self._databases.keys()
+
+    def connect(self, dbname=None, host=None, user=None, pwd=None, port=8069, verbose=False):
+        """ Wraper aroun ERP_Proxy constructor class to simplify connect from shell.
+
+            @param dbname: name of database to connect to (will be asked interactvely if not provided)
+            @param host: host name to connect to (will be asked interactvely if not provided)
+            @param user: user name to connect as (will be asked interactvely if not provided)
+            @param pwd: password for selected user (will be asked interactvely if not provided)
+            @param port: port to connect to. (default: 8069)
+            @param verbose: to be verbose, or not to be. (default: False)
+            @return: ERP_Proxy object
+        """
+        host = host or raw_input('Server Host: ')
+        dbname = dbname or raw_input('Database name: ')
+        user = user or raw_input('ERP Login: ')
+
+        url = "%(user)s@%(host)s:%(port)s/%(database)s" % dict(user=user,
+                                                               host=host,
+                                                               database=dbname,
+                                                               port=port)
+        db = self._databases.get(url, False)
+        if isinstance(db, ERP_Proxy):
+            return db
+
+        db = ERP_Proxy(dbname=dbname, host=host, user=user, pwd=pwd, port=port, verbose=verbose)
+        self._databases[url] = db
+        return db
+
+    def save(self):
+        data = {}
+        for url, database in self._databases.iteritems():
+            if isinstance(database, ERP_Proxy):
+                init_args = {
+                    'dbname': database.dbname,
+                    'host': database.host,
+                    'port': database.port,
+                    'user': database.user,
+                    'verbose': database.verbose,
+                }
+            else:
+                init_args = database
+            assert isinstance(init_args, dict), "init_args must be instance of dict"
+            data[url] = init_args
+
+        with open(self.data_file, 'wt') as json_data:
+            json.dump(data, json_data)
+
+    def __getitem__(self, url):
+        return self.get_db(url)
+
 if __name__ == '__main__':
+
+    session = ERP_Session()
+
+    header_databases = "\n        - ".join(session.db_list)
 
     header = """
     Usage:
-        >>> db = connect()
+        >>> db = session.connect()
         >>> so_obj = db['sale.orderl']  # get object
         >>> dir(so_obj)  # Thid will show all default methods of object
         >>> so_id = 123 # ID of sale order
         >>> so_obj.read(so_id)
         >>> so_obj.write([so_id], {'note': 'Test'})
         >>> sm_obj = db['stock.move']
-        >>> sm_obj.check_assign([move_id1, move_id2,...])  # check availability of stock move
-    """
+        >>>
+        >>> # check availability of stock move
+        >>> sm_obj.check_assign([move_id1, move_id2,...])
+
+    Available objects in context:
+        ERP_Proxy - class that represents single OpenERP database and
+                    provides methods to work with data. Instances of this
+                    class returned by connect() method of session object.
+        session - represents session of client, stores in home directory list
+                  of databases user works with, to simplify work. It is simpler
+                  to get list of databases you have worked with previously on program
+                  start, and to connect to them without remembrering hosts, users, ports
+                  and other unneccesary information
+
+    Databases You previously worked with:
+        - %(databases)s
+    """ % {'databases': header_databases}
 
     _locals = {
         'ERP_Proxy': ERP_Proxy,
-        'ERP_Object': ERP_Object,
-        'connect': connect,
+        'session': session,
     }
     try:
         from IPython import embed
         embed(user_ns=_locals, header=header)
     except ImportError:
         from code import interact
-        # TODO : Add some function to show simple doc about usage of this module
         interact(local=_locals, banner=header)
 
+    session.save()
