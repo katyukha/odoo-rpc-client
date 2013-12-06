@@ -23,11 +23,14 @@
 
 import xmlrpclib
 from getpass import getpass
+import functools
+
 
 # TODO : add report interface
 # TODO : add ability to create configurations in home directory
 class ERPProxyException(Exception):
     pass
+
 
 class AttrDict(dict):
     """ Simple class to make dictionary able to use attribute get operation
@@ -66,7 +69,7 @@ class ERP_Proxy(object):
             >>> db['sale.order']
                 ERP_Object: 'sale.order'
     """
-    def __init__(self, dbname, host, user, pwd = None, port=8069, verbose=False):
+    def __init__(self, dbname, host, user, pwd=None, port=8069, verbose=False):
         self.dbname = dbname
         self.host = host
         self.user = user
@@ -89,12 +92,11 @@ class ERP_Proxy(object):
         if self.__registered_objects is not None:
             return self.__registered_objects
         t1, t2 = self.__last_result, self.__last_result_wkf
-        ids = self.execute('ir.model','search',[])
-        read = self.execute('ir.model','read',ids,['model'])
-        self.__registered_objects = [ x['model'] for x in read ]
+        ids = self.execute('ir.model', 'search', [])
+        read = self.execute('ir.model', 'read', ids, ['model'])
+        self.__registered_objects = [x['model'] for x in read]
         self.__last_result, self.__last_result_wkf = t1, t2
         return self.__registered_objects
-
 
     @property
     def last_result(self):
@@ -114,7 +116,7 @@ class ERP_Proxy(object):
             returns Id of user connected
         """
         # Get the uid
-        self.sock_common = xmlrpclib.ServerProxy ('http://%s:%s/xmlrpc/common' % (self.host, self.port), verbose=self.verbose)
+        self.sock_common = xmlrpclib.ServerProxy('http://%s:%s/xmlrpc/common' % (self.host, self.port), verbose=self.verbose)
         self.uid = self.sock_common.login(self.dbname, self.user, self.pwd)
         self.sock = xmlrpclib.ServerProxy('http://%s:%s/xmlrpc/object' % (self.host, self.port), verbose=self.verbose)
         return self.uid
@@ -152,7 +154,7 @@ class ERP_Proxy(object):
         if object_name not in self.registered_objects:
             raise ValueError("There is no object named '%s' in ERP" % object_name)
 
-        obj =  ERP_Object(self, object_name)
+        obj = ERP_Object(self, object_name)
         self.__objects[object_name] = obj
         return obj
 
@@ -164,12 +166,14 @@ class ERP_Proxy(object):
         except ValueError:
             raise KeyError('Wrong object name')
 
+    def get_url(self):
+        return "%(user)s@%(host)s:%(port)s/%(database)s" % dict(user=self.user,
+                                                                host=self.host,
+                                                                database=self.dbname,
+                                                                port=self.port)
 
     def __str__(self):
-        return "ERP_Proxy object: %(user)s@%(host)s/%(database)s" % dict( user     = self.user,
-                                                                          host     = self.host,
-                                                                          database =  self.dbname,
-                                                                        )
+        return "ERP_Proxy object: %s" % self.get_url()
     __repr__ = __str__
 
 
@@ -203,8 +207,9 @@ class MethodWraper(object):
 
 class ERP_Record(AttrDict):
     """ A simple class to wrap OpenERP records
-        For internal use.
+        For internal use only.
     """
+
     def __init__(self, obj, data):
         assert isinstance(obj, ERP_Object), "obj should be ERP_Object"
         assert isinstance(data, dict), "data should be dictionary structure returned by ERP_Object.read"
@@ -214,6 +219,16 @@ class ERP_Record(AttrDict):
     def __str__(self):
         return "ERP_Record of %s,%s" % (self.__obj, self.id)
     __repr__ = __str__
+
+    def __getattribute__(self, name):
+        try:
+            return super(ERP_Record, self).__getattribute__(name)
+        except AttributeError:
+            method = getattr(self.__obj, name)
+            return functools.partial(method, [self.id])
+
+    def refresh(self):
+        self.update(self.__obj.read(self.id))
 
 
 class ERP_Object(object):
@@ -234,6 +249,14 @@ class ERP_Object(object):
         return ['search_records', 'read_records', 'read', 'search', 'write', 'unlink', 'create']
 
     def search_records(self, *args, **kwargs):
+        """ Return instance or list of instances of ERP_Record class,
+            making available to work with data simpler:
+                >>> so_obj = db['sale.order']
+                >>> data = so_obj.search_records([('date','>=','2013-01-01')])
+                >>> for order in data:
+                        order.write({'note': 'order data is %s'%order.data})
+        """
+
         res = self.search(*args, **kwargs)
         if not res:
             return False
@@ -243,6 +266,13 @@ class ERP_Object(object):
             return [ERP_Record(self, data) for data in self.read(res)]
 
     def read_records(self, ids, *args, **kwargs):
+        """ Return instance or list of instances of ERP_Record class,
+            making available to work with data simpler:
+                >>> so_obj = db['sale.order']
+                >>> data = so_obj.search_records([('date','>=','2013-01-01')])
+                >>> for order in data:
+                        order.write({'note': 'order data is %s'%order.data})
+        """
         assert isinstance(ids, (int, long, list, tuple)), "ids must be instance of (int, long, list, tuple)"
         if isinstance(ids, (int, long)):
             return ERP_Record(self, self.read(ids, *args, **kwargs))
@@ -271,10 +301,10 @@ def connect(dbname=None, host=None, user=None, pwd=None, port=8069, verbose=Fals
         @param verbose: to be verbose, or not to be. (default: False)
         @return: ERP_Proxy object
     """
-    host   = host   or raw_input('Server Host: ')
+    host = host or raw_input('Server Host: ')
     dbname = dbname or raw_input('Database name: ')
-    user   = user   or raw_input('ERP Login: ')
-    pwd    = pwd    or getpass('Password: ')
+    user = user or raw_input('ERP Login: ')
+    pwd = pwd or getpass('Password: ')
     return ERP_Proxy(dbname=dbname, host=host, user=user, pwd=pwd, port=port, verbose=verbose)
 
 if __name__ == '__main__':
