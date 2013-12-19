@@ -33,7 +33,7 @@ from getpass import getpass
 import functools
 import json
 import os.path
-
+import pprint
 
 
 # TODO : add report interface
@@ -430,6 +430,13 @@ class ERP_Session(object):
 
     def __getitem__(self, url_or_index):
         return self.get_db(url_or_index)
+
+    def __str__(self):
+        return pprint.pformat(self.index)
+
+    def __repr__(self):
+        return pprint.pformat(self.index)
+
 
 if __name__ == '__main__':
 
