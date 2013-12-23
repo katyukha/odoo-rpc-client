@@ -150,6 +150,13 @@ class ERP_Proxy(object):
         self.__last_result = self.sock.execute(self.dbname, self.uid, self.pwd, *args, **kwargs)
         return self.__last_result
 
+    def execute_kw(self, obj, method, *args, **kwargs):
+        """First arguments should be 'object' and 'method' and next
+           will be passed to method of given object
+        """
+        self.__last_result = self.sock.execute_kw(self.dbname, self.uid, self.pwd, obj, method, args, kwargs)
+        return self.__last_result
+
     def execute_wkf(self, *args, **kwargs):
         """First arguments should be 'object' and 'signal' and 'id'
         """
@@ -205,7 +212,7 @@ class MethodWraper(object):
 
     def __call__(self, *args, **kwargs):
         try:
-            res = self.__erp_proxy.execute(self.__obj_name, self.__name, *args, **kwargs)
+            res = self.__erp_proxy.execute_kw(self.__obj_name, self.__name, *args, **kwargs)
         except xmlrpclib.Fault as exc:
             raise ERPProxyException("A fault occured\n"
                                     "Fault code: %s\n"
