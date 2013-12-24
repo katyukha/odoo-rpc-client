@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
+# TODO: Make it as simple [for usage] as it could be
+
 """ This module provides some classes to simplify acces to OpenERP server via xmlrpc.
     Some of these classes are may be not safe enough and should be used with carefully
 
@@ -37,7 +39,6 @@ import pprint
 
 
 # TODO : add report interface
-# TODO : add ability to create configurations in home directory
 class ERPProxyException(Exception):
     pass
 
@@ -198,8 +199,9 @@ class ERP_Proxy(object):
     __repr__ = __str__
 
 
+# TODO: think about rewriting it as simple function (like decorator)
 class MethodWraper(object):
-    """ Wraper class around ERP objcts's methods.
+    """ Wraper class around ERP objects's methods.
         it is callable and shoud bechave like simple function
 
         This class is for internal use.
@@ -331,7 +333,16 @@ def connect(dbname=None, host=None, user=None, pwd=None, port=8069, verbose=Fals
 
 class ERP_Session(object):
 
-    """ Simple session manager which allows to manager databases You worjing with easier
+    """ Simple session manager which allows to manage databases easier
+        This class stores information about databases You used in home
+        directory, and on init it loads history and allows simply connect
+        to database by url or index. No more hosts, usernames, ports, etc...
+        required to be memorized.
+        Just on session start call:
+            print session
+        And You will get all databases You worked with listed as (index, url) pairs.
+        to connect to one of thouse databases just call session[index|url] and required
+        ERP_Proxy object will be returned.
     """
 
     def __init__(self, data_file='~/.erp_proxy.json'):
@@ -356,6 +367,9 @@ class ERP_Session(object):
         return dict(self._db_index)
 
     def _index_url(self, url):
+        """ Returns index of specified URL, or adds it to
+            store assigning new index
+        """
         if self._db_index_rev.get(url, False):
             return self._db_index_rev[url]
 
@@ -365,6 +379,8 @@ class ERP_Session(object):
         return self._db_index_counter
 
     def _add_db(self, url, db):
+        """ Add database to history
+        """
         self._databases[url] = db
         self._index_url(url)
 
@@ -445,8 +461,9 @@ class ERP_Session(object):
         return pprint.pformat(self.index)
 
 
-if __name__ == '__main__':
-
+def main():
+    """ Entry point for running as standalone APP
+    """
     session = ERP_Session()
 
     header_databases = "\n"
@@ -493,3 +510,6 @@ if __name__ == '__main__':
         interact(local=_locals, banner=header)
 
     session.save()
+
+if __name__ == '__main__':
+    main()
