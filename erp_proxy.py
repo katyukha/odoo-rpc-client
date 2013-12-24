@@ -200,21 +200,15 @@ class ERP_Proxy(object):
 
 
 # TODO: think about rewriting it as simple function (like decorator)
-class MethodWraper(object):
-    """ Wraper class around ERP objects's methods.
-        it is callable and shoud bechave like simple function
+def MethodWrapper(erp_proxy, object_name, method_name):
+    """ Wraper around ERP objects's methods.
 
-        This class is for internal use.
+        for internal use.
         It is used in ERP_Object class.
     """
-    def __init__(self, erp_proxy, object_name, method_name):
-        self.__erp_proxy = erp_proxy
-        self.__obj_name = object_name
-        self.__name = method_name
-
-    def __call__(self, *args, **kwargs):
+    def wrapper(*args, **kwargs):
         try:
-            res = self.__erp_proxy.execute_kw(self.__obj_name, self.__name, *args, **kwargs)
+            res = erp_proxy.execute_kw(object_name, method_name, *args, **kwargs)
         except xmlrpclib.Fault as exc:
             raise ERPProxyException("A fault occured\n"
                                     "Fault code: %s\n"
@@ -222,16 +216,21 @@ class MethodWraper(object):
                                     "" % (exc.faultCode,
                                           exc.faultString))
         return res
-
-    def __str__(self):
-        return "ERP Objects Method: ('%s').%s" % (self.__obj_name, self.__name)
-    __repr__ = __str__
+    return wrapper
 
 
 class ERP_Record(AttrDict):
     """ A simple class to wrap OpenERP records
-        For internal use only.
+
+        All fields could be used as dictionary items and as attributes of object
+        All methods could be accessed as attibutes of class, and they will be automaticaly
+        proxied to related ERP_Object instance passing as IDs [self.id]
+
+        Special methods:
+            - refresh() - rereads data for this object
     """
+
+    # TODO: think about optimization via slots
 
     def __init__(self, obj, data):
         assert isinstance(obj, ERP_Object), "obj should be ERP_Object"
@@ -262,6 +261,13 @@ class ERP_Object(object):
         >>> erp = ERP_Proxy(...)
         >>> sale_obj = ERP_Object(erp, 'sale.order')
         >>> sale_obj.search([('state','not in',['done','cancel'])])
+
+        Special methods:
+            - search_records - receives same arguments as 'search' method,
+                               but returns list of ERP_Record objects or False
+            - read_records - receives same arguments as 'read', but returns
+                             list of ERP_Record objects. Or if single int passed as IDs
+                             it will returns single ERP_Record object
     """
 
     def __init__(self, erp_proxy, object_name):
@@ -306,7 +312,7 @@ class ERP_Object(object):
         try:
             return super(ERP_Object, self).__getattribute__(name)
         except AttributeError:
-            return MethodWraper(self.__erp_proxy, self.__obj_name, name)
+            return MethodWrapper(self.__erp_proxy, self.__obj_name, name)
 
     def __str__(self):
         return "ERP Object ('%s')" % self.__obj_name
