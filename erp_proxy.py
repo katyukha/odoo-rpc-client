@@ -36,6 +36,7 @@ import functools
 import json
 import os.path
 import pprint
+import imp
 
 
 # TODO : add report interface
@@ -100,6 +101,17 @@ class ERP_Proxy(object):
         self.__last_result_wkf = None
         self.__registered_objects = None
 
+        self.__use_execute_kw = True
+
+    def use_execute_kw(self, val=True):
+        """ Controlls what execute method version to use by default.
+            Default is True which means to use execute_kw
+            But for version 6 databases execute_kw method is not defined, so
+            befor using database this method should be called with value False:
+                db.use_execute_kw(False)
+        """
+        self.__use_execute_kw = val
+
     @property
     def registered_objects(self):
         """ Stores list of registered in ERP database objects
@@ -158,6 +170,11 @@ class ERP_Proxy(object):
         self.__last_result = self.sock.execute_kw(self.dbname, self.uid, self.pwd, obj, method, args, kwargs)
         return self.__last_result
 
+    def execute_default(self, *args, **kwargs):
+        if self.__use_execute_kw:
+            return self.execute_kw(*args, **kwargs)
+        return self.execute(*args, **kwargs)
+
     def execute_wkf(self, *args, **kwargs):
         """First arguments should be 'object' and 'signal' and 'id'
         """
@@ -208,7 +225,7 @@ def MethodWrapper(erp_proxy, object_name, method_name):
     """
     def wrapper(*args, **kwargs):
         try:
-            res = erp_proxy.execute_kw(object_name, method_name, *args, **kwargs)
+            res = erp_proxy.execute_default(object_name, method_name, *args, **kwargs)
         except xmlrpclib.Fault as exc:
             raise ERPProxyException("A fault occured\n"
                                     "Fault code: %s\n"
@@ -337,6 +354,48 @@ def connect(dbname=None, host=None, user=None, pwd=None, port=8069, verbose=Fals
     return ERP_Proxy(dbname=dbname, host=host, user=user, pwd=pwd, port=port, verbose=verbose)
 
 
+class UtilInitError(Exception):
+    pass
+
+
+class ERP_Utils(object):
+    def __init__(self, erp_proxy, util_classes):
+        """ @param erp_proxy: ERP_Proxy object to bind utils set to
+            @param util_classes: dict with {util_name: util_class}
+
+            # NOTE: util classes should be a reference to dict saved in session
+            # for example. this allows this dict to be updated from session and
+            # all changes from session will be reflected here allowing to add
+            # new utils dynamically.
+        """
+        self.__erp_proxy = erp_proxy
+        self.__util_classes = util_classes
+        self.__utils = {}
+
+    def __getitem__(self, name):
+        util = self.__utils.get(name, False)
+        if util is False:
+            util_cls = self.__util_classes[name]
+            try:
+                util = util_cls(self.__erp_proxy)
+            except Exception as exc:
+                raise UtilInitError(exc)
+            self.__utils[name] = util
+        return util
+
+    def __getattribute__(self, name):
+        try:
+            return super(ERP_Utils, self).__getattribute__(name)
+        except AttributeError:
+            try:
+                return self[name]
+            except KeyError:
+                raise AttributeError(name)
+
+    def __dir__(self):
+        return self.__util_classes.keys()
+
+
 class ERP_Session(object):
 
     """ Simple session manager which allows to manage databases easier
@@ -362,6 +421,27 @@ class ERP_Session(object):
         self._db_index = {}  # key: index; value: url
         self._db_index_rev = {}  # key: url; value: index
         self._db_index_counter = 0
+
+        self._util_classes = {}
+
+    def add_util(self, cls):
+        self._util_classes[cls._name] = cls
+
+    def load_util(self, path):
+        """ Loads utils from specified path, which should be a python module
+            or python package (not tested yet) which defines function
+            'erp_proxy_plugin_init' which should return dictionary with
+            key 'utils' which points to list of utility classes. each class must
+            class level attribute _name which will be used to access it from session
+            or db objects.
+        """
+        # TODO: Add ability to save utils files used in conf.
+        name = os.path.splitext(os.path.basename(path))[0]
+        module_name = 'erp_proxy.%s' % name
+        module = imp.load_source(module_name, path)
+        plugin_data = module.erp_proxy_plugin_init()
+        for cls in plugin_data.get('utils', []):
+            self.add_util(cls)
 
     @property
     def index(self):
@@ -404,6 +484,9 @@ class ERP_Session(object):
             return db
 
         db = ERP_Proxy(**db)
+        # injecting utils:
+        db.utils = ERP_Utils(db, self._util_classes)
+        # utils injected
         self._add_db(url, db)
         return db
 
