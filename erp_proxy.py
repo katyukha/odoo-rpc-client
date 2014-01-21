@@ -108,7 +108,7 @@ class ERP_Proxy(object):
             Default is True which means to use execute_kw
             But for version 6 databases execute_kw method is not defined, so
             befor using database this method should be called with value False:
-                db.use_execute_kw(False)
+                >>> db.use_execute_kw(False)
         """
         self.__use_execute_kw = val
 
@@ -300,7 +300,7 @@ class ERP_Object(object):
                 >>> so_obj = db['sale.order']
                 >>> data = so_obj.search_records([('date','>=','2013-01-01')])
                 >>> for order in data:
-                        order.write({'note': 'order data is %s'%order.data})
+                        order.write({'note': 'order date is %s'%order.date})
         """
 
         res = self.search(*args, **kwargs)
