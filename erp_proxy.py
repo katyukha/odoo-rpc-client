@@ -168,6 +168,30 @@ class ERP_Proxy(object):
         self.__last_result = None
         self.__last_result_wkf = None
 
+    # Report related methods
+    def report(self, report_name, ids, context):
+        """ Proxy to report service *report* method
+
+            @param report_name: string representing name of report service
+            @param ids: list of object ID to get report for
+            @param context: Ususaly have to have 'model' and 'id' keys that describes object to get report for
+            @return: ID of report to get by method *report_get*
+        """
+        return self.get_service('report').report(self.dbname, self.uid, self.pwd, report_name, ids, context)
+
+    def report_get(self, report_id):
+        """ Proxy method to report servce *report_get* method
+
+            @param report_id: int that represents ID of report to get
+            @return: dictinary with keys:
+                         'state': boolean, True if report generated correctly
+                         'result': base64 encoded content of report
+                         'format': string representing format, report generated in
+
+        """
+        return self.get_service('report').report_get(self.dbname, self.uid, self.pwd, report_id)
+
+    # Object related methods
     def execute(self, *args, **kwargs):
         """First arguments should be 'object' and 'method' and next
            will be passed to method of given object
