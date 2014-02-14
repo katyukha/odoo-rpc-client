@@ -93,7 +93,6 @@ class ERP_Proxy(object):
         self.pwd = pwd or getpass('Password: ')
         self.verbose = verbose
 
-        self.connect()
         self.__objects = {}   # cached objects
 
         # properties
@@ -102,6 +101,12 @@ class ERP_Proxy(object):
         self.__registered_objects = None
 
         self.__use_execute_kw = True
+
+        self.uid = None
+        self.__services = {}
+
+        # Connect to database
+        self.connect()
 
     def use_execute_kw(self, val=True):
         """ Controlls what execute method version to use by default.
@@ -137,15 +142,22 @@ class ERP_Proxy(object):
         """
         return self.__last_result_wkf
 
+    def get_service(self, name):
+        if name in self.__services:
+            return self.__services[name]
+
+        service = xmlrpclib.ServerProxy('http://%s:%s/xmlrpc/%s' % (self.host, self.port, name), verbose=self.verbose)
+        self.__services[name] = service
+        return service
+
     def connect(self):
         """ Connects to the server
 
             returns Id of user connected
         """
         # Get the uid
-        self.sock_common = xmlrpclib.ServerProxy('http://%s:%s/xmlrpc/common' % (self.host, self.port), verbose=self.verbose)
-        self.uid = self.sock_common.login(self.dbname, self.user, self.pwd)
-        self.sock = xmlrpclib.ServerProxy('http://%s:%s/xmlrpc/object' % (self.host, self.port), verbose=self.verbose)
+        service_auth = self.get_service('common')
+        self.uid = service_auth.login(self.dbname, self.user, self.pwd)
         return self.uid
 
     def reconnect(self):
@@ -160,14 +172,14 @@ class ERP_Proxy(object):
         """First arguments should be 'object' and 'method' and next
            will be passed to method of given object
         """
-        self.__last_result = self.sock.execute(self.dbname, self.uid, self.pwd, *args, **kwargs)
+        self.__last_result = self.get_service('object').execute(self.dbname, self.uid, self.pwd, *args, **kwargs)
         return self.__last_result
 
     def execute_kw(self, obj, method, *args, **kwargs):
         """First arguments should be 'object' and 'method' and next
            will be passed to method of given object
         """
-        self.__last_result = self.sock.execute_kw(self.dbname, self.uid, self.pwd, obj, method, args, kwargs)
+        self.__last_result = self.get_service('object').execute_kw(self.dbname, self.uid, self.pwd, obj, method, args, kwargs)
         return self.__last_result
 
     def execute_default(self, *args, **kwargs):
@@ -178,7 +190,7 @@ class ERP_Proxy(object):
     def execute_wkf(self, *args, **kwargs):
         """First arguments should be 'object' and 'signal' and 'id'
         """
-        self.__last_result_wkf = self.sock.exec_workflow(self.dbname, self.uid, self.pwd, *args, **kwargs)
+        self.__last_result_wkf = self.get_service('object').exec_workflow(self.dbname, self.uid, self.pwd, *args, **kwargs)
         return self.__last_result_wkf
 
     def get_obj(self, object_name):
