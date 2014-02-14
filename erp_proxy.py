@@ -39,7 +39,6 @@ import pprint
 import imp
 
 
-# TODO : add report interface
 class ERPProxyException(Exception):
     pass
 
@@ -252,7 +251,6 @@ class ERP_Proxy(object):
     __repr__ = __str__
 
 
-# TODO: think about rewriting it as simple function (like decorator)
 def MethodWrapper(erp_proxy, object_name, method_name):
     """ Wraper around ERP objects's methods.
 
