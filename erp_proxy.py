@@ -465,9 +465,20 @@ class ERP_Session(object):
         """ Loads utils from specified path, which should be a python module
             or python package (not tested yet) which defines function
             'erp_proxy_plugin_init' which should return dictionary with
-            key 'utils' which points to list of utility classes. each class must
+            key 'utils' which points to list of utility classes. each class must have
             class level attribute _name which will be used to access it from session
-            or db objects.
+            or db objects. So as masic example util module may look like:
+
+                class MyUtil(object):
+                    _name = 'my_util'
+
+                    def __init__(self, db):  # db is required argument passed by infrastructure
+                        self.db = db
+
+                    ...
+
+                def erp_proxy_plugin_init():
+                    return {'utils': [MyUtil]}
         """
         # TODO: Add ability to save utils files used in conf.
         name = os.path.splitext(os.path.basename(path))[0]
