@@ -39,7 +39,6 @@ import pprint
 import imp
 
 
-# TODO : add report interface
 class ERPProxyException(Exception):
     pass
 
@@ -93,7 +92,6 @@ class ERP_Proxy(object):
         self.pwd = pwd or getpass('Password: ')
         self.verbose = verbose
 
-        self.connect()
         self.__objects = {}   # cached objects
 
         # properties
@@ -102,6 +100,12 @@ class ERP_Proxy(object):
         self.__registered_objects = None
 
         self.__use_execute_kw = True
+
+        self.uid = None
+        self.__services = {}
+
+        # Connect to database
+        self.connect()
 
     def use_execute_kw(self, val=True):
         """ Controlls what execute method version to use by default.
@@ -137,15 +141,22 @@ class ERP_Proxy(object):
         """
         return self.__last_result_wkf
 
+    def get_service(self, name):
+        if name in self.__services:
+            return self.__services[name]
+
+        service = xmlrpclib.ServerProxy('http://%s:%s/xmlrpc/%s' % (self.host, self.port, name), verbose=self.verbose)
+        self.__services[name] = service
+        return service
+
     def connect(self):
         """ Connects to the server
 
             returns Id of user connected
         """
         # Get the uid
-        self.sock_common = xmlrpclib.ServerProxy('http://%s:%s/xmlrpc/common' % (self.host, self.port), verbose=self.verbose)
-        self.uid = self.sock_common.login(self.dbname, self.user, self.pwd)
-        self.sock = xmlrpclib.ServerProxy('http://%s:%s/xmlrpc/object' % (self.host, self.port), verbose=self.verbose)
+        service_auth = self.get_service('common')
+        self.uid = service_auth.login(self.dbname, self.user, self.pwd)
         return self.uid
 
     def reconnect(self):
@@ -156,18 +167,42 @@ class ERP_Proxy(object):
         self.__last_result = None
         self.__last_result_wkf = None
 
+    # Report related methods
+    def report(self, report_name, ids, context):
+        """ Proxy to report service *report* method
+
+            @param report_name: string representing name of report service
+            @param ids: list of object ID to get report for
+            @param context: Ususaly have to have 'model' and 'id' keys that describes object to get report for
+            @return: ID of report to get by method *report_get*
+        """
+        return self.get_service('report').report(self.dbname, self.uid, self.pwd, report_name, ids, context)
+
+    def report_get(self, report_id):
+        """ Proxy method to report servce *report_get* method
+
+            @param report_id: int that represents ID of report to get
+            @return: dictinary with keys:
+                         'state': boolean, True if report generated correctly
+                         'result': base64 encoded content of report
+                         'format': string representing format, report generated in
+
+        """
+        return self.get_service('report').report_get(self.dbname, self.uid, self.pwd, report_id)
+
+    # Object related methods
     def execute(self, *args, **kwargs):
         """First arguments should be 'object' and 'method' and next
            will be passed to method of given object
         """
-        self.__last_result = self.sock.execute(self.dbname, self.uid, self.pwd, *args, **kwargs)
+        self.__last_result = self.get_service('object').execute(self.dbname, self.uid, self.pwd, *args, **kwargs)
         return self.__last_result
 
     def execute_kw(self, obj, method, *args, **kwargs):
         """First arguments should be 'object' and 'method' and next
            will be passed to method of given object
         """
-        self.__last_result = self.sock.execute_kw(self.dbname, self.uid, self.pwd, obj, method, args, kwargs)
+        self.__last_result = self.get_service('object').execute_kw(self.dbname, self.uid, self.pwd, obj, method, args, kwargs)
         return self.__last_result
 
     def execute_default(self, *args, **kwargs):
@@ -178,7 +213,7 @@ class ERP_Proxy(object):
     def execute_wkf(self, *args, **kwargs):
         """First arguments should be 'object' and 'signal' and 'id'
         """
-        self.__last_result_wkf = self.sock.exec_workflow(self.dbname, self.uid, self.pwd, *args, **kwargs)
+        self.__last_result_wkf = self.get_service('object').exec_workflow(self.dbname, self.uid, self.pwd, *args, **kwargs)
         return self.__last_result_wkf
 
     def get_obj(self, object_name):
@@ -216,7 +251,6 @@ class ERP_Proxy(object):
     __repr__ = __str__
 
 
-# TODO: think about rewriting it as simple function (like decorator)
 def MethodWrapper(erp_proxy, object_name, method_name):
     """ Wraper around ERP objects's methods.
 
@@ -431,9 +465,20 @@ class ERP_Session(object):
         """ Loads utils from specified path, which should be a python module
             or python package (not tested yet) which defines function
             'erp_proxy_plugin_init' which should return dictionary with
-            key 'utils' which points to list of utility classes. each class must
+            key 'utils' which points to list of utility classes. each class must have
             class level attribute _name which will be used to access it from session
-            or db objects.
+            or db objects. So as masic example util module may look like:
+
+                class MyUtil(object):
+                    _name = 'my_util'
+
+                    def __init__(self, db):  # db is required argument passed by infrastructure
+                        self.db = db
+
+                    ...
+
+                def erp_proxy_plugin_init():
+                    return {'utils': [MyUtil]}
         """
         # TODO: Add ability to save utils files used in conf.
         name = os.path.splitext(os.path.basename(path))[0]
