@@ -290,12 +290,15 @@ class ERP_Record(AttrDict):
     """
 
     # TODO: think about optimization via slots
+    # TODO: add more doc on aditional functionality like using __obj suffix to
+    # access related by many2one records
 
     def __init__(self, obj, data):
         assert isinstance(obj, ERP_Object), "obj should be ERP_Object"
         assert isinstance(data, dict), "data should be dictionary structure returned by ERP_Object.read"
         self.__obj = obj
         self.__related_objects = {}
+        self.__workflow_instance = None
         self.update(data)
 
     def __dir__(self):
@@ -318,6 +321,30 @@ class ERP_Record(AttrDict):
         """ Returns dictionary with information about columns of related object
         """
         return self.__obj._get_columns_info()
+
+    def _get_workflow_instance(self):
+        """ Retunrs workflow instance related to this record
+        """
+        if self.__workflow_instance is None:
+            wkf = self.__obj._get_workflow()
+            if not wkf:
+                self.__workflow_instance = False
+            else:
+                wkf_inst_obj = self._get_proxy().get_obj('workflow.instance')
+                wkf_inst_records = wkf_inst_obj.search_records([('wkf_id', '=', wkf.id),
+                                                                ('res_id', '=', self.id)], limit=1)
+                self.__workflow_instance = wkf_inst_records and wkf_inst_records[0] or False
+        return self.__workflow_instance
+
+    def _get_workflow_items(self):
+        """ Returns list of related workflow.woritem objects
+        """
+        # TODO: think about adding caching
+        workitem_obj = self._get_proxy().get_obj('workflow.workitem')
+        wkf_inst = self._get_workflow_instance()
+        if wkf_inst:
+            return workitem_obj.search_records([('inst_id', '=', wkf_inst.id)])
+        return []
 
     def __str__(self):
         return "ERP_Record of %s,%s" % (self.__obj, self.id)
@@ -390,10 +417,12 @@ class ERP_Object(object):
                              it will returns single ERP_Record object
     """
 
+    # TODO: add doc on new methods ?
     def __init__(self, erp_proxy, object_name):
         self.__erp_proxy = erp_proxy
         self.__obj_name = object_name
         self.__columns_info = None
+        self.__workflow = None
 
     def _get_proxy(self):
         return self.__erp_proxy
@@ -416,6 +445,23 @@ class ERP_Object(object):
             self.__columns_info = columns_info
 
         return self.__columns_info
+
+    def _get_workflow(self):
+        """ Returns ERP_Record instance of "workflow" object
+            related to this ERP_Object
+
+            If there are no workflow for an object then False will be returned
+        """
+        if self.__workflow is None:
+            wkf_obj = self.__erp_proxy['workflow']
+            # TODO: implement correct behavior for situations with few
+            # workflows for same model.
+            wkf_records = wkf_obj.search_records([('osv', '=', self.__obj_name)])
+            if wkf_records and len(wkf_records) > 1:
+                raise ERPProxyException("More then one workflow per model not supported "
+                                        "be current version of openerp_proxy!")
+            self.__workflow = wkf_records and wkf_records[0] or False
+        return self.__workflow
 
     def search_records(self, *args, **kwargs):
         """ Return instance or list of instances of ERP_Record class,
