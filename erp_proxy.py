@@ -298,6 +298,7 @@ class ERP_Record(AttrDict):
         assert isinstance(data, dict), "data should be dictionary structure returned by ERP_Object.read"
         self.__obj = obj
         self.__related_objects = {}
+        self.__related_objects_o2m = {}
         self.__workflow_instance = None
         self.update(data)
 
@@ -372,21 +373,39 @@ class ERP_Record(AttrDict):
             self.__related_objects[name] = rel_obj.read_records(rel_id)
         return self.__related_objects[name]
 
+    def __get_one2many_rel_obj(self, name, cached=True, limit=None):
+        """ Method used to fetch related objects by name of field that points to them
+            using one2many relation
+        """
+        if name not in self.__related_objects_o2m or not cached:
+            relation = self._get_columns_info()[name].relation
+            rel_obj = self._get_proxy().get_obj(relation)
+            rel_ids = self[name]   # Take in mind that field value is list of IDS
+            self.__related_objects_o2m[name] = rel_obj.read_records(rel_ids)
+        return self.__related_objects_o2m[name]
+
     def __getitem__(self, name):
         res = None
         try:
             res = super(ERP_Record, self).__getitem__(name)
         except KeyError:
             # Allow using '__obj' suffix in field name to retryve ERP_Record
-            # instance of object related via many2one
+            # instance of object related via many2one or one2many
             # This means next:
             #    >>> o = db['sale.order.line'].read_records(1)
             #    >>> o.order_id
             #    ... [25, 'order_name']
             #    >>> o.order_id__obj
             #    ... ERP_Record of sale.order, 25
-            if name.endswith('__obj') and self._get_columns_info()[name[:-5]].ttype == 'many2one':
-                res = self.__get_many2one_rel_obj(name[:-5])
+            if name.endswith('__obj'):
+                fname = name[:-5]
+                col_info = self._get_columns_info()[fname]
+                if col_info.ttype == 'many2one':
+                    res = self.__get_many2one_rel_obj(fname)
+                elif col_info.ttype == 'one2many':
+                    res = self.__get_one2many_rel_obj(fname)
+                else:
+                    raise
             else:
                 raise
 
@@ -396,8 +415,8 @@ class ERP_Record(AttrDict):
         self.update(self.__obj.read(self.id))
 
         # Update related objects cache
-        for name in self.__related_objects:
-            self.__get_many2one_rel_obj(name, cached=False)
+        self.__related_objects = {}
+        self.__related_objects_o2m = {}
 
 
 class ERP_Object(object):
