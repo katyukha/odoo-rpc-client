@@ -58,13 +58,15 @@ class AttrDict(dict):
             1
     """
     def __getattribute__(self, name):
+        res = None
         try:
-            return super(AttrDict, self).__getattribute__(name)
+            res = super(AttrDict, self).__getattribute__(name)
         except AttributeError:
             try:
-                return super(AttrDict, self).__getitem__(name)
+                res = super(AttrDict, self).__getitem__(name)
             except KeyError:
                 raise AttributeError(name)
+        return res
 
     def __setattr__(self, name, value):
         self[name] = value
@@ -157,6 +159,10 @@ class ERP_Proxy(object):
         # Get the uid
         service_auth = self.get_service('common')
         self.uid = service_auth.login(self.dbname, self.user, self.pwd)
+
+        if not self.uid:
+            raise ERPProxyException("Bad login or password")
+
         return self.uid
 
     def reconnect(self):
@@ -235,10 +241,13 @@ class ERP_Proxy(object):
     def __getitem__(self, name):
         """ Returns instance of ERP_Object with name 'name'
         """
+        res = None
         try:
-            return self.get_obj(name)
+            res = self.get_obj(name)
         except ValueError:
             raise KeyError('Wrong object name')
+
+        return res
 
     def get_url(self):
         return "%(user)s@%(host)s:%(port)s/%(database)s" % dict(user=self.user,
@@ -294,11 +303,13 @@ class ERP_Record(AttrDict):
     __repr__ = __str__
 
     def __getattribute__(self, name):
+        res = None
         try:
-            return super(ERP_Record, self).__getattribute__(name)
+            res = super(ERP_Record, self).__getattribute__(name)
         except AttributeError:
             method = getattr(self.__obj, name)
-            return functools.partial(method, [self.id])
+            res = functools.partial(method, [self.id])
+        return res
 
     def refresh(self):
         self.update(self.__obj.read(self.id))
@@ -324,9 +335,24 @@ class ERP_Object(object):
     def __init__(self, erp_proxy, object_name):
         self.__erp_proxy = erp_proxy
         self.__obj_name = object_name
+        self.__columns_info = None
 
     def __dir__(self):
-        return ['search_records', 'read_records', 'read', 'search', 'write', 'unlink', 'create']
+        return ['_get_columns_info', 'search_records', 'read_records', 'read', 'search', 'write', 'unlink', 'create']
+
+    def _get_columns_info(self):
+        """ Reads information about fields available on model
+        """
+        if self.__columns_info is None:
+            columns_info = {}
+            fields_obj = self.__erp_proxy['ir.model.fields']
+            fields = fields_obj.search_records([('model', '=', self.__obj_name)])
+            for field in fields:
+                columns_info[field.name] = field
+
+            self.__columns_info = columns_info
+
+        return self.__columns_info
 
     def search_records(self, *args, **kwargs):
         """ Return instance or list of instances of ERP_Record class,
@@ -360,10 +386,13 @@ class ERP_Object(object):
             return [ERP_Record(self, data) for data in self.read(ids, *args, **kwargs)]
 
     def __getattribute__(self, name):
+        res = None
         try:
-            return super(ERP_Object, self).__getattribute__(name)
+            res = super(ERP_Object, self).__getattribute__(name)
         except AttributeError:
-            return MethodWrapper(self.__erp_proxy, self.__obj_name, name)
+            res = MethodWrapper(self.__erp_proxy, self.__obj_name, name)
+
+        return res
 
     def __str__(self):
         return "ERP Object ('%s')" % self.__obj_name
