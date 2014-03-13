@@ -44,6 +44,8 @@ class ERPProxyException(Exception):
 
 
 class AttrDict(dict):
+    # TODO: think about reimplementing it via self.__dict__ = self
+    #       (http://stackoverflow.com/questions/4984647/accessing-dict-keys-like-an-attribute-in-python)
     """ Simple class to make dictionary able to use attribute get operation
         to get elements it contains using syntax like:
 
@@ -296,7 +298,23 @@ class ERP_Record(AttrDict):
         assert isinstance(obj, ERP_Object), "obj should be ERP_Object"
         assert isinstance(data, dict), "data should be dictionary structure returned by ERP_Object.read"
         self.__obj = obj
+        self.__related_objects = {}
         self.update(data)
+
+    def _get_obj(self):
+        """ Returns instance of related ERP_Object
+        """
+        return self.__obj
+
+    def _get_proxy(self):
+        """ Returns instance of related ERP_Proxy object
+        """
+        return self.__obj._get_proxy()
+
+    def _get_columns_info(self):
+        """ Returns dictionary with information about columns of related object
+        """
+        return self.__obj._get_columns_info()
 
     def __str__(self):
         return "ERP_Record of %s,%s" % (self.__obj, self.id)
@@ -307,12 +325,49 @@ class ERP_Record(AttrDict):
         try:
             res = super(ERP_Record, self).__getattribute__(name)
         except AttributeError:
-            method = getattr(self.__obj, name)
-            res = functools.partial(method, [self.id])
+            try:
+                res = self[name]
+            except KeyError:
+                method = getattr(self.__obj, name)
+                res = functools.partial(method, [self.id])
+        return res
+
+    def __get_many2one_rel_obj(self, name, cached=True):
+        """ Method used to fetch related object by name of field that points to it
+        """
+        if name not in self.__related_objects or not cached:
+            relation = self._get_columns_info()[name].relation
+            rel_obj = self._get_proxy().get_obj(relation)
+            rel_id = self[name][0]   # Do not forged about relations in form [id, name]
+            self.__related_objects[name] = rel_obj.read_records(rel_id)
+        return self.__related_objects[name]
+
+    def __getitem__(self, name):
+        res = None
+        try:
+            res = super(ERP_Record, self).__getitem__(name)
+        except KeyError:
+            # Allow using '__obj' suffix in field name to retryve ERP_Record
+            # instance of object related via many2one
+            # This means next:
+            #    >>> o = db['sale.order.line'].read_records(1)
+            #    >>> o.order_id
+            #    ... [25, 'order_name']
+            #    >>> o.order_id__obj
+            #    ... ERP_Record of sale.order, 25
+            if name.endswith('__obj') and self._get_columns_info()[name[:-5]].ttype == 'many2one':
+                res = self.__get_many2one_rel_obj(name[:-5])
+            else:
+                raise
+
         return res
 
     def refresh(self):
         self.update(self.__obj.read(self.id))
+
+        # Update related objects cache
+        for name in self.__related_objects:
+            self.__get_many2one_rel_obj(name, cached=False)
 
 
 class ERP_Object(object):
@@ -336,6 +391,9 @@ class ERP_Object(object):
         self.__erp_proxy = erp_proxy
         self.__obj_name = object_name
         self.__columns_info = None
+
+    def _get_proxy(self):
+        return self.__erp_proxy
 
     def __dir__(self):
         return ['_get_columns_info', 'search_records', 'read_records', 'read', 'search', 'write', 'unlink', 'create']
