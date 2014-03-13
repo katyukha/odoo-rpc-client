@@ -70,9 +70,6 @@ class AttrDict(dict):
                 raise AttributeError(name)
         return res
 
-    def __setattr__(self, name, value):
-        self[name] = value
-
 
 class ERP_Proxy(object):
     """ A simple class to connect ot ERP via xml_rpc
@@ -301,6 +298,12 @@ class ERP_Record(AttrDict):
         self.__related_objects = {}
         self.update(data)
 
+    def __dir__(self):
+        res = dir(super(ERP_Record, self))
+        res.extend(self.keys())
+        res.extend(['read', 'search', 'write', 'unlink', 'create'])
+        return res
+
     def _get_obj(self):
         """ Returns instance of related ERP_Object
         """
@@ -396,7 +399,9 @@ class ERP_Object(object):
         return self.__erp_proxy
 
     def __dir__(self):
-        return ['_get_columns_info', 'search_records', 'read_records', 'read', 'search', 'write', 'unlink', 'create']
+        res = dir(super(ERP_Object, self))
+        res.extend(['read', 'search', 'write', 'unlink', 'create'])
+        return res
 
     def _get_columns_info(self):
         """ Reads information about fields available on model
