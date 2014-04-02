@@ -38,37 +38,13 @@ import os.path
 import pprint
 import imp
 
+# project imports
+from utils import AttrDict
+from utils import ustr
+
 
 class ERPProxyException(Exception):
     pass
-
-
-class AttrDict(dict):
-    # TODO: think about reimplementing it via self.__dict__ = self
-    #       (http://stackoverflow.com/questions/4984647/accessing-dict-keys-like-an-attribute-in-python)
-    """ Simple class to make dictionary able to use attribute get operation
-        to get elements it contains using syntax like:
-
-        >>> d = AttrDict(arg1=1, arg2='hello')
-        >>> print d.arg1
-            1
-        >>> print d.arg2
-            hello
-        >>> print d['arg2']
-            hello
-        >>> print d['arg1']
-            1
-    """
-    def __getattribute__(self, name):
-        res = None
-        try:
-            res = super(AttrDict, self).__getattribute__(name)
-        except AttributeError:
-            try:
-                res = super(AttrDict, self).__getitem__(name)
-            except KeyError:
-                raise AttributeError(name)
-        return res
 
 
 class ERP_Proxy(object):
@@ -269,11 +245,11 @@ def MethodWrapper(erp_proxy, object_name, method_name):
         try:
             res = erp_proxy.execute_default(object_name, method_name, *args, **kwargs)
         except xmlrpclib.Fault as exc:
-            raise ERPProxyException("A fault occured\n"
-                                    "Fault code: %s\n"
-                                    "Fault string: %s\n"
-                                    "" % (exc.faultCode,
-                                          exc.faultString))
+            raise ERPProxyException(u"A fault occured\n"
+                                    u"Fault code: %s\n"
+                                    u"Fault string: %s\n"
+                                    u"" % (ustr(exc.faultCode),
+                                           ustr(exc.faultString)))
         return res
     return wrapper
 
