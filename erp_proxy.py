@@ -378,7 +378,7 @@ class ERP_Record(AttrDict):
                 col_info = self._get_columns_info()[fname]
                 if col_info.ttype == 'many2one':
                     res = self.__get_many2one_rel_obj(fname)
-                elif col_info.ttype == 'one2many':
+                elif col_info.ttype == 'one2many' or ocl_info.ttype == 'many2many':
                     res = self.__get_one2many_rel_obj(fname)
                 else:
                     raise
