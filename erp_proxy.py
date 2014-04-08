@@ -378,7 +378,7 @@ class ERP_Record(AttrDict):
                 col_info = self._get_columns_info()[fname]
                 if col_info.ttype == 'many2one':
                     res = self.__get_many2one_rel_obj(fname)
-                elif col_info.ttype == 'one2many' or ocl_info.ttype == 'many2many':
+                elif col_info.ttype == 'one2many' or col_info.ttype == 'many2many':
                     res = self.__get_one2many_rel_obj(fname)
                 else:
                     raise
@@ -393,6 +393,11 @@ class ERP_Record(AttrDict):
         # Update related objects cache
         self.__related_objects = {}
         self.__related_objects_o2m = {}
+
+    def workflow_trg(self, signal):
+        """ trigger's specified signal on record's related workflow
+        """
+        return self._get_obj().workflow_trg(self.id, signal)
 
 
 class ERP_Object(object):
@@ -488,6 +493,13 @@ class ERP_Object(object):
             return ERP_Record(self, self.read(ids, *args, **kwargs))
         if isinstance(ids, (list, tuple)):
             return [ERP_Record(self, data) for data in self.read(ids, *args, **kwargs)]
+
+    def workflow_trg(self, obj_id, signal):
+        """ Triggers specified signal for object's workflow
+        """
+        assert isinstance(obj_id, (int, long)), "obj_id must be integer"
+        assert isinstance(signal, basestring), "signal must be string"
+        return self._get_proxy().execute_wkf(self.__obj_name, signal, obj_id)
 
     def __getattribute__(self, name):
         res = None
