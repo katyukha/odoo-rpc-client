@@ -76,22 +76,13 @@ class ERP_Proxy(object):
         self.__last_result_wkf = None
         self.__registered_objects = None
 
-        self.__use_execute_kw = True
+        self.__use_execute_kw = None
 
         self.uid = None
         self.__services = {}
 
         # Connect to database
         self.connect()
-
-    def use_execute_kw(self, val=True):
-        """ Controlls what execute method version to use by default.
-            Default is True which means to use execute_kw
-            But for version 6 databases execute_kw method is not defined, so
-            befor using database this method should be called with value False:
-                >>> db.use_execute_kw(False)
-        """
-        self.__use_execute_kw = val
 
     @property
     def registered_objects(self):
@@ -172,29 +163,35 @@ class ERP_Proxy(object):
         return self.get_service('report').report_get(self.dbname, self.uid, self.pwd, report_id)
 
     # Object related methods
-    def execute(self, *args, **kwargs):
+    def use_execute_kw(self):
+        """ Checks whether 'execute_kw' method is available or not
+        """
+        if self.__use_execute_kw is None:
+            service = self.get_service('object')
+            try:
+                service.execute_kw(self.dbname, self.uid, self.pwd, 'ir.model', 'search', ([],), dict(limit=1))
+                self.__use_execute_kw = True
+            except xmlrpclib.Fault:
+                self.__use_execute_kw = False
+        return self.__use_execute_kw
+
+    def execute(self, obj, method, *args, **kwargs):
         """First arguments should be 'object' and 'method' and next
            will be passed to method of given object
         """
-        self.__last_result = self.get_service('object').execute(self.dbname, self.uid, self.pwd, *args, **kwargs)
+        service = self.get_service('object')
+
+        if self.use_execute_kw():
+            self.__last_result = service.execute_kw(self.dbname, self.uid, self.pwd, obj, method, args, kwargs)
+        else:
+            self.__last_result = service.execute(self.dbname, self.uid, self.pwd, obj, method, *args, **kwargs)
+
         return self.__last_result
 
-    def execute_kw(self, obj, method, *args, **kwargs):
-        """First arguments should be 'object' and 'method' and next
-           will be passed to method of given object
+    def execute_wkf(self, object_name, signal, object_id):
+        """ Triggers workflow event on specified object
         """
-        self.__last_result = self.get_service('object').execute_kw(self.dbname, self.uid, self.pwd, obj, method, args, kwargs)
-        return self.__last_result
-
-    def execute_default(self, *args, **kwargs):
-        if self.__use_execute_kw:
-            return self.execute_kw(*args, **kwargs)
-        return self.execute(*args, **kwargs)
-
-    def execute_wkf(self, *args, **kwargs):
-        """First arguments should be 'object' and 'signal' and 'id'
-        """
-        self.__last_result_wkf = self.get_service('object').exec_workflow(self.dbname, self.uid, self.pwd, *args, **kwargs)
+        self.__last_result_wkf = self.get_service('object').exec_workflow(self.dbname, self.uid, self.pwd, object_name, signal, object_id)
         return self.__last_result_wkf
 
     def get_obj(self, object_name):
@@ -243,7 +240,7 @@ def MethodWrapper(erp_proxy, object_name, method_name):
     """
     def wrapper(*args, **kwargs):
         try:
-            res = erp_proxy.execute_default(object_name, method_name, *args, **kwargs)
+            res = erp_proxy.execute(object_name, method_name, *args, **kwargs)
         except xmlrpclib.Fault as exc:
             raise ERPProxyException(u"A fault occured\n"
                                     u"Fault code: %s\n"
@@ -263,6 +260,8 @@ class ERP_Record(AttrDict):
 
         Special methods:
             - refresh() - rereads data for this object
+            - workflow_trg(signal) - sends specified signal to record's
+                                     workflow
     """
 
     # TODO: think about optimization via slots
@@ -415,6 +414,8 @@ class ERP_Object(object):
             - read_records - receives same arguments as 'read', but returns
                              list of ERP_Record objects. Or if single int passed as IDs
                              it will returns single ERP_Record object
+            - workflow_trg(id, signal) - sends specified signal to object with
+                                         specified 'id'
     """
 
     # TODO: add doc on new methods ?
