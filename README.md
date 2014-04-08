@@ -5,7 +5,7 @@ This project aims to ease access to openerp data via shell and used mostly for d
 This project provides interface similar to OpenERP internal code to perform operations on
 OpenERP object hiding XML-RPC behind
 
-###Features:
+### Features:
    * supports call to all public methods on any OpenERP object including: *read*, *search*, *write*, *unlink* and others
    * Designed not for speed but to be useful like cli client to OpenERP
    * Stores information about connection to OpenERP databases (beside passwords)
@@ -13,8 +13,20 @@ OpenERP object hiding XML-RPC behind
    * Use IPython as shell if it is installed, otherwise uses defaul python shell
    * Allow using separate programs (called internal *utils*) to perform some programmed logic
 
-###Alternatives:
+### What You can do with this:
+   * Quickly read and analyze some data that is not visible in interface without access to DB
+   * Use this project as library for code that need to access OpenERP data
+   * Use in scripts that migrates OpenERP data (after, for example, adding new functionality or changing old).
+     (Migration using only SQL is abd idea because of functional fields
+     with *store=True* which must be recalculated.
+
+### Alternatives:
    * [Official OpenERP client library](https://github.com/OpenERP/openerp-client-lib)
+
+### Near future plans:
+   * Add support of JSON-RPC and refactor connection system to make it extensible
+     (now only XML-RPC is supported)
+   * Add setup.py script
 
 
 How to use
@@ -47,7 +59,7 @@ Now lets try to find how many sale orders in 'done' state we have in database:
 So we have 5 orders in done state. So let's read them.
 
 Default way to read data from OpenERP is to search for required records with *search* method
-which return's list of IDs of records, that read data from them using *read* method. Both methods
+which return's list of IDs of records, then read data using *read* method. Both methods
 mostly same as OpenERP internal ones:
 
 ```python
@@ -65,10 +77,10 @@ mostly same as OpenERP internal ones:
 As we see reading data in such way allows us to get list of dictionaries where each contain fields have been read
 
 Another way to read data is to use *search_records* or *read_records* method. Each of these methods receives
-same aguments as *search* or *read* method respectively. But passing *count* argument for *search_records* will cause error
-Main difference of these methods is using ERP_Record class instead of dict for each record had been read.
-ERP_Record class provides some orm-like abilities for records, allowing for example accessing field values as attributes and
-providing mechanisms to lazily fetch related fields.
+same aguments as *search* or *read* method respectively. But passing *count* argument for *search_records* will cause error.
+Main difference betwen these methods in using *ERP_Record* class instead of *dict* for each record had been read.
+ERP_Record class provides some orm-like abilities for records, allowing for example access fields as attributes and
+provide mechanisms to lazily fetch related fields.
 
 ```python
 >>> sale_orders = sale_order_obj.search_records([('state', '=', 'done')])
