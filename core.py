@@ -25,6 +25,24 @@
     >>> move_obj = db['stock.move']
     >>> move_ids = [1234] # IDs of stock moves to be checked
     >>> move_obj.check_assign(move_ids)
+
+    Ability to use ERP_Record class as analog to browse_record:
+    >>> move_obj = db['stock.move']
+    >>> move = move_obj.read_records(1234)
+    >>> move.state
+    ... 'confirmed'
+    >>> move.check_assign()
+    >>> move.refresh()
+    >>> move.state
+    ... 'assigned'
+    >>> move.picking_id
+    ... [12, 'OUT-12']
+    >>> move.picking_id__obj.id
+    ... 12
+    >>> move.picking_id__obj.name
+    ... 'OUT-12'
+    >>> move.picking_id__obj.state
+    ... 'assigned'
 """
 
 
@@ -63,10 +81,11 @@ class ERP_Proxy(object):
         self.host = host
         self.user = user
         self.port = port
-        self.pwd = pwd or getpass('Password: ')
+        self.pwd = pwd or getpass('Password: ')  # TODO: move getpass out from here
         self.verbose = verbose
 
         self.__objects = {}   # cached objects
+        self.__services = {}  # cached services
 
         # properties
         self.__last_result = None
@@ -76,7 +95,6 @@ class ERP_Proxy(object):
         self.__use_execute_kw = None
 
         self.uid = None
-        self.__services = {}
 
         # Connect to database
         self.connect()
@@ -361,8 +379,8 @@ class ERP_Record(AttrDict):
         try:
             res = super(ERP_Record, self).__getitem__(name)
         except KeyError:
-            # Allow using '__obj' suffix in field name to retryve ERP_Record
-            # instance of object related via many2one or one2many
+            # Allow using '__obj' suffix in field name to retrive ERP_Record
+            # instance of object related via many2one or one2many or many2many
             # This means next:
             #    >>> o = db['sale.order.line'].read_records(1)
             #    >>> o.order_id
