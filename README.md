@@ -17,8 +17,8 @@ OpenERP object hiding XML-RPC behind
    * Quickly read and analyze some data that is not visible in interface without access to DB
    * Use this project as library for code that need to access OpenERP data
    * Use in scripts that migrates OpenERP data (after, for example, adding new functionality or changing old).
-     (Migration using only SQL is abd idea because of functional fields
-     with *store=True* which must be recalculated.
+     (Migration using only SQL is bad idea because of functional fields
+     with *store=True* which must be recalculated).
 
 ### Alternatives:
    * [Official OpenERP client library](https://github.com/OpenERP/openerp-client-lib)
