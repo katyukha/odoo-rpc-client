@@ -32,10 +32,19 @@ OpenERP object hiding XML-RPC behind
 How to use
 ----------
 
-Run *erp_proxy.py* file, which will open shell. If IPython is installed, then IPython shell will be opened
+Install package with ``` python setup.py install ```, this will make available package *openerp_proxy*
+and also shell will be available by command ```$ openerp_proxy```
+
+So, after that run in shell:
+
+```bash
+   openerp_proxy
+```
+
+And You will get the shell. If *IPython* is installed then IPython shell will be opened, else usual python shell
 There in context exists *session* variable that represents current session to work with
 
-**This project may be used as lib too. just import it and use same as below**
+**This project may be used as lib too. just import it ```import openerp_proxy``` and use same as below without big differences**
 
 First connect to OpenERP database You want:
 
