@@ -32,7 +32,7 @@ OpenERP object hiding XML-RPC behind
 How to use
 ----------
 
-Install package with ``` python setup.py install ```, this will make available package *openerp_proxy*
+Install package with ``` pip install openerp_proxy ```, this will make available package *openerp_proxy*
 and also shell will be available by command ```$ openerp_proxy```
 
 So, after that run in shell:

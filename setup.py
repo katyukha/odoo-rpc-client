@@ -5,7 +5,7 @@ try:
 except ImportError:
     from distutils.core import setup
 
-setup(name='OpenERP Proxy',
+setup(name='openerp_proxy',
       version='0.1',
       description='OpenERP CLI interface and libraray for RPC',
       author='Dmytro Katyukha',
@@ -16,11 +16,13 @@ setup(name='OpenERP Proxy',
       scripts=['bin/openerp_proxy'],
       license="GPL",
       classifiers=[
-          'Development Status :: Beta',
+          'Development Status :: 4 - Beta',
           'Environment :: Console',
           'Intended Audience :: Developers',
-          'License :: GPL',
+          'License :: OSI Approved :: GNU General Public License (GPL)',
           'Programming Language :: Python',
+          'Topic :: Utilities',
+          'Topic :: Software Development :: Libraries',
       ],
       keywords=['openerp', 'rpc'],
       extras_require={
