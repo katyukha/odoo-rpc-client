@@ -3,3 +3,7 @@
 *.swp
 *.log
 /.ropeproject/
+/build/
+/dist/
+/OpenERP_Proxy.egg-info/
+/openerp_proxy.egg-info/
