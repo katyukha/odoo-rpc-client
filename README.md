@@ -22,6 +22,8 @@ OpenERP object hiding XML-RPC behind
 
 ### Alternatives:
    * [Official OpenERP client library](https://github.com/OpenERP/openerp-client-lib)
+   * [ERPpeek](https://pypi.python.org/pypi/ERPpeek)
+   * [OEERPLib](https://pypi.python.org/pypi/OERPLib)
 
 ### Near future plans:
    * Add support of JSON-RPC and refactor connection system to make it extensible
