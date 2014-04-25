@@ -28,7 +28,6 @@ OpenERP object hiding XML-RPC behind
 ### Near future plans:
    * Add support of JSON-RPC and refactor connection system to make it extensible
      (now only XML-RPC is supported)
-   * Add setup.py script
 
 
 How to use
@@ -116,4 +115,4 @@ provide mechanisms to lazily fetch related fields.
 ... True
 ```
 
-For more information see source code.
+For more information see [source code](https://github.com/katyukha/openerp-proxy).

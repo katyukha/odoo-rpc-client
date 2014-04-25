@@ -257,11 +257,13 @@ def MethodWrapper(erp_proxy, object_name, method_name):
         try:
             res = erp_proxy.execute(object_name, method_name, *args, **kwargs)
         except xmlrpclib.Fault as exc:
-            raise ERPProxyException(u"A fault occured\n"
-                                    u"Fault code: %s\n"
-                                    u"Fault string: %s\n"
-                                    u"" % (ustr(exc.faultCode),
-                                           ustr(exc.faultString)))
+            msg = (u"A fault occured\n"
+                   u"Fault code: %s\n"
+                   u"Fault string: %s\n"
+                   u"" % (ustr(exc.faultCode),
+                          ustr(exc.faultString)))
+            msg = msg.encode('utf-8')
+            raise ERPProxyException(msg)
         return res
     return wrapper
 
