@@ -11,8 +11,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   modules/core.rst
-   modules/session.rst
+   intro.rst
+   modules/index.rst
 
 
 
