@@ -62,7 +62,9 @@ class ERP_Session(object):
         to database by url or index. No more hosts, usernames, ports, etc...
         required to be memorized.
         Just on session start call:
-            print session
+
+            >>> print session
+
         And You will get all databases You worked with listed as (index, url) pairs.
         to connect to one of thouse databases just call session[index|url] and required
         ERP_Proxy object will be returned.
@@ -88,7 +90,7 @@ class ERP_Session(object):
             'erp_proxy_plugin_init' which should return dictionary with
             key 'utils' which points to list of utility classes. each class must have
             class level attribute _name which will be used to access it from session
-            or db objects. So as masic example util module may look like:
+            or db objects. So as masic example util module may look like::
 
                 class MyUtil(object):
                     _name = 'my_util'

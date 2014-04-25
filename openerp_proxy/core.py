@@ -21,12 +21,14 @@
 
     Also You can call any method (beside private ones starting with underscore(_)) of any model.
     For example to check availability of stock move all You need is:
+
     >>> db = session.connect()
     >>> move_obj = db['stock.move']
     >>> move_ids = [1234] # IDs of stock moves to be checked
     >>> move_obj.check_assign(move_ids)
 
     Ability to use ERP_Record class as analog to browse_record:
+
     >>> move_obj = db['stock.move']
     >>> move = move_obj.read_records(1234)
     >>> move.state
@@ -63,16 +65,19 @@ class ERPProxyException(Exception):
 
 
 class ERP_Proxy(object):
-    """ A simple class to connect ot ERP via xml_rpc
-        Should be initialized with following arguments:
-            ERP_Proxy(dbname, host, user, pwd = getpass('Password: '), verbose = False)
+    """
+       A simple class to connect ot ERP via xml_rpc
+       Should be initialized with following arguments:
 
-        Allows access to ERP objects via dictionary syntax:
-            >>> db = ERP_Proxy(...)
-            >>> db['sale.order']
+           >>> ERP_Proxy(dbname, host, user, pwd = getpass('Password: '), verbose = False)
+
+       Allows access to ERP objects via dictionary syntax:
+
+           >>> db = ERP_Proxy(...)
+           >>> db['sale.order']
                 ERP_Object: 'sale.order'
 
-        TODO: describe methods and how to use them
+       TODO: describe methods and how to use them
 
     """
 
@@ -170,9 +175,9 @@ class ERP_Proxy(object):
 
             @param report_id: int that represents ID of report to get
             @return: dictinary with keys:
-                         'state': boolean, True if report generated correctly
-                         'result': base64 encoded content of report
-                         'format': string representing format, report generated in
+                        - 'state': boolean, True if report generated correctly
+                        - 'result': base64 encoded content of report
+                        - 'format': string representing format, report generated in
 
         """
         return self.get_service('report').report_get(self.dbname, self.uid, self.pwd, report_id)
@@ -276,6 +281,7 @@ class ERP_Record(AttrDict):
         proxied to related ERP_Object instance passing as IDs [self.id]
 
         Special methods:
+
             - refresh() - rereads data for this object
             - workflow_trg(signal) - sends specified signal to record's
                                      workflow
@@ -421,11 +427,13 @@ class ERP_Object(object):
         It gives interface like open ERP osv.osv objects.
 
         Example:
+
         >>> erp = ERP_Proxy(...)
         >>> sale_obj = ERP_Object(erp, 'sale.order')
         >>> sale_obj.search([('state','not in',['done','cancel'])])
 
         Special methods:
+
             - search_records - receives same arguments as 'search' method,
                                but returns list of ERP_Record objects or False
             - read_records - receives same arguments as 'read', but returns
@@ -484,6 +492,7 @@ class ERP_Object(object):
     def search_records(self, *args, **kwargs):
         """ Return instance or list of instances of ERP_Record class,
             making available to work with data simpler:
+
                 >>> so_obj = db['sale.order']
                 >>> data = so_obj.search_records([('date','>=','2013-01-01')])
                 >>> for order in data:
@@ -501,8 +510,9 @@ class ERP_Object(object):
     def read_records(self, ids, *args, **kwargs):
         """ Return instance or list of instances of ERP_Record class,
             making available to work with data simpler:
+
                 >>> so_obj = db['sale.order']
-                >>> data = so_obj.search_records([('date','>=','2013-01-01')])
+                >>> data = so_obj.read_records([1,2,3,4,5])
                 >>> for order in data:
                         order.write({'note': 'order data is %s'%order.data})
         """
