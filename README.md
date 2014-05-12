@@ -5,29 +5,33 @@ This project aims to ease access to openerp data via shell and used mostly for d
 This project provides interface similar to OpenERP internal code to perform operations on
 OpenERP object hiding XML-RPC behind
 
-### Features:
+## Overview
+
+### Features
    * supports call to all public methods on any OpenERP object including: *read*, *search*, *write*, *unlink* and others
    * Designed not for speed but to be useful like cli client to OpenERP
    * Stores information about connection to OpenERP databases (beside passwords)
    * Provides *browse_record* like interface, allowing to browse related models too. (But doing it in defferent way than *browse_record* do
    * Use IPython as shell if it is installed, otherwise uses defaul python shell
-   * Allow using separate programs (called internal *utils*) to perform some programmed logic
+   * Plugin Support
 
-### What You can do with this:
+### What You can do with this
    * Quickly read and analyze some data that is not visible in interface without access to DB
    * Use this project as library for code that need to access OpenERP data
    * Use in scripts that migrates OpenERP data (after, for example, adding new functionality or changing old).
      (Migration using only SQL is bad idea because of functional fields
      with *store=True* which must be recalculated).
 
-### Alternatives:
+### Alternatives
    * [Official OpenERP client library](https://github.com/OpenERP/openerp-client-lib)
    * [ERPpeek](https://pypi.python.org/pypi/ERPpeek)
    * [OEERPLib](https://pypi.python.org/pypi/OERPLib)
 
-### Near future plans:
+### Near future plans
    * Add support of JSON-RPC and refactor connection system to make it extensible
      (now only XML-RPC is supported)
+   * Better plugin system which will allow to extend API on database, object, and record levels
+   * Django-like search and write API implemented as plugin
 
 
 How to use
@@ -115,4 +119,45 @@ provide mechanisms to lazily fetch related fields.
 ... True
 ```
 
+
+Plugins
+-------
+
+Plugins are separate scripts that could be placed anywhere on file system.
+Plugin shoud be python file or package which colud be imported and with specific structure
+So to define new plugin just place next code on some where You would like to store plugin code.
+
+```python
+# Plugis just provides some set of classes and functions which could do some predefined work
+class MyPluginClass(object):
+    _name = 'my_class1'  # Name of class placed in plugin
+
+    # Init must receive 'db' argement which is ERP_Proxy instace
+    # Plugin system is lazy, so all classes or even plugins at all will be initialized
+    # only when some code requestes for them trying to access it.
+    def __init__(self, db):
+        self.db = db  # Save database instance to be able to work with data letter
+
+    # Define methods You would  like to provide to end user
+    def my_cool_method(self, arg1, argN):
+        # Do some work
+
+# And define initialization method for plugin which will show what this plugin provides to user
+def plugin_init():
+    return {
+        'classes': MyPluginClass,
+        'name': 'my_plugin',
+    }
+```
+
+And now to use this plugin just load it to session:
+
+```python
+>>> session.load_plugin("<path to your plugin>")  # this may be called in any place of code.
+>>> db = session.connect()
+>>> db.plugins.my_plugin.my_class1.my_cool_method()
+```
+
+
+---------------------------------------------
 For more information see [source code](https://github.com/katyukha/openerp-proxy).

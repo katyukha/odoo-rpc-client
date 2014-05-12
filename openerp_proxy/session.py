@@ -1,57 +1,10 @@
 import json
 import os.path
 import pprint
-import imp
 
 # project imports
 from core import ERP_Proxy
-
-# TODO: terminology: Util - > PlugIn
-
-
-class UtilInitError(Exception):
-    pass
-
-
-class ERP_Utils(object):
-    """ Class to hold information about utils (scripts which can be placed
-        anywhere but also could be easiely connected to session and be used)
-    """
-    def __init__(self, erp_proxy, util_classes):
-        """ @param erp_proxy: ERP_Proxy object to bind utils set to
-            @param util_classes: dict with {util_name: util_class}
-
-            # NOTE: util classes should be a reference to dict saved in session
-            # for example. this allows this dict to be updated from session and
-            # all changes from session will be reflected here allowing to add
-            # new utils dynamically.
-        """
-        self.__erp_proxy = erp_proxy
-        self.__util_classes = util_classes
-        self.__utils = {}
-
-    def __getitem__(self, name):
-        util = self.__utils.get(name, False)
-        if util is False:
-            util_cls = self.__util_classes[name]
-            try:
-                util = util_cls(self.__erp_proxy)
-            except Exception as exc:
-                raise UtilInitError(exc)
-            self.__utils[name] = util
-        return util
-
-    def __getattribute__(self, name):
-        try:
-            return super(ERP_Utils, self).__getattribute__(name)
-        except AttributeError:
-            try:
-                return self[name]
-            except KeyError:
-                raise AttributeError(name)
-
-    def __dir__(self):
-        return self.__util_classes.keys()
+from plugin import ERP_PluginManager
 
 
 class ERP_Session(object):
@@ -70,46 +23,33 @@ class ERP_Session(object):
         ERP_Proxy object will be returned.
     """
 
-    def __init__(self, data_file='~/.erp_proxy.json'):
+    def __init__(self, data_file='~/.openerp_proxy.json'):
         self.data_file = os.path.expanduser(data_file)
         self._databases = {}  # key: url; value: instance of DB or dict with init args
 
         if os.path.exists(self.data_file):
             with open(self.data_file, 'rt') as json_data:
-                self._databases = json.load(json_data)
+                data = json.load(json_data)
+                if data.get('databases', False) is not False:  # For compatability with older versions
+                    self._databases = data['databases']
+                    for plugin_name, plugin_path in data.get('plugins', {}).iteritems():
+                        try:
+                            self.load_plugin(plugin_path)
+                        except Exception:
+                            # TODO: implement some notifications about errors
+                            # on plugin loading
+                            pass
+                else:
+                    self._databases = data  # For compatability with older versions
 
         self._db_index = {}  # key: index; value: url
         self._db_index_rev = {}  # key: url; value: index
         self._db_index_counter = 0
 
-        self._util_classes = {}
-
-    def load_util(self, path):
-        """ Loads utils from specified path, which should be a python module
-            or python package (not tested yet) which defines function
-            'erp_proxy_plugin_init' which should return dictionary with
-            key 'utils' which points to list of utility classes. each class must have
-            class level attribute _name which will be used to access it from session
-            or db objects. So as masic example util module may look like::
-
-                class MyUtil(object):
-                    _name = 'my_util'
-
-                    def __init__(self, db):  # db is required argument passed by infrastructure
-                        self.db = db
-
-                    ...
-
-                def erp_proxy_plugin_init():
-                    return {'utils': [MyUtil]}
-        """
-        # TODO: Add ability to save utils files used in conf.
-        name = os.path.splitext(os.path.basename(path))[0]
-        module_name = '%s' % name
-        module = imp.load_source(module_name, path)
-        plugin_data = module.erp_proxy_plugin_init()
-        for cls in plugin_data.get('utils', []):
-            self._util_classes[cls._name] = cls
+    def load_plugin(self, path):
+        # TODO: think about ability to pass here plugin name as argument
+        #       it may be useful for saving in session.
+        ERP_PluginManager.load_plugin(path)
 
     @property
     def index(self):
@@ -160,9 +100,9 @@ class ERP_Session(object):
             return db
 
         db = ERP_Proxy(**db)
-        # injecting utils:
-        db.utils = ERP_Utils(db, self._util_classes)
-        # utils injected
+        # injecting Plugins:
+        db.plugins = ERP_PluginManager(db)
+        # Plugins injected
         self._add_db(url, db)
         return db
 
@@ -202,7 +142,7 @@ class ERP_Session(object):
     def save(self):
         """ Saves session on disc
         """
-        data = {}
+        databases = {}
         for url, database in self._databases.iteritems():
             if isinstance(database, ERP_Proxy):
                 init_args = {
@@ -215,7 +155,13 @@ class ERP_Session(object):
             else:
                 init_args = database
             assert isinstance(init_args, dict), "init_args must be instance of dict"
-            data[url] = init_args
+            databases[url] = init_args
+
+        plugins = ERP_PluginManager.get_plugins_info()
+        data = {
+            'databases': databases,
+            'plugins': plugins
+        }
 
         with open(self.data_file, 'wt') as json_data:
             json.dump(data, json_data)
