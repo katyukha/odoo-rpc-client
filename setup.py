@@ -6,7 +6,7 @@ except ImportError:
     from distutils.core import setup
 
 setup(name='openerp_proxy',
-      version='0.1',
+      version='0.2',
       description='OpenERP CLI interface and libraray for RPC',
       author='Dmytro Katyukha',
       author_email='firemage.dima@gmail.com',
