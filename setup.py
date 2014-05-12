@@ -24,7 +24,7 @@ setup(name='openerp_proxy',
           'Topic :: Utilities',
           'Topic :: Software Development :: Libraries',
       ],
-      keywords=['openerp', 'rpc'],
+      keywords=['openerp', 'rpc', 'xmlrpc', 'xml-rpc'],
       extras_require={
           'ipython_shell': ['ipython'],
       }

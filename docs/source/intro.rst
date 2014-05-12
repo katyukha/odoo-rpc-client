@@ -1,82 +1,105 @@
 OpenERP proxy
 =============
 
-This project aims to ease access to openerp data via shell and used mostly for debug purposes.
-This project provides interface similar to OpenERP internal code to perform operations on
-OpenERP object hiding XML-RPC behind
+This project aims to ease access to openerp data via shell and used
+mostly for debug purposes. This project provides interface similar to
+OpenERP internal code to perform operations on OpenERP object hiding
+XML-RPC behind
 
 Overview
 --------
 
-Features:
-~~~~~~~~~
+Features
+~~~~~~~~
 
-   * supports call to all public methods on any OpenERP object including: *read*, *search*, *write*, *unlink* and others
-   * Designed not for speed but to be useful like cli client to OpenERP
-   * Stores information about connection to OpenERP databases (beside passwords)
-   * Provides *browse_record* like interface, allowing to browse related models too. (But doing it in defferent way than *browse_record* do
-   * Use IPython as shell if it is installed, otherwise uses defaul python shell
-   * Allow using separate programs (called internal *utils*) to perform some programmed logic
+-  supports call to all public methods on any OpenERP object including:
+   *read*, *search*, *write*, *unlink* and others
+-  Designed not for speed but to be useful like cli client to OpenERP
+-  Stores information about connection to OpenERP databases (beside
+   passwords)
+-  Provides *browse\_record* like interface, allowing to browse related
+   models too. (But doing it in defferent way than *browse\_record* do
+-  Use IPython as shell if it is installed, otherwise uses defaul python
+   shell
+-  Plugin Support
 
-What You can do with this:
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+What You can do with this
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   * Quickly read and analyze some data that is not visible in interface without access to DB
-   * Use this project as library for code that need to access OpenERP data
-   * Use in scripts that migrates OpenERP data (after, for example, adding new functionality or changing old).
-     (Migration using only SQL is bad idea because of functional fields
-     with *store=True* which must be recalculated).
+-  Quickly read and analyze some data that is not visible in interface
+   without access to DB
+-  Use this project as library for code that need to access OpenERP data
+-  Use in scripts that migrates OpenERP data (after, for example, adding
+   new functionality or changing old). (Migration using only SQL is bad
+   idea because of functional fields with *store=True* which must be
+   recalculated).
 
-Alternatives:
-~~~~~~~~~~~~~
+Alternatives
+~~~~~~~~~~~~
 
-   * `Official OpenERP client library <https://github.com/OpenERP/openerp-client-lib>`_
-   * `ERPpeek <https://pypi.python.org/pypi/ERPpeek>`_
-   * `OEERPLib <https://pypi.python.org/pypi/OERPLib>`_
+-  `Official OpenERP client
+   library <https://github.com/OpenERP/openerp-client-lib>`_
+-  `ERPpeek <https://pypi.python.org/pypi/ERPpeek>`_
+-  `OEERPLib <https://pypi.python.org/pypi/OERPLib>`_
 
-Near future plans:
-~~~~~~~~~~~~~~~~~~
+Near future plans
+~~~~~~~~~~~~~~~~~
 
-   * Add support of JSON-RPC and refactor connection system to make it extensible
-     (now only XML-RPC is supported)
-
+-  Add support of JSON-RPC and refactor connection system to make it
+   extensible (now only XML-RPC is supported)
+-  Better plugin system which will allow to extend API on database,
+   object, and record levels
+-  Django-like search and write API implemented as plugin
 
 How to use
 ----------
 
-Install package with ``` python setup.py install ```, this will make available package *openerp_proxy*
-and also shell will be available by command ```$ openerp_proxy```
+Install package with ``pip install openerp_proxy``, this will make
+available package *openerp\_proxy* and also shell will be available by
+command ``$ openerp_proxy``
 
-So, after that run in shell::
+So, after that run in shell:
 
-   openerp_proxy
+::
 
+       openerp_proxy
 
-And You will get the shell. If *IPython* is installed then IPython shell will be opened, else usual python shell
-There in context exists *session* variable that represents current session to work with
+And You will get the shell. If *IPython* is installed then IPython shell
+will be opened, else usual python shell There in context exists
+*session* variable that represents current session to work with
 
-**This project may be used as lib too. just import it ```import openerp_proxy``` and use same as below without big differences**
+**This project may be used as lib too. just import it
+``import openerp_proxy`` and use same as below without big differences**
 
-First connect to OpenERP database You want::
+First connect to OpenERP database You want:
+
+::
 
     >>> db = session.connect()
 
-This will ask You for host, port, database, etc to connect to.
-Now You have connection to OpenERP database which allows You to use database objects.
+This will ask You for host, port, database, etc to connect to. Now You
+have connection to OpenERP database which allows You to use database
+objects.
 
-Now lets try to find how many sale orders in 'done' state we have in database::
+Now lets try to find how many sale orders in 'done' state we have in
+database:
+
+::
 
     >>> sale_order_obj = db['sale.order']  # or You may use 'db.get_obj('sale.order')' if You like
     >>>
     >>> # Now lets search for sale orders:
     >>> sale_order_obj.search([('state', '=', 'done')], count=True)
     >>> 5
- 
+
 So we have 5 orders in done state. So let's read them.
 
-Default way to read data from OpenERP is to search for required records with *search* method
-which return's list of IDs of records, then read data using *read* method. Both methods
-mostly same as OpenERP internal ones::
+Default way to read data from OpenERP is to search for required records
+with *search* method which return's list of IDs of records, then read
+data using *read* method. Both methods mostly same as OpenERP internal
+ones:
+
+::
 
     >>> sale_order_ids = sale_order_obj.search([('state', '=', 'done')])
     >>> sale_order_datas = sale_order_obj.read(sale_order_ids, ['name'])  # Last argument is optional.
@@ -88,13 +111,19 @@ mostly same as OpenERP internal ones::
      'name': 'SO0004'
     }
 
-As we see reading data in such way allows us to get list of dictionaries where each contain fields have been read
+As we see reading data in such way allows us to get list of dictionaries
+where each contain fields have been read
 
-Another way to read data is to use *search_records* or *read_records* method. Each of these methods receives
-same aguments as *search* or *read* method respectively. But passing *count* argument for *search_records* will cause error.
-Main difference betwen these methods in using *ERP_Record* class instead of *dict* for each record had been read.
-ERP_Record class provides some orm-like abilities for records, allowing for example access fields as attributes and
-provide mechanisms to lazily fetch related fields. ::
+Another way to read data is to use *search\_records* or *read\_records*
+method. Each of these methods receives same aguments as *search* or
+*read* method respectively. But passing *count* argument for
+*search\_records* will cause error. Main difference betwen these methods
+in using *ERP\_Record* class instead of *dict* for each record had been
+read. ERP\_Record class provides some orm-like abilities for records,
+allowing for example access fields as attributes and provide mechanisms
+to lazily fetch related fields.
+
+::
 
     >>> sale_orders = sale_order_obj.search_records([('state', '=', 'done')])
     >>> sale_orders[0]
@@ -116,6 +145,47 @@ provide mechanisms to lazily fetch related fields. ::
     ... Better Corp
     >>> so.partner_id__obj.active
     ... True
-    
 
-For more information see `source code <https://github.com/katyukha/openerp-proxy>`_.
+Plugins
+-------
+
+Plugins are separate scripts that could be placed anywhere on file
+system. Plugin shoud be python file or package which colud be imported
+and with specific structure So to define new plugin just place next code
+on some where You would like to store plugin code.
+
+::
+
+    # Plugis just provides some set of classes and functions which could do some predefined work
+    class MyPluginClass(object):
+        _name = 'my_class1'  # Name of class placed in plugin
+
+        # Init must receive 'db' argement which is ERP_Proxy instace
+        # Plugin system is lazy, so all classes or even plugins at all will be initialized
+        # only when some code requestes for them trying to access it.
+        def __init__(self, db):
+            self.db = db  # Save database instance to be able to work with data letter
+
+        # Define methods You would  like to provide to end user
+        def my_cool_method(self, arg1, argN):
+            # Do some work
+
+    # And define initialization method for plugin which will show what this plugin provides to user
+    def plugin_init():
+        return {
+            'classes': MyPluginClass,
+            'name': 'my_plugin',
+        }
+
+And now to use this plugin just load it to session:
+
+::
+
+    >>> session.load_plugin("<path to your plugin>")  # this may be called in any place of code.
+    >>> db = session.connect()
+    >>> db.plugins.my_plugin.my_class1.my_cool_method()
+
+--------------
+
+For more information see `source
+code <https://github.com/katyukha/openerp-proxy>`_.
