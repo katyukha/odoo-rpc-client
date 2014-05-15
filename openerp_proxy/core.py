@@ -497,15 +497,26 @@ class ERP_Object(object):
                 >>> data = so_obj.search_records([('date','>=','2013-01-01')])
                 >>> for order in data:
                         order.write({'note': 'order date is %s'%order.date})
+
+            Additionally accepts keyword argument 'read_field' which can be used to specify
+            list of fields to read
         """
+
+        read_fields = kwargs.pop('read_fields', [])
+
+        # Function to make ability to read specific fields or all together
+        def read(ids):
+            if read_fields:
+                return self.read(ids, read_fields)
+            return self.read(ids)
 
         res = self.search(*args, **kwargs)
         if not res:
             return False
         if isinstance(res, (int, long)):
-            return ERP_Record(self, self.read(res))
+            return ERP_Record(self, read(res))
         if isinstance(res, (list, tuple)):
-            return [ERP_Record(self, data) for data in self.read(res)]
+            return [ERP_Record(self, data) for data in read(res)]
 
     def read_records(self, ids, *args, **kwargs):
         """ Return instance or list of instances of ERP_Record class,
