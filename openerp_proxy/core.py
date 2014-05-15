@@ -49,7 +49,6 @@
 
 
 import xmlrpclib
-from getpass import getpass
 import functools
 
 # project imports
@@ -81,20 +80,18 @@ class ERP_Proxy(object):
 
     """
 
-    def __init__(self, dbname, host, user, pwd=None, port=8069, verbose=False):
+    def __init__(self, dbname, host, user, pwd, port=8069, verbose=False):
         self.dbname = dbname
         self.host = host
         self.user = user
         self.port = port
-        self.pwd = pwd or getpass('Password: ')  # TODO: move getpass out from here
+        self.pwd = pwd
         self.verbose = verbose
 
         self.__objects = {}   # cached objects
         self.__services = {}  # cached services
 
         # properties
-        self.__last_result = None
-        self.__last_result_wkf = None
         self.__registered_objects = None
 
         self.__use_execute_kw = None
@@ -110,24 +107,10 @@ class ERP_Proxy(object):
         """
         if self.__registered_objects is not None:
             return self.__registered_objects
-        t1, t2 = self.__last_result, self.__last_result_wkf
         ids = self.execute('ir.model', 'search', [])
         read = self.execute('ir.model', 'read', ids, ['model'])
         self.__registered_objects = [x['model'] for x in read]
-        self.__last_result, self.__last_result_wkf = t1, t2
         return self.__registered_objects
-
-    @property
-    def last_result(self):
-        """ Stores last value returned by 'execute' method
-        """
-        return self.__last_result
-
-    @property
-    def last_result_wkf(self):
-        """ Stores last value returned by 'execute_wkf' method
-        """
-        return self.__last_result_wkf
 
     def get_service(self, name):
         if name in self.__services:
@@ -155,9 +138,6 @@ class ERP_Proxy(object):
         """ Recreates connection to the server and clears caches
         """
         self.connect()
-
-        self.__last_result = None
-        self.__last_result_wkf = None
 
     # Report related methods
     def report(self, report_name, ids, context):
@@ -202,17 +182,18 @@ class ERP_Proxy(object):
         service = self.get_service('object')
 
         if self.use_execute_kw():
-            self.__last_result = service.execute_kw(self.dbname, self.uid, self.pwd, obj, method, args, kwargs)
+            result = service.execute_kw(self.dbname, self.uid, self.pwd, obj, method, args, kwargs)
         else:
-            self.__last_result = service.execute(self.dbname, self.uid, self.pwd, obj, method, *args, **kwargs)
+            result = service.execute(self.dbname, self.uid, self.pwd, obj, method, *args, **kwargs)
 
-        return self.__last_result
+        return result
 
     def execute_wkf(self, object_name, signal, object_id):
         """ Triggers workflow event on specified object
         """
-        self.__last_result_wkf = self.get_service('object').exec_workflow(self.dbname, self.uid, self.pwd, object_name, signal, object_id)
-        return self.__last_result_wkf
+        service = self.get_service('object')
+        result_wkf = service.exec_workflow(self.dbname, self.uid, self.pwd, object_name, signal, object_id)
+        return result_wkf
 
     def get_obj(self, object_name):
         """ Returns wraper around openERP object 'object_name' which is instance of ERP_Object
@@ -504,19 +485,13 @@ class ERP_Object(object):
 
         read_fields = kwargs.pop('read_fields', [])
 
-        # Function to make ability to read specific fields or all together
-        def read(ids):
-            if read_fields:
-                return self.read(ids, read_fields)
-            return self.read(ids)
-
         res = self.search(*args, **kwargs)
         if not res:
             return False
-        if isinstance(res, (int, long)):
-            return ERP_Record(self, read(res))
-        if isinstance(res, (list, tuple)):
-            return [ERP_Record(self, data) for data in read(res)]
+
+        if read_fields:
+            return self.read_records(res, read_fields)
+        return self.read_records(res)
 
     def read_records(self, ids, *args, **kwargs):
         """ Return instance or list of instances of ERP_Record class,
@@ -552,22 +527,3 @@ class ERP_Object(object):
     def __str__(self):
         return "ERP Object ('%s')" % self.__obj_name
     __repr__ = __str__
-
-
-def connect(dbname=None, host=None, user=None, pwd=None, port=8069, verbose=False):
-    """ Wraper aroun ERP_Proxy constructor class to simplify connect from shell.
-
-        @param dbname: name of database to connect to (will be asked interactvely if not provided)
-        @param host: host name to connect to (will be asked interactvely if not provided)
-        @param user: user name to connect as (will be asked interactvely if not provided)
-        @param pwd: password for selected user (will be asked interactvely if not provided)
-        @param port: port to connect to. (default: 8069)
-        @param verbose: to be verbose, or not to be. (default: False)
-        @return: ERP_Proxy object
-    """
-    host = host or raw_input('Server Host: ')
-    dbname = dbname or raw_input('Database name: ')
-    user = user or raw_input('ERP Login: ')
-    pwd = pwd or getpass('Password: ')
-    return ERP_Proxy(dbname=dbname, host=host, user=user, pwd=pwd, port=port, verbose=verbose)
-

@@ -15,6 +15,11 @@ import imp
 #           - record extensions (available for ERP_Record instances)
 
 
+# TODO: Add ability to load plugins be specifying import path
+#       like 'package.subpackage.module' to make able loading plugins
+#       implemented and installed as regular python packages
+
+
 class PluginInitError(Exception):
     pass
 

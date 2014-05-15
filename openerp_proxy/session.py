@@ -1,6 +1,7 @@
 import json
 import os.path
 import pprint
+from getpass import getpass
 
 # project imports
 from core import ERP_Proxy
@@ -99,7 +100,7 @@ class ERP_Session(object):
         if isinstance(db, ERP_Proxy):
             return db
 
-        db = ERP_Proxy(**db)
+        db = ERP_Proxy(pwd=getpass('Password: '), **db)
         # injecting Plugins:
         db.plugins = ERP_PluginManager(db)
         # Plugins injected
