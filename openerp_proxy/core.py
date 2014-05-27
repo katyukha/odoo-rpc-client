@@ -277,7 +277,6 @@ class ERP_Record(object):
         self.__obj = obj
         self.__data = data
         self.__related_objects = {}
-        self.__related_objects_o2m = {}
         self.__workflow_instance = None
 
     def __dir__(self):
@@ -335,7 +334,7 @@ class ERP_Record(object):
             res = super(ERP_Record, self).__getattribute__(name)
         except AttributeError:
             try:
-                res = self.__data[name]
+                res = self[name]
             except KeyError:
                 method = getattr(self.__obj, name)
                 res = functools.partial(method, [self.id])
@@ -355,12 +354,23 @@ class ERP_Record(object):
         """ Method used to fetch related objects by name of field that points to them
             using one2many relation
         """
-        if name not in self.__related_objects_o2m or not cached:
+        if name not in self.__related_objects or not cached:
             relation = self._get_columns_info()[name].relation
             rel_obj = self._get_proxy().get_obj(relation)
             rel_ids = self[name]   # Take in mind that field value is list of IDS
-            self.__related_objects_o2m[name] = rel_obj.read_records(rel_ids)
-        return self.__related_objects_o2m[name]
+            self.__related_objects[name] = rel_obj.read_records(rel_ids)
+        return self.__related_objects[name]
+
+    def __get_related_field(self, name):
+        """ Method to fetch related object's data
+        """
+        col_info = self._get_columns_info()[name]
+        if col_info.ttype == 'many2one':
+            return self.__get_many2one_rel_obj(name)
+        elif col_info.ttype == 'one2many' or col_info.ttype == 'many2many':
+            return self.__get_one2many_rel_obj(name)
+        else:
+            raise KeyError("There are no related field %s in model %s" % (name, self._get_obj().name))
 
     def __getitem__(self, name):
         # Allow using '__obj' suffix in field name to retrive ERP_Record
@@ -373,13 +383,7 @@ class ERP_Record(object):
         #    ... ERP_Record of sale.order, 25
         if name.endswith('__obj'):
             fname = name[:-5]
-            col_info = self._get_columns_info()[fname]
-            if col_info.ttype == 'many2one':
-                return self.__get_many2one_rel_obj(fname)
-            elif col_info.ttype == 'one2many' or col_info.ttype == 'many2many':
-                return self.__get_one2many_rel_obj(fname)
-            else:
-                raise KeyError("There are no related field %s in model %s" % (fname, self._get_obj().name))
+            return self.__get_related_field(fname)
         else:
             return self.__data[name]
 
@@ -388,7 +392,9 @@ class ERP_Record(object):
 
         # Update related objects cache
         self.__related_objects = {}
-        self.__related_objects_o2m = {}
+
+    def as_dict(self):
+        return self.__data.copy()
 
     def workflow_trg(self, signal):
         """ trigger's specified signal on record's related workflow
