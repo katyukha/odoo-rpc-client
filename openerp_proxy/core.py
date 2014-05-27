@@ -52,8 +52,7 @@ import xmlrpclib
 import functools
 
 # project imports
-from utils import AttrDict
-from utils import ustr
+from openerp_proxy.utils import ustr
 
 
 __all__ = ('ERPProxyException', 'ERP_Proxy', 'ERP_Object', 'ERP_Record')
@@ -229,7 +228,7 @@ class ERP_Proxy(object):
                                                                 port=self.port)
 
     def __str__(self):
-        return "ERP_Proxy object: %s" % self.get_url()
+        return "ERP_Proxy: %s" % self.get_url()
     __repr__ = __str__
 
 
@@ -254,7 +253,7 @@ def MethodWrapper(erp_proxy, object_name, method_name):
     return wrapper
 
 
-class ERP_Record(AttrDict):
+class ERP_Record(object):
     """ A simple class to wrap OpenERP records
 
         All fields could be used as dictionary items and as attributes of object
@@ -276,14 +275,14 @@ class ERP_Record(AttrDict):
         assert isinstance(obj, ERP_Object), "obj should be ERP_Object"
         assert isinstance(data, dict), "data should be dictionary structure returned by ERP_Object.read"
         self.__obj = obj
+        self.__data = data
         self.__related_objects = {}
         self.__related_objects_o2m = {}
         self.__workflow_instance = None
-        self.update(data)
 
     def __dir__(self):
         res = dir(super(ERP_Record, self))
-        res.extend(self.keys())
+        res.extend(self.__data.keys())
         res.extend(['read', 'search', 'write', 'unlink', 'create'])
         return res
 
@@ -327,7 +326,7 @@ class ERP_Record(AttrDict):
         return []
 
     def __str__(self):
-        return "ERP_Record of %s,%s" % (self.__obj, self.id)
+        return "ERP_Record (%s, %s)" % (self.__obj.name, self.id)
     __repr__ = __str__
 
     def __getattribute__(self, name):
@@ -336,7 +335,7 @@ class ERP_Record(AttrDict):
             res = super(ERP_Record, self).__getattribute__(name)
         except AttributeError:
             try:
-                res = self[name]
+                res = self.__data[name]
             except KeyError:
                 method = getattr(self.__obj, name)
                 res = functools.partial(method, [self.id])
@@ -364,31 +363,25 @@ class ERP_Record(AttrDict):
         return self.__related_objects_o2m[name]
 
     def __getitem__(self, name):
-        res = None
-        try:
-            res = super(ERP_Record, self).__getitem__(name)
-        except KeyError:
-            # Allow using '__obj' suffix in field name to retrive ERP_Record
-            # instance of object related via many2one or one2many or many2many
-            # This means next:
-            #    >>> o = db['sale.order.line'].read_records(1)
-            #    >>> o.order_id
-            #    ... [25, 'order_name']
-            #    >>> o.order_id__obj
-            #    ... ERP_Record of sale.order, 25
-            if name.endswith('__obj'):
-                fname = name[:-5]
-                col_info = self._get_columns_info()[fname]
-                if col_info.ttype == 'many2one':
-                    res = self.__get_many2one_rel_obj(fname)
-                elif col_info.ttype == 'one2many' or col_info.ttype == 'many2many':
-                    res = self.__get_one2many_rel_obj(fname)
-                else:
-                    raise
+        # Allow using '__obj' suffix in field name to retrive ERP_Record
+        # instance of object related via many2one or one2many or many2many
+        # This means next:
+        #    >>> o = db['sale.order.line'].read_records(1)
+        #    >>> o.order_id
+        #    ... [25, 'order_name']
+        #    >>> o.order_id__obj
+        #    ... ERP_Record of sale.order, 25
+        if name.endswith('__obj'):
+            fname = name[:-5]
+            col_info = self._get_columns_info()[fname]
+            if col_info.ttype == 'many2one':
+                return self.__get_many2one_rel_obj(fname)
+            elif col_info.ttype == 'one2many' or col_info.ttype == 'many2many':
+                return self.__get_one2many_rel_obj(fname)
             else:
-                raise
-
-        return res
+                raise KeyError("There are no related field %s in model %s" % (fname, self._get_obj().name))
+        else:
+            return self.__data[name]
 
     def refresh(self):
         self.update(self.__obj.read(self.id))
@@ -430,6 +423,10 @@ class ERP_Object(object):
         self.__obj_name = object_name
         self.__columns_info = None
         self.__workflow = None
+
+    @property
+    def name(self):
+        return self.__obj_name
 
     def _get_proxy(self):
         return self.__erp_proxy
