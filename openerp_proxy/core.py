@@ -346,7 +346,8 @@ class ERP_Record(object):
         if name not in self.__related_objects or not cached:
             relation = self._get_columns_info()[name].relation
             rel_obj = self._get_proxy().get_obj(relation)
-            rel_id = self[name][0]   # Do not forged about relations in form [id, name]
+            rel_data = self[name]
+            rel_id = rel_data and rel_data[0] or False  # Do not forged about relations in form [id, name]
             self.__related_objects[name] = rel_obj.read_records(rel_id)
         return self.__related_objects[name]
 
@@ -388,7 +389,7 @@ class ERP_Record(object):
             return self.__data[name]
 
     def refresh(self):
-        self.update(self.__obj.read(self.id))
+        self.__data.update(self.__obj.read(self.id))
 
         # Update related objects cache
         self.__related_objects = {}
