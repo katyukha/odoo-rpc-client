@@ -1,5 +1,4 @@
 # -*- coding: utf8 -*-
-
 """ This module provides some classes to simplify acces to OpenERP server via xmlrpc.
     Some of these classes are may be not safe enough and should be used with carefully
 
@@ -48,17 +47,17 @@
 """
 
 
-import xmlrpclib
 import functools
 
 # project imports
-from openerp_proxy.utils import ustr
+from openerp_proxy.connection import get_connector
+from openerp_proxy.exceptions import Error, ConnectorError
 
 
 __all__ = ('ERPProxyException', 'ERP_Proxy', 'ERP_Object', 'ERP_Record')
 
 
-class ERPProxyException(Exception):
+class ERPProxyException(Error):
     pass
 
 
@@ -67,11 +66,10 @@ class ERP_Proxy(object):
        A simple class to connect ot ERP via xml_rpc
        Should be initialized with following arguments:
 
-           >>> ERP_Proxy(dbname, host, user, pwd = getpass('Password: '), verbose = False)
+           >>> db = ERP_Proxy('dbname', 'host', 'user', pwd = 'Password', verbose = False)
 
        Allows access to ERP objects via dictionary syntax:
 
-           >>> db = ERP_Proxy(...)
            >>> db['sale.order']
                 ERP_Object: 'sale.order'
 
@@ -79,16 +77,18 @@ class ERP_Proxy(object):
 
     """
 
-    def __init__(self, dbname, host, user, pwd, port=8069, verbose=False):
+    def __init__(self, dbname, host, user, pwd, port=8069, protocol='xml-rpc', verbose=False):
         self.dbname = dbname
         self.host = host
         self.user = user
         self.port = port
         self.pwd = pwd
         self.verbose = verbose
+        self.protocol = protocol
+
+        self._connection = get_connector(protocol)(host, port, verbose=verbose)
 
         self.__objects = {}   # cached objects
-        self.__services = {}  # cached services
 
         # properties
         self.__registered_objects = None
@@ -112,12 +112,7 @@ class ERP_Proxy(object):
         return self.__registered_objects
 
     def get_service(self, name):
-        if name in self.__services:
-            return self.__services[name]
-
-        service = xmlrpclib.ServerProxy('http://%s:%s/xmlrpc/%s' % (self.host, self.port, name), verbose=self.verbose)
-        self.__services[name] = service
-        return service
+        return self._connection.get_service(name)
 
     def connect(self):
         """ Connects to the server
@@ -170,7 +165,7 @@ class ERP_Proxy(object):
             try:
                 service.execute_kw(self.dbname, self.uid, self.pwd, 'ir.model', 'search', ([],), dict(limit=1))
                 self.__use_execute_kw = True
-            except xmlrpclib.Fault:
+            except ConnectorError:
                 self.__use_execute_kw = False
         return self.__use_execute_kw
 
@@ -222,10 +217,11 @@ class ERP_Proxy(object):
         return res
 
     def get_url(self):
-        return "%(user)s@%(host)s:%(port)s/%(database)s" % dict(user=self.user,
+        return "%(protocol)s://%(user)s@%(host)s:%(port)s/%(database)s" % dict(user=self.user,
                                                                 host=self.host,
                                                                 database=self.dbname,
-                                                                port=self.port)
+                                                                port=self.port,
+                                                                protocol=self.protocol)
 
     def __str__(self):
         return "ERP_Proxy: %s" % self.get_url()
@@ -239,17 +235,7 @@ def MethodWrapper(erp_proxy, object_name, method_name):
         It is used in ERP_Object class.
     """
     def wrapper(*args, **kwargs):
-        try:
-            res = erp_proxy.execute(object_name, method_name, *args, **kwargs)
-        except xmlrpclib.Fault as exc:
-            msg = (u"A fault occured\n"
-                   u"Fault code: %s\n"
-                   u"Fault string: %s\n"
-                   u"" % (ustr(exc.faultCode),
-                          ustr(exc.faultString)))
-            msg = msg.encode('utf-8')
-            raise ERPProxyException(msg)
-        return res
+        return erp_proxy.execute(object_name, method_name, *args, **kwargs)
     return wrapper
 
 

@@ -113,7 +113,7 @@ class ERP_Session(object):
         """
         return self._databases.keys()
 
-    def connect(self, dbname=None, host=None, user=None, pwd=None, port=8069, verbose=False):
+    def connect(self, dbname=None, host=None, user=None, pwd=None, port=8069, protocol='xml-rpc', verbose=False):
         """ Wraper aroun ERP_Proxy constructor class to simplify connect from shell.
 
             @param dbname: name of database to connect to (will be asked interactvely if not provided)
@@ -128,15 +128,16 @@ class ERP_Session(object):
         dbname = dbname or raw_input('Database name: ')
         user = user or raw_input('ERP Login: ')
 
-        url = "%(user)s@%(host)s:%(port)s/%(database)s" % dict(user=user,
-                                                               host=host,
-                                                               database=dbname,
-                                                               port=port)
+        url = "%(protocol)s://%(user)s@%(host)s:%(port)s/%(database)s" % dict(user=user,
+                                                                              host=host,
+                                                                              database=dbname,
+                                                                              port=port,
+                                                                              protocol=protocol)
         db = self._databases.get(url, False)
         if isinstance(db, ERP_Proxy):
             return db
 
-        db = ERP_Proxy(dbname=dbname, host=host, user=user, pwd=pwd, port=port, verbose=verbose)
+        db = ERP_Proxy(dbname=dbname, host=host, user=user, pwd=pwd, port=port, protocol=protocol, verbose=verbose)
         self._add_db(url, db)
         return db
 
@@ -151,6 +152,7 @@ class ERP_Session(object):
                     'host': database.host,
                     'port': database.port,
                     'user': database.user,
+                    'protocol': database.protocol,
                     'verbose': database.verbose,
                 }
             else:
@@ -165,7 +167,7 @@ class ERP_Session(object):
         }
 
         with open(self.data_file, 'wt') as json_data:
-            json.dump(data, json_data)
+            json.dump(data, json_data, indent=4)
 
     def __getitem__(self, url_or_index):
         return self.get_db(url_or_index)
