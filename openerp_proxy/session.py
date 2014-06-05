@@ -127,6 +127,7 @@ class ERP_Session(object):
         host = host or raw_input('Server Host: ')
         dbname = dbname or raw_input('Database name: ')
         user = user or raw_input('ERP Login: ')
+        pwd = pwd or getpass("Password: ")
 
         url = "%(protocol)s://%(user)s@%(host)s:%(port)s/%(database)s" % dict(user=user,
                                                                               host=host,

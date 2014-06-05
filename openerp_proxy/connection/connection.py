@@ -14,9 +14,8 @@ class ConnectorType(type):
             mcs._connectors[inst._name] = inst
         return inst
 
-    @property
     @classmethod
-    def connectors(mcs):
+    def get_connector_names(mcs):
         return mcs._connectors.keys()
 
     @classmethod
@@ -33,7 +32,7 @@ def get_connector(name):
 def get_connector_names():
     """ Returns lisnt of connector names registered in system
     """
-    return ConnectorType.connectors
+    return ConnectorType.get_connector_names()
 
 
 class ConnectorBase(object):
