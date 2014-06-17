@@ -477,7 +477,7 @@ class ERP_Object(object):
 
         res = self.search(*args, **kwargs)
         if not res:
-            return False
+            return []
 
         if read_fields:
             return self.read_records(res, read_fields)
