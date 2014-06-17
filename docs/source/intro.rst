@@ -1,10 +1,10 @@
 OpenERP proxy
 =============
 
-This project aims to ease access to openerp data via shell and used
+This project aims to ease access to OpenERP/Odoo data via shell and used
 mostly for debug purposes. This project provides interface similar to
-OpenERP internal code to perform operations on OpenERP object hiding
-XML-RPC behind
+OpenERP/Odoo internal code to perform operations on OpenERP/Odoo objects
+hiding XML-RPC behind
 
 Overview
 --------
@@ -22,6 +22,7 @@ Features
 -  Use IPython as shell if it is installed, otherwise uses defaul python
    shell
 -  Plugin Support
+-  Support of JSON-RPC for version 8 of OpenERP
 
 What You can do with this
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -45,8 +46,6 @@ Alternatives
 Near future plans
 ~~~~~~~~~~~~~~~~~
 
--  Add support of JSON-RPC and refactor connection system to make it
-   extensible (now only XML-RPC is supported)
 -  Better plugin system which will allow to extend API on database,
    object, and record levels
 -  Django-like search and write API implemented as plugin
