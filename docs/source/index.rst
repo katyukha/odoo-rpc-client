@@ -12,7 +12,7 @@ Contents:
    :maxdepth: 2
 
    intro.rst
-   modules/index.rst
+   module_ref/modules.rst
 
 
 

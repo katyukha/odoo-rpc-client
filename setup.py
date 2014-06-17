@@ -5,8 +5,10 @@ try:
 except ImportError:
     from distutils.core import setup
 
+import openerp_proxy.version
+
 setup(name='openerp_proxy',
-      version='0.2',
+      version=openerp_proxy.version.version,
       description='OpenERP CLI interface and libraray for RPC',
       author='Dmytro Katyukha',
       author_email='firemage.dima@gmail.com',

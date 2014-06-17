@@ -8,6 +8,9 @@ from core import ERP_Proxy
 from plugin import ERP_PluginManager
 
 
+__all__ = ('ERP_Session',)
+
+
 class ERP_Session(object):
 
     """ Simple session manager which allows to manage databases easier
