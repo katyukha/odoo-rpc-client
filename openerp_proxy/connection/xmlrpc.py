@@ -62,7 +62,7 @@ class ConnectorXMLRPC(ConnectorBase):
     def get_service_url(self, service_name):
         return 'http://%s:%s/xmlrpc/%s' % (self.host, self.port, service_name)
 
-    def get_service(self, name):
+    def _get_service(self, name):
         service = self.__services.get(name, False)
         if service is False:
             service = XMLRPCProxy(self.get_service_url(name), verbose=self.verbose)

@@ -51,7 +51,8 @@ import functools
 
 # project imports
 from openerp_proxy.connection import get_connector
-from openerp_proxy.exceptions import Error, ConnectorError
+from openerp_proxy.exceptions import Error
+from openerp_proxy.service import get_service_class
 
 
 __all__ = ('ERPProxyException', 'ERP_Proxy', 'ERP_Object', 'ERP_Record')
@@ -95,24 +96,27 @@ class ERP_Proxy(object):
 
         self.__use_execute_kw = None
 
-        self.uid = None
+        self._uid = None
 
-        # Connect to database
-        self.connect()
+    @property
+    def uid(self):
+        """ Returns ID of current user. if one is None,
+            connects to database and returns it
+        """
+        if self._uid is None:
+            return self.connect()
+        return self._uid
 
     @property
     def registered_objects(self):
         """ Stores list of registered in ERP database objects
         """
-        if self.__registered_objects is not None:
-            return self.__registered_objects
-        ids = self.execute('ir.model', 'search', [])
-        read = self.execute('ir.model', 'read', ids, ['model'])
-        self.__registered_objects = [x['model'] for x in read]
-        return self.__registered_objects
+        return self.get_service('object').get_registered_objects()
 
     def get_service(self, name):
-        return self._connection.get_service(name)
+        cls = get_service_class(name)
+        srv = self._connection.get_service(name)
+        return cls(srv, self)
 
     def connect(self):
         """ Connects to the server
@@ -121,12 +125,12 @@ class ERP_Proxy(object):
         """
         # Get the uid
         service_auth = self.get_service('common')
-        self.uid = service_auth.login(self.dbname, self.user, self.pwd)
+        self._uid = service_auth.login(self.dbname, self.user, self.pwd)
 
-        if not self.uid:
+        if not self._uid:
             raise ERPProxyException("Bad login or password")
 
-        return self.uid
+        return self._uid
 
     def reconnect(self):
         """ Recreates connection to the server and clears caches
@@ -134,6 +138,7 @@ class ERP_Proxy(object):
         self.connect()
 
     # Report related methods
+    # TODO: Move to report service class
     def report(self, report_name, ids, context):
         """ Proxy to report service *report* method
 
@@ -156,37 +161,19 @@ class ERP_Proxy(object):
         """
         return self.get_service('report').report_get(self.dbname, self.uid, self.pwd, report_id)
 
-    # Object related methods
-    def use_execute_kw(self):
-        """ Checks whether 'execute_kw' method is available or not
-        """
-        if self.__use_execute_kw is None:
-            service = self.get_service('object')
-            try:
-                service.execute_kw(self.dbname, self.uid, self.pwd, 'ir.model', 'search', ([],), dict(limit=1))
-                self.__use_execute_kw = True
-            except ConnectorError:
-                self.__use_execute_kw = False
-        return self.__use_execute_kw
-
     def execute(self, obj, method, *args, **kwargs):
         """First arguments should be 'object' and 'method' and next
            will be passed to method of given object
         """
         service = self.get_service('object')
 
-        if self.use_execute_kw():
-            result = service.execute_kw(self.dbname, self.uid, self.pwd, obj, method, args, kwargs)
-        else:
-            result = service.execute(self.dbname, self.uid, self.pwd, obj, method, *args, **kwargs)
-
-        return result
+        return service.execute(obj, method, *args, **kwargs)
 
     def execute_wkf(self, object_name, signal, object_id):
         """ Triggers workflow event on specified object
         """
         service = self.get_service('object')
-        result_wkf = service.exec_workflow(self.dbname, self.uid, self.pwd, object_name, signal, object_id)
+        result_wkf = service.exec_workflow(object_name, signal, object_id)
         return result_wkf
 
     def get_obj(self, object_name):
@@ -379,6 +366,8 @@ class ERP_Record(object):
 
         # Update related objects cache
         self.__related_objects = {}
+        self.__workflow_instance = None
+        return self
 
     def as_dict(self):
         return self.__data.copy()

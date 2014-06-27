@@ -45,5 +45,8 @@ class ConnectorBase(object):
         self.port = port
         self.verbose = verbose
 
-    def get_service(self, name):
+    def _get_service(self, name):
         raise NotImplementedError
+
+    def get_service(self, name):
+        return self._get_service(name)

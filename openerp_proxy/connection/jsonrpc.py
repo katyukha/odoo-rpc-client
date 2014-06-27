@@ -82,7 +82,7 @@ class ConnectorJSONRPC(ConnectorBase):
         super(ConnectorJSONRPC, self).__init__(*args, **kwargs)
         self.__services = {}
 
-    def get_service(self, name):
+    def _get_service(self, name):
         service = self.__services.get(name, False)
         if service is False:
             service = JSONRPCProxy(self.host, self.port, name, ssl=self._use_ssl)
