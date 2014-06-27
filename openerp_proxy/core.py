@@ -79,24 +79,30 @@ class ERP_Proxy(object):
     """
 
     def __init__(self, dbname, host, user, pwd, port=8069, protocol='xml-rpc', verbose=False):
+        # TODO: hide these fields behide properties
         self.dbname = dbname
         self.host = host
-        self.user = user
+        self.user = user  # TODO: rename. Use this name for property yo get logged in user record instace
         self.port = port
         self.pwd = pwd
         self.verbose = verbose
         self.protocol = protocol
 
-        self._connection = get_connector(protocol)(host, port, verbose=verbose)
+        self._connection = None
 
         self.__objects = {}   # cached objects
 
-        # properties
-        self.__registered_objects = None
-
-        self.__use_execute_kw = None
-
         self._uid = None
+
+    @property
+    def connection(self):
+        """ Automatically connects to OpenERP and returns
+            connection instance
+        """
+        if self._connection is None:
+            connector = get_connector(self.protocol)
+            self._connection = connector(self.host, self.port, verbose=self.verbose)
+        return self._connection
 
     @property
     def uid(self):
@@ -104,7 +110,27 @@ class ERP_Proxy(object):
             connects to database and returns it
         """
         if self._uid is None:
-            return self.connect()
+            self._uid = self.connect()
+        return self._uid
+
+    def connect(self):
+        """ Connects to the server
+
+            returns Id of user connected
+        """
+        # Get the uid
+        service_auth = self.get_service('common')
+        uid = service_auth.login(self.dbname, self.user, self.pwd)
+
+        if not uid:
+            raise ERPProxyException("Bad login or password")
+
+        return uid
+
+    def reconnect(self):
+        """ Recreates connection to the server and clears caches
+        """
+        self._uid = self.connect()
         return self._uid
 
     @property
@@ -115,27 +141,8 @@ class ERP_Proxy(object):
 
     def get_service(self, name):
         cls = get_service_class(name)
-        srv = self._connection.get_service(name)
+        srv = self.connection.get_service(name)
         return cls(srv, self)
-
-    def connect(self):
-        """ Connects to the server
-
-            returns Id of user connected
-        """
-        # Get the uid
-        service_auth = self.get_service('common')
-        self._uid = service_auth.login(self.dbname, self.user, self.pwd)
-
-        if not self._uid:
-            raise ERPProxyException("Bad login or password")
-
-        return self._uid
-
-    def reconnect(self):
-        """ Recreates connection to the server and clears caches
-        """
-        self.connect()
 
     # Report related methods
     # TODO: Move to report service class
@@ -203,12 +210,13 @@ class ERP_Proxy(object):
 
         return res
 
+    # TODO: think to reimplement as property
     def get_url(self):
         return "%(protocol)s://%(user)s@%(host)s:%(port)s/%(database)s" % dict(user=self.user,
-                                                                host=self.host,
-                                                                database=self.dbname,
-                                                                port=self.port,
-                                                                protocol=self.protocol)
+                                                                               host=self.host,
+                                                                               database=self.dbname,
+                                                                               port=self.port,
+                                                                               protocol=self.protocol)
 
     def __str__(self):
         return "ERP_Proxy: %s" % self.get_url()
@@ -258,26 +266,30 @@ class ERP_Record(object):
         res.extend(['read', 'search', 'write', 'unlink', 'create'])
         return res
 
+    # TODO: think to reimplement as property
     def _get_obj(self):
         """ Returns instance of related ERP_Object
         """
         return self.__obj
 
+    # TODO: think to reimplement as property
     def _get_proxy(self):
         """ Returns instance of related ERP_Proxy object
         """
-        return self.__obj._get_proxy()
+        return self.__obj.proxy
 
+    # TODO: think to reimplement as property
     def _get_columns_info(self):
         """ Returns dictionary with information about columns of related object
         """
-        return self.__obj._get_columns_info()
+        return self.__obj.columns_info
 
+    # TODO: think to reimplement as property
     def _get_workflow_instance(self):
         """ Retunrs workflow instance related to this record
         """
         if self.__workflow_instance is None:
-            wkf = self.__obj._get_workflow()
+            wkf = self.__obj.workflow
             if not wkf:
                 self.__workflow_instance = False
             else:
@@ -287,6 +299,7 @@ class ERP_Record(object):
                 self.__workflow_instance = wkf_inst_records and wkf_inst_records[0] or False
         return self.__workflow_instance
 
+    # TODO: think to reimplement as property
     def _get_workflow_items(self):
         """ Returns list of related workflow.woritem objects
         """
@@ -369,6 +382,7 @@ class ERP_Record(object):
         self.__workflow_instance = None
         return self
 
+    @property
     def as_dict(self):
         return self.__data.copy()
 
@@ -399,7 +413,6 @@ class ERP_Object(object):
                                          specified 'id'
     """
 
-    # TODO: add doc on new methods ?
     def __init__(self, erp_proxy, object_name):
         self.__erp_proxy = erp_proxy
         self.__obj_name = object_name
@@ -410,7 +423,8 @@ class ERP_Object(object):
     def name(self):
         return self.__obj_name
 
-    def _get_proxy(self):
+    @property
+    def proxy(self):
         return self.__erp_proxy
 
     def __dir__(self):
@@ -418,13 +432,14 @@ class ERP_Object(object):
         res.extend(['read', 'search', 'write', 'unlink', 'create'])
         return res
 
-    def _get_columns_info(self):
+    @property
+    def columns_info(self):
         """ Reads information about fields available on model
         """
         if self.__columns_info is None:
             columns_info = {}
-            fields_obj = self.__erp_proxy['ir.model.fields']
-            fields = fields_obj.search_records([('model', '=', self.__obj_name)])
+            fields_obj = self.proxy.get_obj('ir.model.fields')
+            fields = fields_obj.search_records([('model', '=', self.name)])
             for field in fields:
                 columns_info[field.name] = field
 
@@ -432,17 +447,18 @@ class ERP_Object(object):
 
         return self.__columns_info
 
-    def _get_workflow(self):
+    @property
+    def workflow(self):
         """ Returns ERP_Record instance of "workflow" object
             related to this ERP_Object
 
             If there are no workflow for an object then False will be returned
         """
         if self.__workflow is None:
-            wkf_obj = self.__erp_proxy['workflow']
+            wkf_obj = self.proxy.get_obj('workflow')
             # TODO: implement correct behavior for situations with few
             # workflows for same model.
-            wkf_records = wkf_obj.search_records([('osv', '=', self.__obj_name)])
+            wkf_records = wkf_obj.search_records([('osv', '=', self.name)])
             if wkf_records and len(wkf_records) > 1:
                 raise ERPProxyException("More then one workflow per model not supported "
                                         "be current version of openerp_proxy!")
@@ -492,17 +508,17 @@ class ERP_Object(object):
         """
         assert isinstance(obj_id, (int, long)), "obj_id must be integer"
         assert isinstance(signal, basestring), "signal must be string"
-        return self._get_proxy().execute_wkf(self.__obj_name, signal, obj_id)
+        return self.proxy.execute_wkf(self.name, signal, obj_id)
 
     def __getattribute__(self, name):
         res = None
         try:
             res = super(ERP_Object, self).__getattribute__(name)
         except AttributeError:
-            res = MethodWrapper(self.__erp_proxy, self.__obj_name, name)
+            res = MethodWrapper(self.proxy, self.name, name)
 
         return res
 
     def __str__(self):
-        return "ERP Object ('%s')" % self.__obj_name
+        return "ERP Object ('%s')" % self.name
     __repr__ = __str__

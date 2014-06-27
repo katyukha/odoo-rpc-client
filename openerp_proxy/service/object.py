@@ -3,6 +3,10 @@ from openerp_proxy.exceptions import ConnectorError
 
 
 class ObjectService(ServiceBase):
+    """ Service class to simplify interaction with 'object' service
+        Particulary, implements logic of choosing execute method ('execute' or 'execute_kw')
+        The last one cannot work with keyword arguments(
+    """
     _name = 'object'
 
     def __init__(self, *args, **kwargs):
@@ -40,6 +44,8 @@ class ObjectService(ServiceBase):
         return result_wkf
 
     def get_registered_objects(self):
+        """ Returns list of registered objects in database
+        """
         if self.__registered_objects is not None:
             return self.__registered_objects
         ids = self.execute('ir.model', 'search', [])
