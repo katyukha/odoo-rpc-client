@@ -51,6 +51,9 @@ class ERP_Session(object):
         self._db_index_counter = 0
 
     def load_plugin(self, path):
+        """ Load pluging located by specified path. path may point to
+            python module or package where 'plugin_init' function may be imported from
+        """
         # TODO: think about ability to pass here plugin name as argument
         #       it may be useful for saving in session.
         ERP_PluginManager.load_plugin(path)

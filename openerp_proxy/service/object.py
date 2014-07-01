@@ -53,3 +53,9 @@ class ObjectService(ServiceBase):
         self.__registered_objects = [x['model'] for x in read]
         return self.__registered_objects
 
+    def clean_caches(self):
+        """ Cleans caches, to fill them with fresh data with next call of related methods
+        """
+        self.__use_execute_kw = None
+        self.__registered_objects = None
+

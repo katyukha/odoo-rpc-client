@@ -52,7 +52,7 @@ import functools
 # project imports
 from openerp_proxy.connection import get_connector
 from openerp_proxy.exceptions import Error
-from openerp_proxy.service import get_service_class
+from openerp_proxy.service import ServiceManager
 
 
 __all__ = ('ERPProxyException', 'ERP_Proxy', 'ERP_Object', 'ERP_Record')
@@ -89,10 +89,17 @@ class ERP_Proxy(object):
         self.protocol = protocol
 
         self._connection = None
+        self._services = None
 
         self.__objects = {}   # cached objects
 
         self._uid = None
+
+    @property
+    def services(self):
+        if self._services is None:
+            self._services = ServiceManager(self)
+        return self._services
 
     @property
     def connection(self):
@@ -113,14 +120,19 @@ class ERP_Proxy(object):
             self._uid = self.connect()
         return self._uid
 
+    @property
+    def registered_objects(self):
+        """ Stores list of registered in ERP database objects
+        """
+        return self.services['object'].get_registered_objects()
+
     def connect(self):
         """ Connects to the server
 
             returns Id of user connected
         """
         # Get the uid
-        service_auth = self.get_service('common')
-        uid = service_auth.login(self.dbname, self.user, self.pwd)
+        uid = self.services['common'].login(self.dbname, self.user, self.pwd)
 
         if not uid:
             raise ERPProxyException("Bad login or password")
@@ -133,54 +145,16 @@ class ERP_Proxy(object):
         self._uid = self.connect()
         return self._uid
 
-    @property
-    def registered_objects(self):
-        """ Stores list of registered in ERP database objects
-        """
-        return self.get_service('object').get_registered_objects()
-
-    def get_service(self, name):
-        cls = get_service_class(name)
-        srv = self.connection.get_service(name)
-        return cls(srv, self)
-
-    # Report related methods
-    # TODO: Move to report service class
-    def report(self, report_name, ids, context):
-        """ Proxy to report service *report* method
-
-            @param report_name: string representing name of report service
-            @param ids: list of object ID to get report for
-            @param context: Ususaly have to have 'model' and 'id' keys that describes object to get report for
-            @return: ID of report to get by method *report_get*
-        """
-        return self.get_service('report').report(self.dbname, self.uid, self.pwd, report_name, ids, context)
-
-    def report_get(self, report_id):
-        """ Proxy method to report servce *report_get* method
-
-            @param report_id: int that represents ID of report to get
-            @return: dictinary with keys:
-                        - 'state': boolean, True if report generated correctly
-                        - 'result': base64 encoded content of report
-                        - 'format': string representing format, report generated in
-
-        """
-        return self.get_service('report').report_get(self.dbname, self.uid, self.pwd, report_id)
-
     def execute(self, obj, method, *args, **kwargs):
         """First arguments should be 'object' and 'method' and next
            will be passed to method of given object
         """
-        service = self.get_service('object')
-
-        return service.execute(obj, method, *args, **kwargs)
+        return self.services['object'].execute(obj, method, *args, **kwargs)
 
     def execute_wkf(self, object_name, signal, object_id):
         """ Triggers workflow event on specified object
         """
-        service = self.get_service('object')
-        result_wkf = service.exec_workflow(object_name, signal, object_id)
+        result_wkf = self.services['object'].exec_workflow(object_name, signal, object_id)
         return result_wkf
 
     def get_obj(self, object_name):
