@@ -4,3 +4,6 @@ class Error(Exception):
 
 class ConnectorError(Error):
     pass
+
+class ObjectException(Error):
+    pass

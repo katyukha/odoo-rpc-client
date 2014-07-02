@@ -96,13 +96,13 @@ class ServiceType(type):
 
 
 def get_service_class(name):
-    """ Return connector specified by it's name
+    """ Return service class specified by it's name
     """
     return ServiceType.get_service_class(name)
 
 
 class ServiceBase(object):
-    """ Base class for all connectors
+    """ Base class for all Services
     """
     __metaclass__ = ServiceType
 
