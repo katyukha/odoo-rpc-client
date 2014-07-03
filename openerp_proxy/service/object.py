@@ -20,7 +20,7 @@ class ObjectService(ServiceBase):
         """
         if self.__use_execute_kw is None:
             try:
-                self._service.execute_kw(self._erp_proxy.dbname, self._erp_proxy.uid, self._erp_proxy.pwd, 'ir.model', 'search', ([],), dict(limit=1))
+                self._service.execute_kw(self.proxy.dbname, self.proxy.uid, self.proxy.pwd, 'ir.model', 'search', ([],), dict(limit=1))
                 self.__use_execute_kw = True
             except ConnectorError:
                 self.__use_execute_kw = False
@@ -31,16 +31,16 @@ class ObjectService(ServiceBase):
            will be passed to method of given object
         """
         if self.use_execute_kw:
-            result = self._service.execute_kw(self._erp_proxy.dbname, self._erp_proxy.uid, self._erp_proxy.pwd, obj, method, args, kwargs)
+            result = self._service.execute_kw(self.proxy.dbname, self.proxy.uid, self.proxy.pwd, obj, method, args, kwargs)
         else:
-            result = self._service.execute(self._erp_proxy.dbname, self._erp_proxy.uid, self._erp_proxy.pwd, obj, method, *args, **kwargs)
+            result = self._service.execute(self.proxy.dbname, self.proxy.uid, self.proxy.pwd, obj, method, *args, **kwargs)
 
         return result
 
     def execute_wkf(self, object_name, signal, object_id):
         """ Triggers workflow event on specified object
         """
-        result_wkf = self._service.exec_workflow(self._erp_proxy.dbname, self._erp_proxy.uid, self._erp_proxy.pwd, object_name, signal, object_id)
+        result_wkf = self._service.exec_workflow(self.proxy.dbname, self.proxy.uid, self.proxy.pwd, object_name, signal, object_id)
         return result_wkf
 
     def get_registered_objects(self):

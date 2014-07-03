@@ -85,17 +85,18 @@ class ERP_Session(object):
         self._databases[url] = db
         self._index_url(url)
 
-    def get_db(self, url_or_index):
+    def get_db(self, url_or_index, **kwargs):
         """ Returns instance of ERP_Proxy object, that represents single
             OpenERP database it connected to, specified by passed index (integer) or
             url (string) of database, previously saved in session.
 
             @param url_or_index: must be integer (if index) or string (if url). this parametr
                                  specifies database to get from session
+            @param kwargs: can contain aditional arguments to be passed on init of ERP_Proxy
             @return: ERP_Proxy instance
         """
         if isinstance(url_or_index, (int, long)):
-            url = self._db_index[url_or_index]
+            url = self.index[url_or_index]
         else:
             url = url_or_index
 
@@ -106,7 +107,15 @@ class ERP_Session(object):
         if isinstance(db, ERP_Proxy):
             return db
 
-        db = ERP_Proxy(pwd=getpass('Password: '), **db)
+        ep_args = db.copy()  # DB here is instance of dict
+        ep_args.update(**kwargs)
+
+        # Check password, if not provided - ask
+        # TODO: implement correct behavior for IPython notebooks
+        if 'pwd' not in ep_args:
+            ep_args['pwd'] = getpass('Password: ')
+
+        db = ERP_Proxy(**ep_args)
         # injecting Plugins:
         db.plugins = ERP_PluginManager(db)
         # Plugins injected

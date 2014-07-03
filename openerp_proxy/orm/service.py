@@ -26,7 +26,7 @@ class Service(ObjectService):
             raise ValueError("There is no object named '%s' in ERP" % object_name)
 
         obj_cls = get_object_class()
-        obj = obj_cls(self._erp_proxy, object_name)
+        obj = obj_cls(self, object_name)
         self.__objects[object_name] = obj
         return obj
 

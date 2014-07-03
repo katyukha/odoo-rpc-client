@@ -50,7 +50,7 @@ class RecordBase(object):
     def __init__(self, obj, data):
         assert isinstance(obj, ObjectBase), "obj should be ObjectBase"
         assert isinstance(data, dict), "data should be dictionary structure returned by Object.read"
-        self._obj = obj
+        self._object = obj
         self._data = data
 
     def __dir__(self):
@@ -60,10 +60,10 @@ class RecordBase(object):
         return res
 
     @property
-    def _object(self):
-        """ Returns instance of related Object instance
+    def _service(self):
+        """ Returns instance of related Object service instance
         """
-        return self._obj
+        return self._object.service
 
     @property
     def _proxy(self):
@@ -133,7 +133,7 @@ class RecordRelations(RecordBase):
         """
         if name not in self._related_objects or not cached:
             relation = self._columns_info[name].relation
-            rel_obj = self._proxy.get_obj(relation)
+            rel_obj = self._service.get_obj(relation)
             rel_data = self[name]
             rel_id = rel_data and rel_data[0] or False  # Do not forged about relations in form [id, name]
             self._related_objects[name] = rel_obj.read_records(rel_id)
@@ -145,7 +145,7 @@ class RecordRelations(RecordBase):
         """
         if name not in self._related_objects or not cached:
             relation = self._columns_info[name].relation
-            rel_obj = self._proxy.get_obj(relation)
+            rel_obj = self._service.get_obj(relation)
             rel_ids = self[name]   # Take in mind that field value is list of IDS
             self._related_objects[name] = rel_obj.read_records(rel_ids)
         return self._related_objects[name]

@@ -50,8 +50,8 @@ class ObjectBase(object):
     """
     __metaclass__ = ObjectType
 
-    def __init__(self, erp_proxy, object_name):
-        self._erp_proxy = erp_proxy
+    def __init__(self, service, object_name):
+        self._service = service
         self._obj_name = object_name
 
         self._columns_info = None
@@ -63,10 +63,16 @@ class ObjectBase(object):
         return self._obj_name
 
     @property
+    def service(self):
+        """ Object service instance
+        """
+        return self._service
+
+    @property
     def proxy(self):
         """ ERP_Proxy instance, this object is relatedto
         """
-        return self._erp_proxy
+        return self.service.proxy
 
     # Overeiddent to add some standard method to be available in introspection
     # Useful for IPython auto completition
@@ -76,23 +82,25 @@ class ObjectBase(object):
         return res
 
     def __getattribute__(self, name):
-        # TODO: remove erp_proxy arg. use self.proxy instead
-        # Or better relate it to object service instead
-        def MethodWrapper(erp_proxy, object_name, method_name):
+        def MethodWrapper(object_name, method_name):
             """ Wraper around ERP objects's methods.
 
                 for internal use.
                 It is used in ERP_Object class.
             """
             def wrapper(*args, **kwargs):
-                return erp_proxy.execute(object_name, method_name, *args, **kwargs)
+                return self.service.execute(object_name, method_name, *args, **kwargs)
             return wrapper
 
         res = None
         try:
             res = super(ObjectBase, self).__getattribute__(name)
         except AttributeError:
-            res = MethodWrapper(self.proxy, self.name, name)
+            # Private methods are not available to be called via RPC
+            if name.startswith('_'):
+                raise
+
+            res = MethodWrapper(self.name, name)
 
         return res
 
@@ -107,7 +115,7 @@ class ObjectBase(object):
         """
         if self._columns_info is None:
             columns_info = {}
-            fields_obj = self.proxy.get_obj('ir.model.fields')
+            fields_obj = self.service.get_obj('ir.model.fields')
             fields = fields_obj.search_records([('model', '=', self.name)])
             for field in fields:
                 columns_info[field.name] = field

@@ -110,6 +110,12 @@ class ServiceBase(object):
         self._erp_proxy = erp_proxy
         self._service = service
 
+    @property
+    def proxy(self):
+        """ Related ERP_Proxy instance
+        """
+        return self._erp_proxy
+
 
 class Service(ServiceBase):
     """ Service class that implements common behavior of all service

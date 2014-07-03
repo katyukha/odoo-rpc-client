@@ -7,8 +7,8 @@ __all__ = ('RecordWorkflow', 'ObjectWorkflow')
 
 
 class ObjectWorkflow(ObjectRecords):
-    def __init__(self, erp_proxy, object_name):
-        super(ObjectWorkflow, self).__init__(erp_proxy, object_name)
+    def __init__(self, *args, **kwargs):
+        super(ObjectWorkflow, self).__init__(*args, **kwargs)
         self._workflow = None
 
     @property
@@ -19,7 +19,7 @@ class ObjectWorkflow(ObjectRecords):
             If there are no workflow for an object then False will be returned
         """
         if self._workflow is None:
-            wkf_obj = self.proxy.get_obj('workflow')
+            wkf_obj = self.service.get_obj('workflow')
             # TODO: implement correct behavior for situations with few
             # workflows for same model.
             wkf_records = wkf_obj.search_records([('osv', '=', self.name)])
@@ -34,15 +34,15 @@ class ObjectWorkflow(ObjectRecords):
         """
         assert isinstance(obj_id, (int, long)), "obj_id must be integer"
         assert isinstance(signal, basestring), "signal must be string"
-        return self.proxy.execute_wkf(self.name, signal, obj_id)
+        return self.service.execute_wkf(self.name, signal, obj_id)
 
 
 class RecordWorkflow(RecordBase):
     """ Adds ability to browse related fields from record
     """
 
-    def __init__(self, obj, data):
-        super(RecordWorkflow, self).__init__(obj, data)
+    def __init__(self, *args, **kwargs):
+        super(RecordWorkflow, self).__init__(*args, **kwargs)
         self._workflow_instance = None
 
     @property
@@ -54,7 +54,7 @@ class RecordWorkflow(RecordBase):
             if not wkf:
                 self._workflow_instance = False
             else:
-                wkf_inst_obj = self._proxy.get_obj('workflow.instance')
+                wkf_inst_obj = self._service.get_obj('workflow.instance')
                 wkf_inst_records = wkf_inst_obj.search_records([('wkf_id', '=', wkf.id),
                                                                 ('res_id', '=', self.id)], limit=1)
                 self._workflow_instance = wkf_inst_records and wkf_inst_records[0] or False
@@ -65,7 +65,7 @@ class RecordWorkflow(RecordBase):
         """ Returns list of related workflow.woritem objects
         """
         # TODO: think about adding caching
-        workitem_obj = self._proxy.get_obj('workflow.workitem')
+        workitem_obj = self._service.get_obj('workflow.workitem')
         wkf_inst = self.workflow_instance
         if wkf_inst:
             return workitem_obj.search_records([('inst_id', '=', wkf_inst.id)])
