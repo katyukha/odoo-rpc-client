@@ -29,13 +29,18 @@ class ObjectData(ObjectRecords):
             @return: dictionary like 'group_rules' but with domains replaced by search result
         """
         result = {}
+        sub_domain = group_rules.pop('__sub_domain', [])
         for key, value in group_rules.iteritems():
             if isinstance(value, (list, tuple)):  # If value is domain
+                domain = sub_domain + value
                 if records:
-                    result[key] = self.search_records(value, count=count)
+                    result[key] = self.search_records(domain, count=count)
                 else:
-                    result[key] = self.search(value, count=count)
+                    result[key] = self.search(domain, count=count)
             elif isinstance(value, dict):  # if value is subgroup of domains
+                _sub_domain = sub_domain + value.get('__sub_domain', [])
+                if _sub_domain:
+                    value['__sub_domain'] = _sub_domain
                 result[key] = self.data__get_grouped(value, count=count, records=records)
             else:
                 raise TypeError("Unsupported type for 'group_rules' value for key %s: %s" % (key, type(value)))
