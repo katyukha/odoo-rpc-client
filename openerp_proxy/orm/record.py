@@ -203,6 +203,9 @@ class ObjectRecords(ObjectBase):
 
         read_fields = kwargs.pop('read_fields', [])
 
+        if kwargs.get('count', False):
+            return self.search(*args, **kwargs)
+
         res = self.search(*args, **kwargs)
         if not res:
             return []
