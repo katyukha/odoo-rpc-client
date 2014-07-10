@@ -3,7 +3,11 @@ from openerp_proxy.orm.record import ObjectRecords
 
 __all__ = ('ObjectData')
 
-
+# TODO: implement some class wrapper to by default load only count of domains,
+#       and by some method load ids, or records if required. this will allow to
+#       work better with data when accessing root object showing all groups and
+#       amounts of objects within, but when accessing some object we could get
+#       records related to that group to analyse them.
 class ObjectData(ObjectRecords):
     """ Provides aditional methods to work with data
     """
@@ -16,11 +20,14 @@ class ObjectData(ObjectRecords):
                                 with domains.
                                 For example:
                                     group_rules = {'g1': [('state','=','done')],
-                                                'g2': {
-                                                    'total': [],
-                                                    'done': [('state', '=', 'done')],
-                                                    'cancel': [('state', '=', 'cancel')]
-                                                }}
+                                                   'g2': {
+                                                        '__sub_domain': [('partner_id','=',5)],
+                                                        'total': [],
+                                                        'done': [('state', '=', 'done')],
+                                                        'cancel': [('state', '=', 'cancel')]
+                                                    }}
+                                Each group may contain '__sub_domain' field with domain applied to all
+                                items of group
             @param count: if True then in result dictinary only couns will be
                         other wie each group in result dictionary will contain list of IDs
                         of records found
