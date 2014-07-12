@@ -1,11 +1,17 @@
 import functools
 from openerp_proxy.orm.object import ObjectBase
 
-__all__ = ('get_record_class', 'RecordBase', 'RecordRelations', 'ObjectRecords')
+__all__ = ('get_record_class',
+           'RecordBase',
+           'RecordRelations',
+           'ObjectRecords',
+           'RecordListBase',
+           'get_record_list_class')
 
 
 # TODO: Add type and extension logic for RecordList concept
 # TODO: Add ability to use name_get to represent records
+
 
 class RecordType(type):
     """ Metaclass for all objects
@@ -184,6 +190,147 @@ class RecordRelations(RecordBase):
         return self
 
 
+class RecordListType(type):
+    """ Metaclass for all Record Lists
+    """
+
+    _record_list_base_classes = []
+
+    __generated_record_list_class = None
+
+    def __new__(mcs, name, bases, attrs):
+        inst = super(RecordListType, mcs).__new__(mcs, name, bases, attrs)
+        if getattr(inst, '_generated', False):
+            return inst
+
+        if inst not in mcs._record_list_base_classes:
+            mcs._record_list_base_classes.insert(0, inst)
+            mcs.__generated_record_list_class = None  # Clean cache
+
+        return inst
+
+    @classmethod
+    def get_record_class(mcs):
+        """ Returns class to be used to build Record instance.
+        """
+        if mcs.__generated_record_list_class is None:
+            cls = type("RecordList", tuple(mcs._record_list_base_classes), {'_generated': True})
+            mcs.__generated_record_list_class = cls
+
+        assert mcs.__generated_record_list_class is not None, "RLIST class None"
+        return mcs.__generated_record_list_class
+
+
+# TODO: make it lazy
+# TODO: add ability to group list by fields returning dict with sublists
+class RecordListBase(object):
+    """Class to hold list of records with some extra functionality
+    """
+    __metaclass__ = RecordListType
+
+    def __init__(self, obj, ids=None, fields=None, context=None):
+        """
+            @param obj: instance of Object to make this list related to
+            @param ids: list of IDs of objects to read data from
+            @param fields: list of field names to read by default
+            @param context: context to be passed automatocally to methods called from this list
+        """
+        # TODO: add checks to check if fields are real fields in
+        # object.columns_info
+        self._ids = [] if ids is None else ids
+        self._object = obj
+        self._fields = fields
+        self._context = context
+
+        self._raw_data = None  # Raw data got from object's 'read' method
+        self._records = None  # simple list of Records
+
+    @property
+    def ids(self):
+        """ IDs of records present in this RecordList
+        """
+        return self._ids
+
+    @property
+    def object(self):
+        """ Object this record is related to
+        """
+        return self._object
+
+    @property
+    def raw_data(self):
+        """ Raw data in format: [{'id': 1}, {'id': 2}, {'id': 3}, ...]
+        """
+        if self._raw_data is None:
+            kwargs = {}
+            if self._fields is not None:
+                kwargs['fields'] = self._fields
+            if self._context is not None:
+                kwargs['context'] = self._context
+
+            self._raw_data = self.object.read(self.ids, **kwargs)
+        return self._raw_data  # TODO: Think about using copy here.
+
+    @property
+    def records(self):
+        """ Returns list (class 'list') of records
+        """
+        if self._records is None:
+            # TODO: think about using iterator here
+            RecordCls = get_record_class()
+            self._records = [RecordCls(self.object, data)
+                             for data in self.raw_data]
+        return self._records
+
+    @property
+    def length(self):
+        """ Returns length of this record list
+        """
+        return len(self.records)
+
+    # Container related methods
+    def __getitem__(self, index):
+        return self.records[index]
+
+    def __iter__(self):
+        return self.records
+
+    def __len__(self):
+        return len(self.records)
+
+    # Overridden to make ability to call methods of object on list of IDs
+    # present in this RecordList
+    def __getattribute__(self, name):
+        res = None
+        try:
+            res = super(RecordListBase, self).__getattribute__(name)
+        except AttributeError:
+            method = getattr(self.object, name)
+            res = functools.partial(method, self.ids)
+        return res
+
+    def __str__(self):
+        return "RecordList(%s): length=%s" % (self.object.name, self.length)
+    __repr__ = __str__
+
+    def refresh(self):
+        self._raw_data = None
+        self._records = None
+        return self
+
+    def append(self, item):
+        assert isinstance(item, RecordBase), "Only Record instances could be added to list"
+        self.records.append(item)
+        self.ids.append(item.id)
+        return self
+
+
+def get_record_list_class():
+    """ Returns class to be used to represent list of Record obejcts
+    """
+    return RecordListType.get_record_class()
+
+
 class ObjectRecords(ObjectBase):
     """ Adds support to use records from Object classes
     """
@@ -228,5 +375,6 @@ class ObjectRecords(ObjectBase):
         if isinstance(ids, (int, long)):
             return RecordCls(self, self.read(ids, *args, **kwargs))
         if isinstance(ids, (list, tuple)):
-            return [RecordCls(self, data) for data in self.read(ids, *args, **kwargs)]
+            RecordListCls = get_record_list_class()
+            return RecordListCls(self, ids, *args, **kwargs)
 

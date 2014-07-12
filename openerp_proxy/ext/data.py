@@ -1,7 +1,37 @@
 from openerp_proxy.orm.record import ObjectRecords
+from openerp_proxy.orm.record import RecordListBase
+from openerp_proxy.orm.record import get_record_list_class
+import collections
+import functools
 
 
-__all__ = ('ObjectData')
+__all__ = ('ObjectData', 'RecordListData')
+
+
+class RecordListData(RecordListBase):
+    """ Extend record list to add aditional method to work with lists of records
+    """
+
+    def group_by(self, field_name):
+        """ Groups all records in list by specifed field.
+
+            for example we have list of sale orders and want to group it by state:
+
+                # so_list - variable that contains list of sale orders selected
+                # by some criterias. so to group it by state we will do:
+                group = so_list.group_by('state')
+                for state, rlist in group.iteritems():  # Iterate over resulting dictionary
+                    print state, rlist.length    # Print state and amount of items with such state
+        """
+        cls_init = functools.partial(get_record_list_class(),
+                                     self.object,
+                                     fields=self._fields,
+                                     context=self._context)
+        res = collections.defaultdict(cls_init)
+        for record in self.records:
+            res[record[field_name]].append(record)
+        return res
+
 
 # TODO: implement some class wrapper to by default load only count of domains,
 #       and by some method load ids, or records if required. this will allow to
