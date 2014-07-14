@@ -138,11 +138,14 @@ class RecordRelations(RecordBase):
         """ Method used to fetch related object by name of field that points to it
         """
         if name not in self._related_objects or not cached:
-            relation = self._columns_info[name].relation
-            rel_obj = self._service.get_obj(relation)
             rel_data = self[name]
-            rel_id = rel_data and rel_data[0] or False  # Do not forged about relations in form [id, name]
-            self._related_objects[name] = rel_obj.read_records(rel_id)
+            if rel_data:
+                rel_id = rel_data[0]  # Do not forged about relations in form [id, name]
+                relation = self._columns_info[name].relation
+                rel_obj = self._service.get_obj(relation)
+                self._related_objects[name] = rel_obj.read_records(rel_id)
+            else:
+                self._related_objects[name] = False
         return self._related_objects[name]
 
     def _get_one2many_rel_obj(self, name, cached=True, limit=None):
@@ -177,7 +180,7 @@ class RecordRelations(RecordBase):
         #    >>> o.order_id__obj
         #    ... ERP_Record of sale.order, 25
         if name.endswith('__obj'):
-            fname = name[:-5]
+            fname = name[:-5]  # cut '__obj' suffix
             return self._get_related_field(fname)
         else:
             return super(RecordRelations, self).__getitem__(name)
@@ -269,7 +272,7 @@ class RecordListBase(object):
                 kwargs['context'] = self._context
 
             self._raw_data = self.object.read(self.ids, **kwargs)
-        return self._raw_data  # TODO: Think about using copy here.
+        return self._raw_data  # no copy, brcause of data may be too big to copy it every time
 
     @property
     def records(self):
@@ -286,14 +289,14 @@ class RecordListBase(object):
     def length(self):
         """ Returns length of this record list
         """
-        return len(self.records)
+        return len(self.ids)
 
     # Container related methods
     def __getitem__(self, index):
         return self.records[index]
 
     def __iter__(self):
-        return self.records
+        return iter(self.records)
 
     def __len__(self):
         return len(self.records)
@@ -320,8 +323,8 @@ class RecordListBase(object):
 
     def append(self, item):
         assert isinstance(item, RecordBase), "Only Record instances could be added to list"
-        self.records.append(item)
         self.ids.append(item.id)
+        self.records.append(item)
         return self
 
 
