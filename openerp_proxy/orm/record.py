@@ -358,7 +358,7 @@ class ObjectRecords(ObjectBase):
 
         res = self.search(*args, **kwargs)
         if not res:
-            return []
+            return get_record_list_class()(self, [], *args, **kwargs)
 
         if read_fields:
             return self.read_records(res, read_fields)
