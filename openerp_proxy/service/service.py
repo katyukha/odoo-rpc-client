@@ -106,6 +106,8 @@ class ServiceBase(object):
     """
     __metaclass__ = ServiceType
 
+    _base = True
+
     def __init__(self, service, erp_proxy):
         self._erp_proxy = erp_proxy
         self._service = service
@@ -116,17 +118,9 @@ class ServiceBase(object):
         """
         return self._erp_proxy
 
-
-class Service(ServiceBase):
-    """ Service class that implements common behavior of all service
-    """
-    _base = True
-
     def __getattribute__(self, name):
         try:
-            res = super(Service, self).__getattribute__(name)
+            res = super(ServiceBase, self).__getattribute__(name)
         except AttributeError:
             res = getattr(self._service, name)
         return res
-
-

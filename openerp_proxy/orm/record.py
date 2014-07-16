@@ -1,57 +1,21 @@
 import functools
 from openerp_proxy.orm.object import ObjectBase
+from openerp_proxy import meta
 
-__all__ = ('get_record_class',
-           'RecordBase',
-           'RecordRelations',
-           'ObjectRecords',
-           'RecordListBase',
-           'get_record_list_class')
+__all__ = (
+    'RecordBase',
+    'RecordRelations',
+    'ObjectRecords',
+    'RecordListBase',
+)
 
 
-# TODO: Add type and extension logic for RecordList concept
 # TODO: Add ability to use name_get to represent records
 
 
-class RecordType(type):
-    """ Metaclass for all objects
-    """
-
-    _record_base_classes = []
-
-    __generated_record_class = None
-
-    def __new__(mcs, name, bases, attrs):
-        inst = super(RecordType, mcs).__new__(mcs, name, bases, attrs)
-        if getattr(inst, '_generated', False):
-            return inst
-
-        if inst not in mcs._record_base_classes:
-            mcs._record_base_classes.insert(0, inst)
-            mcs.__generated_record_class = None  # Clean cache
-
-        return inst
-
-    @classmethod
-    def get_record_class(mcs):
-        """ Returns class to be used to build Record instance.
-        """
-        if mcs.__generated_record_class is None:
-            cls = type("Record", tuple(mcs._record_base_classes), {'_generated': True})
-            mcs.__generated_record_class = cls
-        return mcs.__generated_record_class
-
-
-def get_record_class():
-    """ Return object class
-    """
-    return RecordType.get_record_class()
-
-
-class RecordBase(object):
+class RecordBase(meta.Extensible):
     """ Base class for all Records
     """
-    __metaclass__ = RecordType
 
     def __init__(self, obj, data):
         assert isinstance(obj, ObjectBase), "obj should be ObjectBase"
@@ -193,43 +157,11 @@ class RecordRelations(RecordBase):
         return self
 
 
-class RecordListType(type):
-    """ Metaclass for all Record Lists
-    """
-
-    _record_list_base_classes = []
-
-    __generated_record_list_class = None
-
-    def __new__(mcs, name, bases, attrs):
-        inst = super(RecordListType, mcs).__new__(mcs, name, bases, attrs)
-        if getattr(inst, '_generated', False):
-            return inst
-
-        if inst not in mcs._record_list_base_classes:
-            mcs._record_list_base_classes.insert(0, inst)
-            mcs.__generated_record_list_class = None  # Clean cache
-
-        return inst
-
-    @classmethod
-    def get_record_class(mcs):
-        """ Returns class to be used to build Record instance.
-        """
-        if mcs.__generated_record_list_class is None:
-            cls = type("RecordList", tuple(mcs._record_list_base_classes), {'_generated': True})
-            mcs.__generated_record_list_class = cls
-
-        assert mcs.__generated_record_list_class is not None, "RLIST class None"
-        return mcs.__generated_record_list_class
-
-
 # TODO: make it lazy
 # TODO: add ability to group list by fields returning dict with sublists
-class RecordListBase(object):
+class RecordListBase(meta.Extensible):
     """Class to hold list of records with some extra functionality
     """
-    __metaclass__ = RecordListType
 
     def __init__(self, obj, ids=None, fields=None, context=None):
         """
@@ -280,8 +212,7 @@ class RecordListBase(object):
         """
         if self._records is None:
             # TODO: think about using iterator here
-            RecordCls = get_record_class()
-            self._records = [RecordCls(self.object, data)
+            self._records = [RecordBase(self.object, data)
                              for data in self.raw_data]
         return self._records
 
@@ -328,12 +259,6 @@ class RecordListBase(object):
         return self
 
 
-def get_record_list_class():
-    """ Returns class to be used to represent list of Record obejcts
-    """
-    return RecordListType.get_record_class()
-
-
 class ObjectRecords(ObjectBase):
     """ Adds support to use records from Object classes
     """
@@ -358,7 +283,7 @@ class ObjectRecords(ObjectBase):
 
         res = self.search(*args, **kwargs)
         if not res:
-            return get_record_list_class()(self, [], *args, **kwargs)
+            return RecordListBase(self, [], *args, **kwargs)
 
         if read_fields:
             return self.read_records(res, read_fields)
@@ -374,10 +299,8 @@ class ObjectRecords(ObjectBase):
                         order.write({'note': 'order data is %s'%order.data})
         """
         assert isinstance(ids, (int, long, list, tuple)), "ids must be instance of (int, long, list, tuple)"
-        RecordCls = get_record_class()
         if isinstance(ids, (int, long)):
-            return RecordCls(self, self.read(ids, *args, **kwargs))
+            return RecordBase(self, self.read(ids, *args, **kwargs))
         if isinstance(ids, (list, tuple)):
-            RecordListCls = get_record_list_class()
-            return RecordListCls(self, ids, *args, **kwargs)
+            return RecordListBase(self, ids, *args, **kwargs)
 

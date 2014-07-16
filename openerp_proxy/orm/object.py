@@ -1,45 +1,11 @@
 #import openerp_proxy.orm.record as Record
+from openerp_proxy import meta
 
-__all__ = ('get_object_class', 'ObjectBase')
-
-
-class ObjectType(type):
-    """ Metaclass for all objects
-    """
-
-    _object_base_classes = []
-
-    __generated_object_class = None
-
-    def __new__(mcs, name, bases, attrs):
-        inst = super(ObjectType, mcs).__new__(mcs, name, bases, attrs)
-        if getattr(inst, '_generated', False):
-            return inst
-
-        if inst not in mcs._object_base_classes:
-            mcs._object_base_classes.insert(0, inst)
-            mcs.__generated_object_class = None  # Clean cache
-
-        return inst
-
-    @classmethod
-    def get_object_class(mcs):
-        """ Returns class to be used to build Object instance.
-        """
-        if mcs.__generated_object_class is None:
-            obj_cls = type("Object", tuple(mcs._object_base_classes), {'_generated': True})
-            mcs.__generated_object_class = obj_cls
-        return mcs.__generated_object_class
-
-
-def get_object_class():
-    """ Return object class
-    """
-    return ObjectType.get_object_class()
+__all__ = ('ObjectBase',)
 
 
 # TODO: think about connecting it to service instead of Proxy
-class ObjectBase(object):
+class ObjectBase(meta.Extensible):
     """ Base class for all Objects
 
         Provides simple interface to remote osv.osv objects
@@ -48,7 +14,6 @@ class ObjectBase(object):
             sale_obj = ObjectBase(erp, 'sale.order')
             sale_obj.search([('state','not in',['done','cancel'])])
     """
-    __metaclass__ = ObjectType
 
     def __init__(self, service, object_name):
         self._service = service

@@ -1,5 +1,5 @@
 from openerp_proxy.service.object import ObjectService
-from openerp_proxy.orm.object import get_object_class
+from openerp_proxy.orm.object import ObjectBase
 
 
 class Service(ObjectService):
@@ -19,14 +19,13 @@ class Service(ObjectService):
             @param object_name: name of an object to get wraper for
             @return: instance of ERP_Object which wraps choosen object
         """
-        obj_cls = get_object_class()
-        if object_name in self.__objects and self.__objects[object_name].__class__ == obj_cls:
+        if object_name in self.__objects:
             return self.__objects[object_name]
 
         if object_name not in self.get_registered_objects():
             raise ValueError("There is no object named '%s' in ERP" % object_name)
 
-        obj = obj_cls(self, object_name)
+        obj = ObjectBase(self, object_name)
         self.__objects[object_name] = obj
         return obj
 
