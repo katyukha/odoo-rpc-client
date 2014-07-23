@@ -1,11 +1,11 @@
 #import openerp_proxy.orm.record as Record
-from openerp_proxy import meta
+from extend_me import Extensible
 
 __all__ = ('ObjectBase',)
 
 
 # TODO: think about connecting it to service instead of Proxy
-class ObjectBase(meta.Extensible):
+class ObjectBase(Extensible):
     """ Base class for all Objects
 
         Provides simple interface to remote osv.osv objects

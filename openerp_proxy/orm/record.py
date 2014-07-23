@@ -1,6 +1,6 @@
 import functools
 from openerp_proxy.orm.object import ObjectBase
-from openerp_proxy import meta
+from extend_me import Extensible
 
 __all__ = (
     'RecordBase',
@@ -13,7 +13,7 @@ __all__ = (
 # TODO: Add ability to use name_get to represent records
 
 
-class RecordBase(meta.Extensible):
+class RecordBase(Extensible):
     """ Base class for all Records
     """
 
@@ -159,7 +159,7 @@ class RecordRelations(RecordBase):
 
 # TODO: make it lazy
 # TODO: add ability to group list by fields returning dict with sublists
-class RecordListBase(meta.Extensible):
+class RecordListBase(Extensible):
     """Class to hold list of records with some extra functionality
     """
 

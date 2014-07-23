@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
-from session import ERP_Session
-from core import ERP_Proxy
-
 
 HELP_HEADER = """
     Usage:
@@ -37,6 +34,9 @@ HELP_HEADER = """
 def main():
     """ Entry point for running as standalone APP
     """
+    from session import ERP_Session
+    from core import ERP_Proxy
+
     session = ERP_Session()
 
     header_databases = "\n"

@@ -55,7 +55,7 @@ from openerp_proxy.service import ServiceManager
 # Activate orm internal logic
 import openerp_proxy.orm
 
-from openerp_proxy import meta
+from extend_me import Extensible
 
 
 __all__ = ('ERPProxyException', 'ERP_Proxy')
@@ -65,7 +65,7 @@ class ERPProxyException(Error):
     pass
 
 
-class ERP_Proxy(meta.Extensible):
+class ERP_Proxy(Extensible):
     """
        A simple class to connect ot ERP via xml_rpc
        Should be initialized with following arguments:

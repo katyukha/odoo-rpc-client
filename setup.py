@@ -33,5 +33,8 @@ setup(name='openerp_proxy',
       keywords=['openerp', 'rpc', 'xmlrpc', 'xml-rpc'],
       extras_require={
           'ipython_shell': ['ipython'],
-      }
+      },
+      install_requires=[
+          'extend_me',
+      ],
 )
