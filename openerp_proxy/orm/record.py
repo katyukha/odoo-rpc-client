@@ -283,7 +283,7 @@ class ObjectRecords(ObjectBase):
 
         res = self.search(*args, **kwargs)
         if not res:
-            return RecordListBase(self, [], *args, **kwargs)
+            return RecordListBase(self, [], read_fields)
 
         if read_fields:
             return self.read_records(res, read_fields)

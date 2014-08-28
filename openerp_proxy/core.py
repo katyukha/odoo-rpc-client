@@ -53,6 +53,10 @@ from openerp_proxy.exceptions import Error
 from openerp_proxy.service import ServiceManager
 
 # Activate orm internal logic
+# TODO: think about not enabling it by default, allowing users to choose what
+# thay woudld like to use. Or simply create two entry points (one with all
+# enabled by default and another with only basic stuff which may be useful for
+# libraries that would like to get speed instead of better usability
 import openerp_proxy.orm
 
 from extend_me import Extensible

@@ -11,6 +11,28 @@ class RecordListData(RecordListBase):
     """ Extend record list to add aditional method to work with lists of records
     """
 
+    def prefetch(self, *fields):
+        """ Prefetches related fields in one query
+        """
+        # TODO: refactor this ugly code to make it more readable
+        for field in fields:
+            ci = self.object.columns_info[field]
+            rel_obj = self.object.service.get_obj(ci.relation)
+
+            if ci.ttype == 'many2one':
+                prefetch_ids = [r[field][0] for r in self.records if r[field]]
+                rel_recs = {r.id: r for r in rel_obj.read_records(prefetch_ids)}
+                for record in self.records:
+                    if record[field]:
+                        record._related_objects[field] = rel_recs[record[field][0]]
+            elif ci.ttype in ('one2many', 'many2many'):
+                prefetch_ids = sum((r[field] for r in self.records if r[field]))
+                rel_recs = {r.id: r for r in rel_obj.read_records(prefetch_ids)}
+                for record in self.records:
+                    # TODO: convert to recordlist
+                    record._related_objects[field] = [rel_recs[i] for i in record[field]]
+        return self
+
     def group_by(self, field_name):
         """ Groups all records in list by specifed field.
 
