@@ -4,7 +4,8 @@ from openerp_proxy.service.service import ServiceBase
 class ReportService(ServiceBase):
     """ Service class to simplify interaction with 'report' service
     """
-    _name = 'report'
+    class Meta:
+        name = 'report'
 
     def report(self, report_name, ids, context):
         """ Proxy to report service *report* method

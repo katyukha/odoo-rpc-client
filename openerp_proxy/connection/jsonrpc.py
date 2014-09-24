@@ -75,8 +75,9 @@ class JSONRPCProxy(object):
 class ConnectorJSONRPC(ConnectorBase):
     """ JSON-RPC connector
     """
-    _name = 'json-rpc'
-    _use_ssl = False
+    class Meta:
+        name = 'json-rpc'
+        use_ssl = False
 
     def __init__(self, *args, **kwargs):
         super(ConnectorJSONRPC, self).__init__(*args, **kwargs)
@@ -85,7 +86,7 @@ class ConnectorJSONRPC(ConnectorBase):
     def _get_service(self, name):
         service = self.__services.get(name, False)
         if service is False:
-            service = JSONRPCProxy(self.host, self.port, name, ssl=self._use_ssl)
+            service = JSONRPCProxy(self.host, self.port, name, ssl=self.Meta._use_ssl)
             self.__services[name] = service
         return service
 
@@ -93,6 +94,6 @@ class ConnectorJSONRPC(ConnectorBase):
 class ConnectorJSONRPCS(ConnectorJSONRPC):
     """ JSON-RPCS Connector
     """
-
-    _name = 'json-rpcs'
-    _use_ssl = True
+    class Meta:
+        name = 'json-rpcs'
+        use_ssl = True

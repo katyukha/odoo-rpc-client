@@ -1,38 +1,20 @@
+from extend_me import ExtensibleByHashType
 
 __all__ = ('get_connector', 'get_connector_names', 'ConnectorBase')
 
-
-class ConnectorType(type):
-    """ Metaclass for all connectors
-    """
-
-    _connectors = {}
-
-    def __new__(mcs, name, bases, attrs):
-        inst = super(ConnectorType, mcs).__new__(mcs, name, bases, attrs)
-        if getattr(inst, '_name', False):
-            mcs._connectors[inst._name] = inst
-        return inst
-
-    @classmethod
-    def get_connector_names(mcs):
-        return mcs._connectors.keys()
-
-    @classmethod
-    def get_connector(mcs, name):
-        return mcs._connectors[name]
+ConnectorType = ExtensibleByHashType._('Connector', hashattr='name')
 
 
 def get_connector(name):
     """ Return connector specified by it's name
     """
-    return ConnectorType.get_connector(name)
+    return ConnectorType.get_class(name)
 
 
 def get_connector_names():
     """ Returns lisnt of connector names registered in system
     """
-    return ConnectorType.get_connector_names()
+    return ConnectorType.get_registered_names()
 
 
 class ConnectorBase(object):

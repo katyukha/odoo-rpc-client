@@ -53,7 +53,8 @@ class XMLRPCProxy(xmlrpclib.ServerProxy):
 class ConnectorXMLRPC(ConnectorBase):
     """ XML-RPC connector
     """
-    _name = 'xml-rpc'
+    class Meta:
+        name = 'xml-rpc'
 
     def __init__(self, *args, **kwargs):
         super(ConnectorXMLRPC, self).__init__(*args, **kwargs)
@@ -73,8 +74,8 @@ class ConnectorXMLRPC(ConnectorBase):
 class ConnectorXMLRPCS(ConnectorXMLRPC):
     """ XML-RPCS Connector
     """
-
-    _name = 'xml-rpcs'
+    class Meta:
+        name = 'xml-rpcs'
 
     def get_service_url(self, service_name):
         return 'https://%s:%s/xmlrpc/%s' % (self.host, self.port, service_name)

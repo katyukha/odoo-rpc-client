@@ -1,4 +1,4 @@
-import collections
+from extend_me import ExtensibleByHashType
 
 __all__ = ('get_service_class', 'ServiceBase', 'ServiceManager')
 
@@ -56,57 +56,19 @@ class ServiceManager(object):
         return self.get_service(name)
 
 
-class ServiceType(type):
-    """ Metaclass for all services
-    """
-
-    # Dictionary whith list of classes which are used as bases to build service
-    # class for one database
-    _service_classes = collections.defaultdict(list)
-    _service_base_classes = []
-
-    # Dictionary with already generated service classes
-    __generated_service_classes = {}
-
-    def __new__(mcs, name, bases, attrs):
-        inst = super(ServiceType, mcs).__new__(mcs, name, bases, attrs)
-        if getattr(inst, '_generated', False):
-            return inst
-
-        if getattr(inst, '_name', False):
-            mcs._service_classes[inst._name].insert(0, inst)
-            mcs.__generated_service_classes[inst._name] = None  # Clean cache
-        elif getattr(inst, '_base', False) and inst not in mcs._service_base_classes:
-            mcs._service_base_classes.insert(0, inst)
-            mcs.__generated_service_classes = {}  # Clean cache
-
-        ServiceManager.clean_caches()  # Clean service caches
-        return inst
-
-    @classmethod
-    def get_service_class(mcs, name):
-        """ Returns class to be used to build service instance.
-        """
-        srv_cls = mcs.__generated_service_classes.get(name, None)
-        if srv_cls is None:
-            bases = mcs._service_classes.get(name, []) + mcs._service_base_classes
-            srv_cls = type("Service", tuple(bases), {'_generated': True})
-            mcs.__generated_service_classes[name] = srv_cls
-        return srv_cls
+ServiceType = ExtensibleByHashType._('Service', hashattr='name')
 
 
 def get_service_class(name):
     """ Return service class specified by it's name
     """
-    return ServiceType.get_service_class(name)
+    return ServiceType.get_class(name, default=True)
 
 
 class ServiceBase(object):
     """ Base class for all Services
     """
     __metaclass__ = ServiceType
-
-    _base = True
 
     def __init__(self, service, erp_proxy):
         self._erp_proxy = erp_proxy

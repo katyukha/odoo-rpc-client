@@ -35,6 +35,6 @@ setup(name='openerp_proxy',
           'ipython_shell': ['ipython'],
       },
       install_requires=[
-          'extend_me',
+          'extend_me>=1.1.0',
       ],
 )
