@@ -46,8 +46,8 @@ class ObjectBase(Extensible):
         res.extend(['read', 'search', 'write', 'unlink', 'create'])
         return res
 
-    def __getattribute__(self, name):
-        def MethodWrapper(object_name, method_name):
+    def __getattr__(self, name):
+        def method_wrapper(object_name, method_name):
             """ Wraper around ERP objects's methods.
 
                 for internal use.
@@ -55,19 +55,15 @@ class ObjectBase(Extensible):
             """
             def wrapper(*args, **kwargs):
                 return self.service.execute(object_name, method_name, *args, **kwargs)
+            wrapper.__name__ = '%s:%s' % (object_name, method_name)
             return wrapper
 
-        res = None
-        try:
-            res = super(ObjectBase, self).__getattribute__(name)
-        except AttributeError:
-            # Private methods are not available to be called via RPC
-            if name.startswith('_'):
-                raise
+        # Private methods are not available to be called via RPC
+        if name.startswith('_'):
+            raise AttributeError("Private methods are not exposed to RPC. (attr: %s)" % name)
 
-            res = MethodWrapper(self.name, name)
-
-        return res
+        setattr(self, name,  method_wrapper(self.name, name))
+        return getattr(self, name)
 
     def __str__(self):
         return "Object ('%s')" % self.name
@@ -79,12 +75,6 @@ class ObjectBase(Extensible):
         """ Reads information about fields available on model
         """
         if self._columns_info is None:
-            columns_info = {}
-            fields_obj = self.service.get_obj('ir.model.fields')
-            fields = fields_obj.search_records([('model', '=', self.name)])
-            for field in fields:
-                columns_info[field.name] = field
-
-            self._columns_info = columns_info
+            self._columns_info = self.fields_get()
 
         return self._columns_info

@@ -7,7 +7,6 @@ class Service(ObjectService):
         Particulary, implements logic of choosing execute method ('execute' or 'execute_kw')
         The last one cannot work with keyword arguments(
     """
-    _name = 'object'
 
     def __init__(self, *args, **kwargs):
         super(Service, self).__init__(*args, **kwargs)

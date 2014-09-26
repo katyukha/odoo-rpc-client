@@ -18,14 +18,24 @@ class RecordBase(Extensible):
     """
 
     def __init__(self, obj, data):
+        """ Constructor
+            @param obj: instance of object this record is related to
+            @param data: dictionary with initial data for a record
+                         or integer ID of database record to fetch data from
+        """
         assert isinstance(obj, ObjectBase), "obj should be ObjectBase"
+        if isinstance(data, (int, long)):
+            data = {'id': data}
         assert isinstance(data, dict), "data should be dictionary structure returned by Object.read"
         self._object = obj
         self._data = data
+        self._id = data['id']
+
+        self._name_get_result = None
 
     def __dir__(self):
         res = dir(super(RecordBase, self))
-        res.extend(self._data.keys())
+        res.extend(self._columns_info.keys())
         res.extend(['read', 'search', 'write', 'unlink', 'create'])
         return res
 
@@ -53,26 +63,54 @@ class RecordBase(Extensible):
         """
         return self._data.copy()
 
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def _name(self):
+        """ Returns result of name_get for this record
+        """
+        if self._name_get_result is None:
+            _id, name = self.name_get()[0]
+            assert self.id == _id, "Record ID and name_get res id must be same"
+            self._name_get_result = name
+        return self._name_get_result
+
     def __str__(self):
-        return "Record (%s, %s)" % (self._object.name, self.id)
+        return "R(%s, %s)[%s]" % (self._object.name, self.id, self._name)
     __repr__ = __str__
+
+    def _get_field(self, ftype, name):
+        """ Returns value for field 'name' of type 'type'
+
+            Should be overridden by extensions to provide better hadling for diferent field values
+        """
+        try:
+            res = self._data[name]
+        except KeyError:
+            res = self.refresh()._data[name]
+        return res
 
     # Allow dictionary access to data fields
     def __getitem__(self, name):
-        return self._data[name]
+        field = self._columns_info.get(name, None)
+
+        if field is None:
+            raise KeyError("No such field %s in object %s, %s" % (name, self._object.name, self.id))
+
+        ftype = field and field['type']
+        return self._get_field(ftype, name)
 
     # Allow to access data as attributes and call object's methods
     # directly from record object
-    def __getattribute__(self, name):
-        res = None
+    def __getattr__(self, name):
         try:
-            res = super(RecordBase, self).__getattribute__(name)
-        except AttributeError:
-            try:
-                res = self[name]   # Try to get data field
-            except KeyError:
-                method = getattr(self._object, name)
-                res = functools.partial(method, [self.id])
+            res = self[name]   # Try to get data field
+        except KeyError:
+            method = getattr(self._object, name)
+            res = functools.partial(method, [self.id])
+            setattr(self, name, res)
         return res
 
     def refresh(self):
@@ -80,85 +118,9 @@ class RecordBase(Extensible):
         return self
 
 
-class RecordRelations(RecordBase):
-    """ Adds ability to browse related fields from record
-
-        Allow using '__obj' suffix in field name to retrive Record
-        instance of object related via many2one or one2many or many2many
-        This means next:
-
-            >>> o = erp_proxy['sale.order.line'].read_records(1)
-            >>> o.order_id
-            ... [25, 'order_name']
-            >>> o.order_id__obj
-            ... Record (sale.order, 25)
-    """
-
-    def __init__(self, obj, data):
-        super(RecordRelations, self).__init__(obj, data)
-        self._related_objects = {}
-
-    def _get_many2one_rel_obj(self, name, cached=True):
-        """ Method used to fetch related object by name of field that points to it
-        """
-        if name not in self._related_objects or not cached:
-            rel_data = self[name]
-            if rel_data:
-                rel_id = rel_data[0]  # Do not forged about relations in form [id, name]
-                relation = self._columns_info[name].relation
-                rel_obj = self._service.get_obj(relation)
-                self._related_objects[name] = rel_obj.read_records(rel_id)
-            else:
-                self._related_objects[name] = False
-        return self._related_objects[name]
-
-    def _get_one2many_rel_obj(self, name, cached=True, limit=None):
-        """ Method used to fetch related objects by name of field that points to them
-            using one2many relation
-        """
-        if name not in self._related_objects or not cached:
-            relation = self._columns_info[name].relation
-            rel_obj = self._service.get_obj(relation)
-            rel_ids = self[name]   # Take in mind that field value is list of IDS
-            self._related_objects[name] = rel_obj.read_records(rel_ids)
-        return self._related_objects[name]
-
-    def _get_related_field(self, name):
-        """ Method to fetch related object's data
-        """
-        col_info = self._columns_info[name]
-        if col_info.ttype == 'many2one':
-            return self._get_many2one_rel_obj(name)
-        elif col_info.ttype == 'one2many' or col_info.ttype == 'many2many':
-            return self._get_one2many_rel_obj(name)
-        else:
-            raise KeyError("There are no related field %s in model %s" % (name, self._object.name))
-
-    def __getitem__(self, name):
-        # Allow using '__obj' suffix in field name to retrive ERP_Record
-        # instance of object related via many2one or one2many or many2many
-        # This means next:
-        #    >>> o = db['sale.order.line'].read_records(1)
-        #    >>> o.order_id
-        #    ... [25, 'order_name']
-        #    >>> o.order_id__obj
-        #    ... ERP_Record of sale.order, 25
-        if name.endswith('__obj'):
-            fname = name[:-5]  # cut '__obj' suffix
-            return self._get_related_field(fname)
-        else:
-            return super(RecordRelations, self).__getitem__(name)
-
-    def refresh(self):
-        super(RecordRelations, self).refresh()
-
-        # Update related objects cache
-        self._related_objects = {}
-        return self
-
-
 # TODO: make it lazy
 # TODO: add ability to group list by fields returning dict with sublists
+# TODO: completly refactor it
 class RecordListBase(Extensible):
     """Class to hold list of records with some extra functionality
     """
@@ -234,13 +196,10 @@ class RecordListBase(Extensible):
 
     # Overridden to make ability to call methods of object on list of IDs
     # present in this RecordList
-    def __getattribute__(self, name):
-        res = None
-        try:
-            res = super(RecordListBase, self).__getattribute__(name)
-        except AttributeError:
-            method = getattr(self.object, name)
-            res = functools.partial(method, self.ids)
+    def __getattr__(self, name):
+        method = getattr(self.object, name)
+        res = functools.partial(method, self.ids)
+        setattr(self, name, res)
         return res
 
     def __str__(self):
@@ -256,6 +215,71 @@ class RecordListBase(Extensible):
         assert isinstance(item, RecordBase), "Only Record instances could be added to list"
         self.ids.append(item.id)
         self.records.append(item)
+        return self
+
+
+class RecordRelations(RecordBase):
+    """ Adds ability to browse related fields from record
+
+        Allow using '__obj' suffix in field name to retrive Record
+        instance of object related via many2one or one2many or many2many
+        This means next:
+
+            >>> o = erp_proxy['sale.order.line'].read_records(1)
+            >>> o.order_id
+            ... [25, 'order_name']
+            >>> o.order_id__obj
+            ... Record (sale.order, 25)
+    """
+
+    def __init__(self, obj, data):
+        super(RecordRelations, self).__init__(obj, data)
+        self._related_objects = {}
+
+    def _get_many2one_rel_obj(self, name, cached=True):
+        """ Method used to fetch related object by name of field that points to it
+        """
+        if name not in self._related_objects or not cached:
+            rel_data = self._data[name]
+            if rel_data:
+                rel_id = rel_data[0]  # Do not forged about relations in form [id, name]
+                relation = self._columns_info[name]['relation']
+                rel_obj = self._service.get_obj(relation)
+                self._related_objects[name] = RecordBase(rel_obj, rel_id)
+            else:
+                self._related_objects[name] = False
+        return self._related_objects[name]
+
+    def _get_one2many_rel_obj(self, name, cached=True, limit=None):
+        """ Method used to fetch related objects by name of field that points to them
+            using one2many relation
+        """
+        if name not in self._related_objects or not cached:
+            relation = self._columns_info[name]['relation']
+            rel_obj = self._service.get_obj(relation)
+            rel_ids = self._data[name]   # Take in mind that field value is list of IDS
+            self._related_objects[name] = RecordListBase(rel_obj, rel_ids)
+        return self._related_objects[name]
+
+    def _get_field(self, ftype, name):
+        res = super(RecordRelations, self)._get_field(ftype, name)
+        if ftype == 'many2one':
+            return self._get_many2one_rel_obj(name)
+        if ftype in ('one2many', 'many2many'):
+            return self._get_one2many_rel_obj(name)
+        return res
+
+    def __getitem__(self, name):
+        # For backward compatability
+        if name.endswith('__obj'):
+            name = name[:-5]
+        return super(RecordRelations, self).__getitem__(name)
+
+    def refresh(self):
+        super(RecordRelations, self).refresh()
+
+        # Update related objects cache
+        self._related_objects = {}
         return self
 
 
