@@ -1,4 +1,3 @@
-#import openerp_proxy.orm.record as Record
 from extend_me import Extensible
 
 __all__ = ('ObjectBase',)
@@ -69,7 +68,6 @@ class ObjectBase(Extensible):
         return "Object ('%s')" % self.name
     __repr__ = __str__
 
-    # NOTE: this method requires orm.record to be imported
     @property
     def columns_info(self):
         """ Reads information about fields available on model

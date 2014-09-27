@@ -78,14 +78,11 @@ class ERP_Plugin(object):
             self.__objects[name] = plugin_obj
         return plugin_obj
 
-    def __getattribute__(self, name):
+    def __getattr__(self, name):
         try:
-            return super(ERP_Plugin, self).__getattribute__(name)
-        except AttributeError:
-            try:
-                return self[name]
-            except KeyError:
-                raise AttributeError(name)
+            return self[name]
+        except KeyError:
+            raise AttributeError(name)
 
     def __dir__(self):
         return self.__classes.keys()
@@ -141,14 +138,11 @@ class ERP_PluginManager(object):
             self.__plugins[name] = plugin
         return plugin
 
-    def __getattribute__(self, name):
+    def __getattr__(self, name):
         try:
-            return super(ERP_PluginManager, self).__getattribute__(name)
-        except AttributeError:
-            try:
-                return self[name]
-            except KeyError:
-                raise AttributeError(name)
+            return self[name]
+        except KeyError:
+            raise AttributeError(name)
 
     def __dir__(self):
         res = dir(super(ERP_PluginManager, self))
