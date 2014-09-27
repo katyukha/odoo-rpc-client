@@ -30,25 +30,48 @@ class ERP_Session(object):
     def __init__(self, data_file='~/.openerp_proxy.json'):
         self.data_file = os.path.expanduser(data_file)
         self._databases = {}  # key: url; value: instance of DB or dict with init args
+        self._db_aliases = {}  # key: aliase name; value: url
 
         if os.path.exists(self.data_file):
             with open(self.data_file, 'rt') as json_data:
                 data = json.load(json_data)
-                if data.get('databases', False) is not False:  # For compatability with older versions
-                    self._databases = data['databases']
-                    for plugin_name, plugin_path in data.get('plugins', {}).iteritems():
-                        try:
-                            self.load_plugin(plugin_path)
-                        except Exception:
-                            # TODO: implement some notifications about errors
-                            # on plugin loading
-                            pass
-                else:
-                    self._databases = data  # For compatability with older versions
+                self._init_databases(data)
+                self._init_plugins(data)
+                self._init_aliases(data)
 
         self._db_index = {}  # key: index; value: url
         self._db_index_rev = {}  # key: url; value: index
         self._db_index_counter = 0
+
+    def _init_databases(self, data):
+        """ Initializes databases from passed data.
+
+            @param data: dictionary with data read from saved session file
+        """
+        if data.get('databases', False) is not False:  # For compatability with older versions
+            self._databases = data['databases']
+        else:
+            self._databases = data  # For compatability with older versions
+
+    def _init_plugins(self, data):
+        """ Initialize plugins data saved in previous sesion
+
+            @param data: dictionary with data read from saved session file
+        """
+        for plugin_name, plugin_path in data.get('plugins', {}).iteritems():
+            try:
+                self.load_plugin(plugin_path)
+            except Exception:
+                # TODO: implement some notifications about errors
+                # on plugin loading
+                pass
+
+    def _init_aliases(self, data):
+        """ Loads db aliases saved in previous session
+
+            @param data: dictionary with data read from saved session file
+        """
+        self._db_aliases = data.get('aliases', {})
 
     def load_plugin(self, path):
         """ Load pluging located by specified path. path may point to
@@ -57,6 +80,27 @@ class ERP_Session(object):
         # TODO: think about ability to pass here plugin name as argument
         #       it may be useful for saving in session.
         ERP_PluginManager.load_plugin(path)
+
+    @property
+    def aliases(self):
+        return self._db_aliases.copy()
+
+    def aliase(self, name, val):
+        """ Sets up aliase 'name' for val, where val
+            could be index, url or ERP_Proxy object
+
+            @return: val
+        """
+        if val in self._databases:
+            self._db_aliases[name] = val
+        elif val in self.index:
+            self._db_aliases[name] = self.index[val]
+        elif isinstance(val, ERP_Proxy):
+            self._db_aliases[name] = val.get_url()
+        else:
+            raise ValueError("Bad value type")
+
+        return val
 
     @property
     def index(self):
@@ -98,11 +142,11 @@ class ERP_Session(object):
         if isinstance(url_or_index, (int, long)):
             url = self.index[url_or_index]
         else:
-            url = url_or_index
+            url = self._db_aliases.get(url_or_index, url_or_index)
 
         db = self._databases.get(url, False)
         if not db:
-            raise ValueError("Bad url %s. not found in history nor databases" % url)
+            raise ValueError("Bad url %s. not found in history or databases" % url)
 
         if isinstance(db, ERP_Proxy):
             return db
@@ -179,17 +223,34 @@ class ERP_Session(object):
         plugins = ERP_PluginManager.get_plugins_info()
         data = {
             'databases': databases,
-            'plugins': plugins
+            'plugins': plugins,
+            'aliases': self._db_aliases,
         }
 
         with open(self.data_file, 'wt') as json_data:
             json.dump(data, json_data, indent=4)
 
     def __getitem__(self, url_or_index):
-        return self.get_db(url_or_index)
+        try:
+            res = self.get_db(url_or_index)
+        except ValueError as e:
+            raise KeyError(e.message)
+        return res
+
+    def __getattr__(self, name):
+        try:
+            res = self.get_db(name)
+        except ValueError as e:
+            raise AttributeError(e.message)
+        return res
 
     def __str__(self):
         return pprint.pformat(self.index)
 
     def __repr__(self):
         return pprint.pformat(self.index)
+
+    def __dir__(self):
+        res = dir(self)
+        res += self.aliases.keys()
+        return res

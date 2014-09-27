@@ -27,7 +27,9 @@ HELP_HEADER = """
 
     Databases You previously worked with: %(databases)s
 
-        (Used index or url for session: session[1] or session[url])
+    Aliases: %(aliases)s
+
+        (Used index or url or aliase for session: session[1] or session[url] or session[aliase])
 """
 
 
@@ -41,9 +43,13 @@ def main():
 
     header_databases = "\n"
     for index, url in session.index.iteritems():
-        header_databases += "        - [%s] %s\n" % (index, url)
+        header_databases += "        - [%3s] %s\n" % (index, url)
 
-    header = HELP_HEADER % {'databases': header_databases}
+    header_aliases = "\n"
+    for aliase, url in session.aliases.iteritems():
+        header_aliases += "        - %7s: %s\n" % (aliase, url)
+
+    header = HELP_HEADER % {'databases': header_databases, 'aliases': header_aliases}
 
     _locals = {
         'ERP_Proxy': ERP_Proxy,
