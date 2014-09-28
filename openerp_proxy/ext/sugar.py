@@ -1,7 +1,7 @@
 import numbers
 
 from openerp_proxy.orm.record import ObjectRecords
-#from openerp_proxy.orm.record import RecordListBase
+from openerp_proxy.orm.record import RecordListBase
 #from openerp_proxy.orm.record import get_record_list_class
 
 
@@ -19,4 +19,12 @@ class ObjectSugar(ObjectRecords):
             return self.read_records(name)
         raise KeyError("Bad key: %s! Only integer or list of intergers allowed" % name)
 
+    def __call__(self, name):
+        """ Performs name_search by specified 'name'
+        """
+        res = self.name_search(name)
+        ids = [i[0] for i in res]
+        if len(ids) == 1:
+            return self[ids[0]]  # user previously defined __getitem__ functionality
+        return RecordListBase(self, ids=ids)
 
