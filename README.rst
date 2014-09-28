@@ -1,5 +1,5 @@
 OpenERP/Odoo proxy
-=============
+==================
 
 This project aims to ease access to openerp data via shell and used
 mostly for debug purposes. This project provides interface similar to
@@ -93,11 +93,15 @@ in most cases there are no need for that interactivity, so connection
 should be created manualy, providing connection data from some other sources
 like config file or something else.
 
-So here is a way to create connection:
+So here is a way to create connection
 
 ::
+
     import openerp_proxy.core as oe_core
-    db = oe_core.ERP_Proxy(dbname='my_db', host='my_host.int',user='my_db_user', pwd='my_password here')
+    db = oe_core.ERP_Proxy(dbname='my_db',
+                           host='my_host.int',
+                           user='my_db_user',
+                           pwd='my_password here')
 
 And next all there same, no more differences betwen shell and lib usage.
 
@@ -199,6 +203,7 @@ So to start use it just import this extension **just after start**
 And after that You will have folowing features working
 
 ::
+
     db['sale.order'][5]       # fetches sale order with ID=5
     db['sale_order']('0050')  # result in name_search for '0050' on sale order
                               # result may be Record if one record found
