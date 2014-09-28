@@ -55,8 +55,8 @@ Install package with ``pip install openerp_proxy``, this will make
 available package *openerp\_proxy* and also shell will be available by
 command ``$ openerp_proxy``
 
-If You want to install development version of *OpenERP Proxy* you can
-do it via ``pip install -e git+https://github.com/katyukha/openerp-proxy.git#egg=openerp_proxy``
+If You want to install development version of *OpenERP Proxy* you can do it via
+``pip install -e git+https://github.com/katyukha/openerp-proxy.git#egg=openerp_proxy``
 
 
 Use as shell
