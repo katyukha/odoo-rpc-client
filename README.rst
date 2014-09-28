@@ -179,12 +179,14 @@ Session provides ability to add aliases to databases, which will simplify access
 To add aliase to our db do the folowing:
 
 ::
+
     >>> session.aliase('my_db', db)
     
 And now to access this database in future (even after restart)
 You can use next code
 
 ::
+
     >>> db = session.my_db
 
 this allows to faster get connection to database Your with which You are working very often
@@ -198,6 +200,7 @@ This extension provides some syntax sugar to ease access to objects
 So to start use it just import this extension **just after start**
 
 ::
+
     import openerp_proxy.sugar
 
 And after that You will have folowing features working
