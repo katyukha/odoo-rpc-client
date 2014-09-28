@@ -31,17 +31,17 @@ class ERP_Session(object):
         self.data_file = os.path.expanduser(data_file)
         self._databases = {}  # key: url; value: instance of DB or dict with init args
         self._db_aliases = {}  # key: aliase name; value: url
-
+        self._db_index = {}  # key: index; value: url
+        self._db_index_rev = {}  # key: url; value: index
+        self._db_index_counter = 0
+        self._start_up_imports = []   # list of modules/packages to be imported at startup
         if os.path.exists(self.data_file):
             with open(self.data_file, 'rt') as json_data:
                 data = json.load(json_data)
                 self._init_databases(data)
                 self._init_plugins(data)
                 self._init_aliases(data)
-
-        self._db_index = {}  # key: index; value: url
-        self._db_index_rev = {}  # key: url; value: index
-        self._db_index_counter = 0
+                self._init_start_up_imports(data)
 
     def _init_databases(self, data):
         """ Initializes databases from passed data.
@@ -72,6 +72,20 @@ class ERP_Session(object):
             @param data: dictionary with data read from saved session file
         """
         self._db_aliases = data.get('aliases', {})
+
+    def _init_start_up_imports(self, data):
+        """ Loads list of modules/packages names to be imported at start-up,
+            saved in previous session
+
+            @param data: dictionary with data read from saved session file
+        """
+        self._start_up_imports += data.get('start_up_imports', [])
+        for i in self._start_up_imports:
+            try:
+                __import__(i)
+            except ImportError:
+                # TODO: implement some logging
+                pass
 
     def load_plugin(self, path):
         """ Load pluging located by specified path. path may point to
@@ -110,6 +124,10 @@ class ERP_Session(object):
             for url in self._databases.keys():
                 self._index_url(url)
         return dict(self._db_index)
+
+    @property
+    def start_up_imports(self):
+        return self._start_up_imports
 
     def _index_url(self, url):
         """ Returns index of specified URL, or adds it to
@@ -201,23 +219,27 @@ class ERP_Session(object):
         self._add_db(url, db)
         return db
 
+    def _get_db_init_args(self, database):
+        if isinstance(database, ERP_Proxy):
+            return {
+                'dbname': database.dbname,
+                'host': database.host,
+                'port': database.port,
+                'user': database.user,
+                'protocol': database.protocol,
+                'verbose': database.verbose,
+            }
+        elif isinstance(database, dict):
+            return database
+        else:
+            raise ValueError("Bad database instance. It should be dict or ERP_Proxy object")
+
     def save(self):
         """ Saves session on disc
         """
         databases = {}
         for url, database in self._databases.iteritems():
-            if isinstance(database, ERP_Proxy):
-                init_args = {
-                    'dbname': database.dbname,
-                    'host': database.host,
-                    'port': database.port,
-                    'user': database.user,
-                    'protocol': database.protocol,
-                    'verbose': database.verbose,
-                }
-            else:
-                init_args = database
-            assert isinstance(init_args, dict), "init_args must be instance of dict"
+            init_args = self._get_db_init_args(database)
             databases[url] = init_args
 
         plugins = ERP_PluginManager.get_plugins_info()
@@ -225,6 +247,7 @@ class ERP_Session(object):
             'databases': databases,
             'plugins': plugins,
             'aliases': self._db_aliases,
+            'start_up_imports': self._start_up_imports,
         }
 
         with open(self.data_file, 'wt') as json_data:
