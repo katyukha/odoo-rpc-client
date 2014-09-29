@@ -274,6 +274,6 @@ class ERP_Session(object):
         return pprint.pformat(self.index)
 
     def __dir__(self):
-        res = dir(self)
+        res = dir(super(ERP_Session,self))
         res += self.aliases.keys()
         return res
