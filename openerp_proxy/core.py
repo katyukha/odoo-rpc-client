@@ -80,9 +80,6 @@ class ERP_Proxy(Extensible):
 
            >>> db['sale.order']
                 ERP_Object: 'sale.order'
-
-       TODO: describe methods and how to use them
-
     """
 
     def __init__(self, dbname, host, user, pwd, port=8069, protocol='xml-rpc', verbose=False):

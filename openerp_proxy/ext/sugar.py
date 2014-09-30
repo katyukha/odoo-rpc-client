@@ -20,10 +20,10 @@ class ObjectSugar(ObjectRecords):
             return self.read_records(name)
         raise KeyError("Bad key: %s! Only integer or list of intergers allowed" % name)
 
-    def __call__(self, name):
+    def __call__(self, name, *args, **kwargs):
         """ Performs name_search by specified 'name'
         """
-        res = self.name_search(name)
+        res = self.name_search(name, *args, **kwargs)
         ids = [i[0] for i in res]
         if len(ids) == 1:
             return self[ids[0]]  # user previously defined __getitem__ functionality
@@ -41,6 +41,7 @@ class ERP_Proxy_Sugar(ERP_Proxy):
         if self._object_aliases is None:
             self._object_aliases = {}
             for oname in self.registered_objects:
+                # TODO: think about other names of aobjects-as-attributes
                 key = 'o_%s' % oname.replace('_', '__').replace('.', '_')
                 self._object_aliases[key] = oname
         return self._object_aliases

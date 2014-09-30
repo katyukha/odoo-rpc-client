@@ -1,7 +1,7 @@
 .. _package-openerp_proxy:
 
 :mod:`openerp_proxy` Package
-----------------------------
+============================
 
 .. automodule:: openerp_proxy.__init__
     :members:
@@ -48,7 +48,14 @@
     :undoc-members:
     :show-inheritance:
 
+
+Subpackages
+-----------
+
 .. toctree::
 
     openerp_proxy.connection
+    openerp_proxy.service
+    openerp_proxy.orm
+    openerp_proxy.ext
 

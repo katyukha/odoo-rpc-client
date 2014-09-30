@@ -1,7 +1,11 @@
-OpenERP-Proxy Modules
-===============
+OpenERP Proxy Modules
+=====================
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
    openerp_proxy
+   openerp_proxy.connection
+   openerp_proxy.service
+   openerp_proxy.orm
+   openerp_proxy.ext

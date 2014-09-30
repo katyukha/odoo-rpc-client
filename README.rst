@@ -1,9 +1,9 @@
-OpenERP/Odoo proxy
-==================
+OpenERP / Odoo proxy
+====================
 
 This project aims to ease access to openerp data via shell and used
 mostly for debug purposes. This project provides interface similar to
-OpenERP internal code to perform operations on OpenERP/Odoo object hiding
+OpenERP internal code to perform operations on **OpenERP** / **Odoo** object hiding
 XML-RPC behind
 
 Overview
@@ -56,7 +56,10 @@ available package *openerp\_proxy* and also shell will be available by
 command ``$ openerp_proxy``
 
 If You want to install development version of *OpenERP Proxy* you can do it via
-``pip install -e git+https://github.com/katyukha/openerp-proxy.git#egg=openerp_proxy``
+
+::
+
+    pip install -e git+https://github.com/katyukha/openerp-proxy.git#egg=openerp_proxy
 
 
 Use as shell

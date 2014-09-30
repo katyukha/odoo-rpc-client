@@ -119,7 +119,6 @@ class RecordBase(Extensible):
 
 
 # TODO: make it lazy
-# TODO: add ability to group list by fields returning dict with sublists
 # TODO: completly refactor it
 class RecordListBase(Extensible):
     """Class to hold list of records with some extra functionality
@@ -192,7 +191,7 @@ class RecordListBase(Extensible):
         return iter(self.records)
 
     def __len__(self):
-        return len(self.records)
+        return self.length
 
     # Overridden to make ability to call methods of object on list of IDs
     # present in this RecordList

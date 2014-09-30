@@ -1,10 +1,10 @@
-OpenERP proxy
-=============
+OpenERP / Odoo proxy
+====================
 
-This project aims to ease access to OpenERP/Odoo data via shell and used
+This project aims to ease access to openerp data via shell and used
 mostly for debug purposes. This project provides interface similar to
-OpenERP/Odoo internal code to perform operations on OpenERP/Odoo objects
-hiding XML-RPC behind
+OpenERP internal code to perform operations on **OpenERP** / **Odoo** object hiding
+XML-RPC behind
 
 Overview
 --------
@@ -12,17 +12,22 @@ Overview
 Features
 ~~~~~~~~
 
--  supports call to all public methods on any OpenERP object including:
+-  supports call to all public methods on any OpenERP/Odoo object including:
    *read*, *search*, *write*, *unlink* and others
--  Designed not for speed but to be useful like cli client to OpenERP
--  Stores information about connection to OpenERP databases (beside
-   passwords)
+-  Designed not for speed but to be useful like cli client to OpenERP/Odoo
+-  Desinged to take as more benefits of *IPython autocomplete* as posible
+-  Provides session/history functionality, so if You used it to connect to
+   some database before, new connection will be simpler (just enter password).
 -  Provides *browse\_record* like interface, allowing to browse related
-   models too. (But doing it in defferent way than *browse\_record* do
--  Use IPython as shell if it is installed, otherwise uses defaul python
-   shell
--  Plugin Support
--  Support of JSON-RPC for version 8 of OpenERP
+   models too. But use's methods *search\_records* and *browse\_records*
+   instead of *browse*
+-  *Extension support*. You can modify most of components of this app/lib
+   creating Your own extensions. It is realy simple. See for examples in
+   openerp_proxy/ext/ directory.
+-  *Plugin Support*. You can write Your scripts that uses this lib,
+   and easily use them from session. no packages for them required,
+   just tell the path where script file is placed
+-  Support of JSON-RPC for version 8 of OpenERP (experimental)
 
 What You can do with this
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -35,42 +40,42 @@ What You can do with this
    idea because of functional fields with *store=True* which must be
    recalculated).
 
-Alternatives
-~~~~~~~~~~~~
-
--  `Official OpenERP client
-   library <https://github.com/OpenERP/openerp-client-lib>`_
--  `ERPpeek <https://pypi.python.org/pypi/ERPpeek>`_
--  `OEERPLib <https://pypi.python.org/pypi/OERPLib>`_
-
 Near future plans
 ~~~~~~~~~~~~~~~~~
 
 -  Better plugin system which will allow to extend API on database,
    object, and record levels
--  Django-like search and write API implemented as plugin
+-  Django-like search and write API implemented as extension
 
-How to use
-----------
+
+Install
+-------
 
 Install package with ``pip install openerp_proxy``, this will make
 available package *openerp\_proxy* and also shell will be available by
 command ``$ openerp_proxy``
 
-So, after that run in shell:
+If You want to install development version of *OpenERP Proxy* you can do it via
+
+::
+
+    pip install -e git+https://github.com/katyukha/openerp-proxy.git#egg=openerp_proxy
+
+
+Use as shell
+------------
+
+After instalation run in shell:
 
 ::
 
        openerp_proxy
 
-And You will get the shell. If *IPython* is installed then IPython shell
-will be opened, else usual python shell There in context exists
+And You will get the openerp_proxy shell. If *IPython* is installed then IPython shell
+will be used, else usual python shell will be used. There is in context exists
 *session* variable that represents current session to work with
 
-**This project may be used as lib too. just import it
-``import openerp_proxy`` and use same as below without big differences**
-
-First connect to OpenERP database You want:
+Next You have to get connection to some OpenERP/Odoo database.
 
 ::
 
@@ -80,7 +85,34 @@ This will ask You for host, port, database, etc to connect to. Now You
 have connection to OpenERP database which allows You to use database
 objects.
 
-Now lets try to find how many sale orders in 'done' state we have in
+
+Use as library
+--------------
+
+The one diference betwen using as lib and using as shell is the way
+connection to database is created. When using as shell the primary object
+is session, which provides some interactivity. But when using as library
+in most cases there are no need for that interactivity, so connection
+should be created manualy, providing connection data from some other sources
+like config file or something else.
+
+So here is a way to create connection
+
+::
+
+    import openerp_proxy.core as oe_core
+    db = oe_core.ERP_Proxy(dbname='my_db',
+                           host='my_host.int',
+                           user='my_db_user',
+                           pwd='my_password here')
+
+And next all there same, no more differences betwen shell and lib usage.
+
+
+General usage
+-------------
+
+Lets try to find how many sale orders in 'done' state we have in
 database:
 
 ::
@@ -126,7 +158,7 @@ to lazily fetch related fields.
 
     >>> sale_orders = sale_order_obj.search_records([('state', '=', 'done')])
     >>> sale_orders[0]
-    ... ERP_Record of ERP Object ('sale.order'),9
+    ... R(sale.order, 9)[SO0011]
     >>>
     >>> # So we have list of ERP_Record objects. Let's check what they are
     >>> so = sale_orders[0]
@@ -134,16 +166,56 @@ to lazily fetch related fields.
     ... 9
     >>> so.name
     ... SO0011
-    >>> so.partner_id  # many2one field values are consists of ID of related record and name of related record
-    ... [25, 'Better Corp']
+    >>> so.partner_id 
+    ... R(res.partner, 9)[Better Corp]
     >>>
-    >>> # Lets fetch related partner obj. To do it just add suffix '__obj' to and of field name
-    >>> so.partner_id__obj
-    ... ERP_Record of ERP Object ('res.partner'),25
-    >>> so.partner_id__obj.name
+    >>> so.partner_id.name
     ... Better Corp
-    >>> so.partner_id__obj.active
+    >>> so.partner_id.active
     ... True
+
+
+Session: db aliases
+-------------------
+
+Session provides ability to add aliases to databases, which will simplify access to them.
+To add aliase to our db do the folowing:
+
+::
+
+    >>> session.aliase('my_db', db)
+    
+And now to access this database in future (even after restart)
+You can use next code
+
+::
+
+    >>> db = session.my_db
+
+this allows to faster get connection to database Your with which You are working very often
+
+
+Sugar extension
+---------------
+
+This extension provides some syntax sugar to ease access to objects
+
+So to start use it just import this extension **just after start**
+
+::
+
+    import openerp_proxy.sugar
+
+And after that You will have folowing features working
+
+::
+
+    db['sale.order'][5]       # fetches sale order with ID=5
+    db['sale_order']('0050')  # result in name_search for '0050' on sale order
+                              # result may be Record if one record found
+                              # or RecordList if there some set of records found
+
+For other extensions look at *openerp_proxy/ext* subdirectory
 
 Plugins
 -------
@@ -188,3 +260,13 @@ And now to use this plugin just load it to session:
 
 For more information see `source
 code <https://github.com/katyukha/openerp-proxy>`_.
+
+
+Alternatives
+~~~~~~~~~~~~
+
+-  `Official OpenERP client
+   library <https://github.com/OpenERP/openerp-client-lib>`_
+-  `ERPpeek <https://pypi.python.org/pypi/ERPpeek>`_
+-  `OEERPLib <https://pypi.python.org/pypi/OERPLib>`_
+
