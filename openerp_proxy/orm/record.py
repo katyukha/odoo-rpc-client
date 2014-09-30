@@ -10,9 +10,6 @@ __all__ = (
 )
 
 
-# TODO: Add ability to use name_get to represent records
-
-
 class RecordBase(Extensible):
     """ Base class for all Records
     """
@@ -77,8 +74,11 @@ class RecordBase(Extensible):
             self._name_get_result = name
         return self._name_get_result
 
+    def __unicode__(self):
+        return u"R(%s, %s)[%s]" % (self._object.name, self.id, self._name)
+
     def __str__(self):
-        return "R(%s, %s)[%s]" % (self._object.name, self.id, self._name)
+        return unicode(self).encode('utf-8')
     __repr__ = __str__
 
     def _get_field(self, ftype, name):
@@ -288,7 +288,7 @@ class ObjectRecords(ObjectBase):
     """
 
     def search_records(self, *args, **kwargs):
-        """ Return instance or list of instances of ERP_Record class,
+        """ Return instance or list of instances of Record class,
             making available to work with data simpler:
 
                 >>> so_obj = db['sale.order']
@@ -314,7 +314,7 @@ class ObjectRecords(ObjectBase):
         return self.read_records(res)
 
     def read_records(self, ids, *args, **kwargs):
-        """ Return instance or list of instances of ERP_Record class,
+        """ Return instance or list of instances of Record class,
             making available to work with data simpler:
 
                 >>> so_obj = db['sale.order']
@@ -327,4 +327,7 @@ class ObjectRecords(ObjectBase):
             return RecordBase(self, self.read(ids, *args, **kwargs))
         if isinstance(ids, (list, tuple)):
             return RecordListBase(self, ids, *args, **kwargs)
+
+    def browse(self, *args, **kwargs):
+        return self.read_records(*args, **kwargs)
 

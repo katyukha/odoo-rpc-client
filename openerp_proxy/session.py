@@ -270,10 +270,10 @@ class ERP_Session(object):
     def __str__(self):
         return pprint.pformat(self.index)
 
-    def __repr__(self):
-        return pprint.pformat(self.index)
+    #def __repr__(self):
+        #return pprint.pformat(self.index)
 
     def __dir__(self):
-        res = dir(super(ERP_Session,self))
+        res = dir(super(ERP_Session, self))
         res += self.aliases.keys()
         return res
