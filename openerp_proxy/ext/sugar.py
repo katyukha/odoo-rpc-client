@@ -1,7 +1,7 @@
 import numbers
 
 from openerp_proxy.orm.record import ObjectRecords
-from openerp_proxy.orm.record import RecordListBase
+from openerp_proxy.orm.record import RecordList
 from openerp_proxy.core import ERP_Proxy
 #from openerp_proxy.orm.record import get_record_list_class
 
@@ -27,7 +27,7 @@ class ObjectSugar(ObjectRecords):
         ids = [i[0] for i in res]
         if len(ids) == 1:
             return self[ids[0]]  # user previously defined __getitem__ functionality
-        return RecordListBase(self, ids=ids)
+        return RecordList(self, ids=ids)
 
 
 class ERP_Proxy_Sugar(ERP_Proxy):

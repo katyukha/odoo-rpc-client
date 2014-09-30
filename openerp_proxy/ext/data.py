@@ -1,5 +1,5 @@
 from openerp_proxy.orm.record import ObjectRecords
-from openerp_proxy.orm.record import RecordListBase
+from openerp_proxy.orm.record import RecordList
 import collections
 import functools
 
@@ -7,7 +7,7 @@ import functools
 __all__ = ('ObjectData', 'RecordListData')
 
 
-class RecordListData(RecordListBase):
+class RecordListData(RecordList):
     """ Extend record list to add aditional method to work with lists of records
     """
 
@@ -50,7 +50,7 @@ class RecordListData(RecordListBase):
                 for state, rlist in group.iteritems():  # Iterate over resulting dictionary
                     print state, rlist.length    # Print state and amount of items with such state
         """
-        cls_init = functools.partial(RecordListBase,
+        cls_init = functools.partial(RecordList,
                                      self.object,
                                      fields=self._fields,
                                      context=self._context)

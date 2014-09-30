@@ -1,16 +1,16 @@
 from extend_me import Extensible
 
-__all__ = ('ObjectBase',)
+__all__ = ('Object',)
 
 
 # TODO: think about connecting it to service instead of Proxy
-class ObjectBase(Extensible):
+class Object(Extensible):
     """ Base class for all Objects
 
         Provides simple interface to remote osv.osv objects
 
             erp = ERP_Proxy(...)
-            sale_obj = ObjectBase(erp, 'sale.order')
+            sale_obj = Object(erp, 'sale.order')
             sale_obj.search([('state','not in',['done','cancel'])])
     """
 
@@ -41,7 +41,7 @@ class ObjectBase(Extensible):
     # Overeiddent to add some standard method to be available in introspection
     # Useful for IPython auto completition
     def __dir__(self):
-        res = dir(super(ObjectBase, self))
+        res = dir(super(Object, self))
         res.extend(['read', 'search', 'write', 'unlink', 'create'])
         return res
 
@@ -50,7 +50,7 @@ class ObjectBase(Extensible):
             """ Wraper around ERP objects's methods.
 
                 for internal use.
-                It is used in ERP_Object class.
+                It is used in Object class.
             """
             def wrapper(*args, **kwargs):
                 return self.service.execute(object_name, method_name, *args, **kwargs)

@@ -26,10 +26,10 @@
     >>> move_ids = [1234] # IDs of stock moves to be checked
     >>> move_obj.check_assign(move_ids)
 
-    Ability to use ERP_Record class as analog to browse_record:
+    Ability to use Record class as analog to browse_record:
 
     >>> move_obj = db['stock.move']
-    >>> move = move_obj.read_records(1234)
+    >>> move = move_obj.browse(1234)
     >>> move.state
     ... 'confirmed'
     >>> move.check_assign()
@@ -79,7 +79,7 @@ class ERP_Proxy(Extensible):
        Allows access to ERP objects via dictionary syntax:
 
            >>> db['sale.order']
-                ERP_Object: 'sale.order'
+               Object ('sale.order')
     """
 
     def __init__(self, dbname, host, user, pwd, port=8069, protocol='xml-rpc', verbose=False):
@@ -160,15 +160,15 @@ class ERP_Proxy(Extensible):
         return result_wkf
 
     def get_obj(self, object_name):
-        """ Returns wraper around openERP object 'object_name' which is instance of ERP_Object
+        """ Returns wraper around openERP object 'object_name' which is instance of Object
 
             @param object_name: name of an object to get wraper for
-            @return: instance of ERP_Object which wraps choosen object
+            @return: instance of Object which wraps choosen object
         """
         return self.services['object'].get_obj(object_name)
 
     def __getitem__(self, name):
-        """ Returns instance of ERP_Object with name 'name'
+        """ Returns instance of Object with name 'name'
         """
         res = None
         try:

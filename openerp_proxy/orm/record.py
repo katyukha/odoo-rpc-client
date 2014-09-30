@@ -1,16 +1,16 @@
 import functools
-from openerp_proxy.orm.object import ObjectBase
+from openerp_proxy.orm.object import Object
 from extend_me import Extensible
 
 __all__ = (
-    'RecordBase',
+    'Record',
     'RecordRelations',
     'ObjectRecords',
-    'RecordListBase',
+    'RecordList',
 )
 
 
-class RecordBase(Extensible):
+class Record(Extensible):
     """ Base class for all Records
     """
 
@@ -20,7 +20,7 @@ class RecordBase(Extensible):
             @param data: dictionary with initial data for a record
                          or integer ID of database record to fetch data from
         """
-        assert isinstance(obj, ObjectBase), "obj should be ObjectBase"
+        assert isinstance(obj, Object), "obj should be Object"
         if isinstance(data, (int, long)):
             data = {'id': data}
         assert isinstance(data, dict), "data should be dictionary structure returned by Object.read"
@@ -31,7 +31,7 @@ class RecordBase(Extensible):
         self._name_get_result = None
 
     def __dir__(self):
-        res = dir(super(RecordBase, self))
+        res = dir(super(Record, self))
         res.extend(self._columns_info.keys())
         res.extend(['read', 'search', 'write', 'unlink', 'create'])
         return res
@@ -120,7 +120,7 @@ class RecordBase(Extensible):
 
 # TODO: make it lazy
 # TODO: completly refactor it
-class RecordListBase(Extensible):
+class RecordList(Extensible):
     """Class to hold list of records with some extra functionality
     """
 
@@ -173,7 +173,7 @@ class RecordListBase(Extensible):
         """
         if self._records is None:
             # TODO: think about using iterator here
-            self._records = [RecordBase(self.object, data)
+            self._records = [Record(self.object, data)
                              for data in self.raw_data]
         return self._records
 
@@ -211,13 +211,13 @@ class RecordListBase(Extensible):
         return self
 
     def append(self, item):
-        assert isinstance(item, RecordBase), "Only Record instances could be added to list"
+        assert isinstance(item, Record), "Only Record instances could be added to list"
         self.ids.append(item.id)
         self.records.append(item)
         return self
 
 
-class RecordRelations(RecordBase):
+class RecordRelations(Record):
     """ Adds ability to browse related fields from record
 
         Allow using '__obj' suffix in field name to retrive Record
@@ -244,7 +244,7 @@ class RecordRelations(RecordBase):
                 rel_id = rel_data[0]  # Do not forged about relations in form [id, name]
                 relation = self._columns_info[name]['relation']
                 rel_obj = self._service.get_obj(relation)
-                self._related_objects[name] = RecordBase(rel_obj, rel_id)
+                self._related_objects[name] = Record(rel_obj, rel_id)
             else:
                 self._related_objects[name] = False
         return self._related_objects[name]
@@ -257,7 +257,7 @@ class RecordRelations(RecordBase):
             relation = self._columns_info[name]['relation']
             rel_obj = self._service.get_obj(relation)
             rel_ids = self._data[name]   # Take in mind that field value is list of IDS
-            self._related_objects[name] = RecordListBase(rel_obj, rel_ids)
+            self._related_objects[name] = RecordList(rel_obj, rel_ids)
         return self._related_objects[name]
 
     def _get_field(self, ftype, name):
@@ -282,7 +282,7 @@ class RecordRelations(RecordBase):
         return self
 
 
-class ObjectRecords(ObjectBase):
+class ObjectRecords(Object):
     """ Adds support to use records from Object classes
     """
 
@@ -306,7 +306,7 @@ class ObjectRecords(ObjectBase):
 
         res = self.search(*args, **kwargs)
         if not res:
-            return RecordListBase(self, [], read_fields)
+            return RecordList(self, [], read_fields)
 
         if read_fields:
             return self.read_records(res, read_fields)
@@ -323,9 +323,9 @@ class ObjectRecords(ObjectBase):
         """
         assert isinstance(ids, (int, long, list, tuple)), "ids must be instance of (int, long, list, tuple)"
         if isinstance(ids, (int, long)):
-            return RecordBase(self, self.read(ids, *args, **kwargs))
+            return Record(self, self.read(ids, *args, **kwargs))
         if isinstance(ids, (list, tuple)):
-            return RecordListBase(self, ids, *args, **kwargs)
+            return RecordList(self, ids, *args, **kwargs)
 
     def browse(self, *args, **kwargs):
         return self.read_records(*args, **kwargs)

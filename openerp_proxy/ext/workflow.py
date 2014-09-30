@@ -1,4 +1,4 @@
-from openerp_proxy.orm.record import RecordBase
+from openerp_proxy.orm.record import Record
 from openerp_proxy.orm.record import ObjectRecords
 from openerp_proxy.exceptions import ObjectException
 
@@ -37,7 +37,7 @@ class ObjectWorkflow(ObjectRecords):
         return self.service.execute_wkf(self.name, signal, obj_id)
 
 
-class RecordWorkflow(RecordBase):
+class RecordWorkflow(Record):
     """ Adds ability to browse related fields from record
     """
 
