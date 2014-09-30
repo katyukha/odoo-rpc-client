@@ -190,7 +190,7 @@ class ERP_Session(object):
         """
         return self._databases.keys()
 
-    def connect(self, dbname=None, host=None, user=None, pwd=None, port=8069, protocol='xml-rpc', verbose=False):
+    def connect(self, dbname=None, host=None, user=None, pwd=None, port=8069, protocol='xml-rpc', verbose=False, no_save=False):
         """ Wraper aroun ERP_Proxy constructor class to simplify connect from shell.
 
             @param dbname: name of database to connect to (will be asked interactvely if not provided)
@@ -199,6 +199,7 @@ class ERP_Session(object):
             @param pwd: password for selected user (will be asked interactvely if not provided)
             @param port: port to connect to. (default: 8069)
             @param verbose: to be verbose, or not to be. (default: False)
+            @param no_save: if set to True database will not be saved to session
             @return: ERP_Proxy object
         """
         host = host or raw_input('Server Host: ')
@@ -217,6 +218,7 @@ class ERP_Session(object):
 
         db = ERP_Proxy(dbname=dbname, host=host, user=user, pwd=pwd, port=port, protocol=protocol, verbose=verbose)
         self._add_db(url, db)
+        db._no_save = no_save   # disalows saving database connection in session
         return db
 
     def _get_db_init_args(self, database):
@@ -239,8 +241,9 @@ class ERP_Session(object):
         """
         databases = {}
         for url, database in self._databases.iteritems():
-            init_args = self._get_db_init_args(database)
-            databases[url] = init_args
+            if not getattr(database, '_no_save', False):
+                init_args = self._get_db_init_args(database)
+                databases[url] = init_args
 
         plugins = ERP_PluginManager.get_plugins_info()
         data = {
