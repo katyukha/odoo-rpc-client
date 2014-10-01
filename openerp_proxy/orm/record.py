@@ -89,7 +89,9 @@ class Record(Extensible):
         try:
             res = self._data[name]
         except KeyError:
-            res = self.refresh()._data[name]
+            #res = self.refresh()._data[name]
+            res = self.read([name])[0][name]
+            self._data[name] = res
         return res
 
     # Allow dictionary access to data fields
@@ -299,7 +301,7 @@ class ObjectRecords(Object):
             list of fields to read
         """
 
-        read_fields = kwargs.pop('read_fields', [])
+        read_fields = kwargs.pop('read_fields', None)
 
         if kwargs.get('count', False):
             return self.search(*args, **kwargs)
@@ -312,7 +314,7 @@ class ObjectRecords(Object):
             return self.read_records(res, read_fields)
         return self.read_records(res)
 
-    def read_records(self, ids, *args, **kwargs):
+    def read_records(self, ids, fields=None, *args, **kwargs):
         """ Return instance or list of instances of Record class,
             making available to work with data simpler:
 
@@ -322,10 +324,17 @@ class ObjectRecords(Object):
                         order.write({'note': 'order data is %s'%order.data})
         """
         assert isinstance(ids, (int, long, list, tuple)), "ids must be instance of (int, long, list, tuple)"
+
+        if fields is None:
+            fields = [f for f, d in self.columns_info.iteritems()
+                      if d['type'] != 'binary' and not d.get('function', False)]
+
         if isinstance(ids, (int, long)):
-            return Record(self, self.read(ids, *args, **kwargs))
+            return Record(self, self.read(ids, fields, *args, **kwargs))
         if isinstance(ids, (list, tuple)):
-            return RecordList(self, ids, *args, **kwargs)
+            return RecordList(self, ids, fields, *args, **kwargs)
+
+        raise ValueError("Wrong type for ids args")
 
     def browse(self, *args, **kwargs):
         return self.read_records(*args, **kwargs)
