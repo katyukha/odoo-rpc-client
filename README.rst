@@ -149,8 +149,8 @@ Another way to read data is to use *search\_records* or *read\_records*
 method. Each of these methods receives same aguments as *search* or
 *read* method respectively. But passing *count* argument for
 *search\_records* will cause error. Main difference betwen these methods
-in using *ERP\_Record* class instead of *dict* for each record had been
-read. ERP\_Record class provides some orm-like abilities for records,
+in using *Record* class instead of *dict* for each record had been
+read. Record class provides some orm-like abilities for records,
 allowing for example access fields as attributes and provide mechanisms
 to lazily fetch related fields.
 
@@ -160,7 +160,7 @@ to lazily fetch related fields.
     >>> sale_orders[0]
     ... R(sale.order, 9)[SO0011]
     >>>
-    >>> # So we have list of ERP_Record objects. Let's check what they are
+    >>> # So we have list of Record objects. Let's check what they are
     >>> so = sale_orders[0]
     >>> so.id
     ... 9
@@ -230,13 +230,19 @@ To ilustrate what is plugins and what they can do we will create one.
 So let's start
 
 1. create some directory to place plugins in:
+   
    ``mkdir ~/oerp_proxy_plugins/``
+   
    ``cd ~/oerp_proxy_plugins/``
+
 2. next create simple file called ``attendance.py`` and edit it
+   
    ``vim attendance.py``
+
 3. write folowing code there
 
     ::
+
         from openerp_proxy.plugin import Plugin
 
         class AttandanceUtils(Plugin):
@@ -257,6 +263,7 @@ So let's start
    Run ``openerp_proxy`` and try to import it
 
     ::
+
         >>> # First add path of Your plugin to session.
         >>> # When session is started all registered paths 
         >>> # will be automaticaly added to sys.path.
