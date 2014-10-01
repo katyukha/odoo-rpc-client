@@ -220,41 +220,63 @@ For other extensions look at *openerp_proxy/ext* subdirectory
 Plugins
 -------
 
-Plugins are separate scripts that could be placed anywhere on file
-system. Plugin shoud be python file or package which colud be imported
-and with specific structure So to define new plugin just place next code
-on some where You would like to store plugin code.
+In version 0.4 plugin system was completly refactored. At this version
+we start using *extend_me* library to build extensions and plugins.
 
-::
+Plugins are usual classes that provides functionality that should be available
+at ``db.plugins.*`` point, implementing logic not related to core system.
 
-    # Plugis just provides some set of classes and functions which could do some predefined work
-    class MyPluginClass(object):
-        _name = 'my_class1'  # Name of class placed in plugin
+To ilustrate what is plugins and what they can do we will create one.
+So let's start
 
-        # Init must receive 'db' argement which is ERP_Proxy instace
-        # Plugin system is lazy, so all classes or even plugins at all will be initialized
-        # only when some code requestes for them trying to access it.
-        def __init__(self, db):
-            self.db = db  # Save database instance to be able to work with data letter
+1. create some directory to place plugins in:
+   ``mkdir ~/oerp_proxy_plugins/``
+   ``cd ~/oerp_proxy_plugins/``
+2. next create simple file called ``attendance.py`` and edit it
+   ``vim attendance.py``
+3. write folowing code there
 
-        # Define methods You would  like to provide to end user
-        def my_cool_method(self, arg1, argN):
-            # Do some work
+    ::
+        from openerp_proxy.plugin import Plugin
 
-    # And define initialization method for plugin which will show what this plugin provides to user
-    def plugin_init():
-        return {
-            'classes': MyPluginClass,
-            'name': 'my_plugin',
-        }
+        class AttandanceUtils(Plugin):
 
-And now to use this plugin just load it to session:
+            # This is required to register Your plugin
+            # *name* - is for db.plugins.<name>
+            class Meta:
+                name = "attendance"
 
-::
+            def get_sign_state(self):
+                # Note: folowing code works on version 6 of Openerp/Odoo
+                emp_obj = self.proxy['hr.employee']
+                emp_id = emp_obj.search([('user_id', '=', self.proxy.uid)])
+                emp = emp_obj.read(emp_id, ['state'])
+                return emp[0]['state']
 
-    >>> session.load_plugin("<path to your plugin>")  # this may be called in any place of code.
-    >>> db = session.connect()
-    >>> db.plugins.my_plugin.my_class1.my_cool_method()
+4. Not Your plugin is done. Let's test it.
+   Run ``openerp_proxy`` and try to import it
+
+    ::
+        >>> # First add path of Your plugin to session.
+        >>> # When session is started all registered paths 
+        >>> # will be automaticaly added to sys.path.
+        >>> # If You do not want this behavior,
+        >>> # use standard 'sys.path.append(path)'
+        >>> session.add_path('~/oerp_proxy_plugins/')
+
+        >>> # and import our plugin
+        >>> import attendance
+
+        >>> # and use it
+        >>> db = session.connect()
+        >>> db.plugin.attendance.get_sign_state()
+        'present'
+
+        >>> If You want some plugins or extensions or other
+        >>> modules imported at start-up of session, do this
+        >>> session.start_up_imports.add('attendance')
+
+As You see above, to use plugin (or extension), just import it module (better at startu-up)
 
 --------------
 

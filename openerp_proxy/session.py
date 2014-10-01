@@ -1,5 +1,6 @@
 import json
 import os.path
+import sys
 import pprint
 from getpass import getpass
 
@@ -31,15 +32,20 @@ class ERP_Session(object):
         self.data_file = os.path.expanduser(data_file)
         self._databases = {}  # key: url; value: instance of DB or dict with init args
         self._db_aliases = {}  # key: aliase name; value: url
+
         self._db_index = {}  # key: index; value: url
         self._db_index_rev = {}  # key: url; value: index
         self._db_index_counter = 0
+
         self._start_up_imports = []   # list of modules/packages to be imported at startup
+
+        self._extra_paths = set()
+
         if os.path.exists(self.data_file):
             with open(self.data_file, 'rt') as json_data:
                 data = json.load(json_data)
                 self._init_databases(data)
-                #self._init_plugins(data)
+                self._init_paths(data)
                 self._init_aliases(data)
                 self._init_start_up_imports(data)
 
@@ -52,19 +58,6 @@ class ERP_Session(object):
             self._databases = data['databases']
         else:
             self._databases = data  # For compatability with older versions
-
-    #def _init_plugins(self, data):
-        #""" Initialize plugins data saved in previous sesion
-
-            #@param data: dictionary with data read from saved session file
-        #"""
-        #for plugin_name, plugin_path in data.get('plugins', {}).iteritems():
-            #try:
-                #self.load_plugin(plugin_path)
-            #except Exception:
-                ## TODO: implement some notifications about errors
-                ## on plugin loading
-                #pass
 
     def _init_aliases(self, data):
         """ Loads db aliases saved in previous session
@@ -87,13 +80,20 @@ class ERP_Session(object):
                 # TODO: implement some logging
                 pass
 
-    #def load_plugin(self, path):
-        #""" Load pluging located by specified path. path may point to
-            #python module or package where 'plugin_init' function may be imported from
-        #"""
-        ## TODO: think about ability to pass here plugin name as argument
-        ##       it may be useful for saving in session.
-        #ERP_PluginManager.load_plugin(path)
+    def _init_paths(self, data):
+        """ This method initializes aditional python paths saved in session
+        """
+        for path in data.get('extra_paths', []):
+            self.add_path(path)
+
+    def add_path(self, path):
+        """ Adds extra path to python import path.
+
+            Note: this way path will be saved in session
+        """
+        if path not in sys.path:
+            sys.path.append(path)
+            self._extra_paths.add(path)
 
     @property
     def aliases(self):
@@ -245,10 +245,9 @@ class ERP_Session(object):
                 init_args = self._get_db_init_args(database)
                 databases[url] = init_args
 
-        #plugins = ERP_PluginManager.get_plugins_info()
         data = {
             'databases': databases,
-            #'plugins': plugins,
+            'extra_paths': list(self._extra_paths),
             'aliases': self._db_aliases,
             'start_up_imports': self._start_up_imports,
         }
@@ -272,9 +271,6 @@ class ERP_Session(object):
 
     def __str__(self):
         return pprint.pformat(self.index)
-
-    #def __repr__(self):
-        #return pprint.pformat(self.index)
 
     def __dir__(self):
         res = dir(super(ERP_Session, self))
