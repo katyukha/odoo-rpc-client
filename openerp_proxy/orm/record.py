@@ -116,6 +116,7 @@ class Record(Extensible):
         return res
 
     def refresh(self):
+        self._name_get_result = None
         self._data.update(self._object.read(self.id))
         return self
 
@@ -228,9 +229,7 @@ class RecordRelations(Record):
 
             >>> o = erp_proxy['sale.order.line'].read_records(1)
             >>> o.order_id
-            ... [25, 'order_name']
-            >>> o.order_id__obj
-            ... Record (sale.order, 25)
+            ... R(sale.order, 25)[SO025]
     """
 
     def __init__(self, obj, data):

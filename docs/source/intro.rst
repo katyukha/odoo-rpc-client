@@ -204,7 +204,7 @@ So to start use it just import this extension **just after start**
 
 ::
 
-    import openerp_proxy.sugar
+    import openerp_proxy.ext.sugar
 
 And after that You will have folowing features working
 

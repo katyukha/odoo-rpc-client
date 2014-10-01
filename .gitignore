@@ -1,6 +1,8 @@
 *.pyc
 *.swo
 *.swp
+*.swm
+*.swn
 *.log
 /.ropeproject/
 /build/
