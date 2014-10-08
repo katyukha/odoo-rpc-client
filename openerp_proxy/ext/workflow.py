@@ -29,7 +29,7 @@ class ObjectWorkflow(ObjectRecords):
             self._workflow = wkf_records and wkf_records[0] or False
         return self._workflow
 
-    def workflow_trg(self, obj_id, signal):
+    def workflow_signal(self, obj_id, signal):
         """ Triggers specified signal for object's workflow
         """
         assert isinstance(obj_id, (int, long)), "obj_id must be integer"
@@ -71,10 +71,10 @@ class RecordWorkflow(Record):
             return workitem_obj.search_records([('inst_id', '=', wkf_inst.id)])
         return []
 
-    def workflow_trg(self, signal):
+    def workflow_signal(self, signal):
         """ trigger's specified signal on record's related workflow
         """
-        return self._object.workflow_trg(self.id, signal)
+        return self._object.workflow_signal(self.id, signal)
 
     def refresh(self):
         """Cleanup record caches and reread data

@@ -19,7 +19,7 @@ class RecordListData(RecordList):
             ci = self.object.columns_info[field]
             rel_obj = self.object.service.get_obj(ci['relation'])
 
-            if ci['ttype'] == 'many2one':
+            if ci['type'] == 'many2one':
                 # many2one field is usualy empty record, so we create
                 # dictionary of folowing format
                 #    {id: record}

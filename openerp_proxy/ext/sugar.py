@@ -42,7 +42,7 @@ class ERP_Proxy_Sugar(ERP_Proxy):
             self._object_aliases = {}
             for oname in self.registered_objects:
                 # TODO: think about other names of aobjects-as-attributes
-                key = 'o_%s' % oname.replace('_', '__').replace('.', '_')
+                key = '_%s' % oname.replace('_', '__').replace('.', '_')
                 self._object_aliases[key] = oname
         return self._object_aliases
 
