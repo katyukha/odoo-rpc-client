@@ -214,8 +214,34 @@ And after that You will have folowing features working
     db['sale_order']('0050')  # result in name_search for '0050' on sale order
                               # result may be Record if one record found
                               # or RecordList if there some set of records found
+    db['sale.order']([('state','=','done')])    # Same as 'search_records' method
+    db['sale.order'](state='done')              # simplified search
+
+    # Automatic object aliaces. Also supports autocompletition
+    # via implementation of __dir__ method
+    db._sale_order == db['sale.order'] == db['sale_order']   # => True
+
 
 For other extensions look at *openerp_proxy/ext* subdirectory
+
+
+Start-up imports
+----------------
+
+If You want some modules (extensions/plugins) to be automatiacly loaded/imported
+at start-up, there are ``session.start_up_imports`` property, that points to 
+list that holds names of movedule to be imported at start-up.
+
+For example, if You want *Sugar extension* to be automaticaly imported, just
+add it to ``session.start_up_imports`` list
+
+::
+
+    session.start_up_imports.append('openerp_proxy.ext.sugar')
+
+After this, when You will start new openerp_proxy shell, *sugar extension*
+will be automaticaly enable.
+
 
 Plugins
 -------

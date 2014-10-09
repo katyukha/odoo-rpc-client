@@ -20,9 +20,25 @@ class ObjectSugar(ObjectRecords):
             return self.read_records(name)
         raise KeyError("Bad key: %s! Only integer or list of intergers allowed" % name)
 
-    def __call__(self, name, *args, **kwargs):
+    def __call__(self, *args, **kwargs):
         """ Performs name_search by specified 'name'
+
+            (below under name 'name' i mean first of 'args')
+            if name is list or tuple, then search_records will be called
+            if name not passed or name is None, then kwargs will be used to build search domain
+                and search_records will be called
+            else name_search will run
         """
+        args = list(args)
+        name = args.pop(0) if args else None
+
+        if name is None:
+            domain = [(k, '=', v) for k, v in kwargs.iteritems()]
+            return self.search_records(domain, *args)
+
+        if isinstance(name, (list, tuple)):
+            return self.search_records(name, *args, **kwargs)
+
         res = self.name_search(name, *args, **kwargs)
         ids = [i[0] for i in res]
         if len(ids) == 1:
