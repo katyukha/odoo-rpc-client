@@ -1,7 +1,14 @@
- - Record objects now behaves more like browse_record in OpenERP.
-   No more need in suffix '__obj' to get related fields as records.
-   They will be automaticaly converted to Record objects.
- - __getattribute___ in most cases changed to __getattr__
- - Record._name property that returns result of name_get method for this record
- - Objec.columns info refactored to use fields_get method to get list of fields for an object
+Version 0.4
+    - Record objects now behaves more like browse_record in OpenERP.
+      No more need in suffix '__obj' to get related fields as records.
+      They will be automaticaly converted to Record objects.
+    - __getattribute___ in most cases changed to __getattr__
+    - Record._name property that returns result of name_get method for this record
+    - Objec.columns_info refactored to use fields_get method to get list of fields for an object
+    - Plugin system refactored. Not it is class-based.
+    - Added extension system, which allow to extend most of classe. For example see
+      'openerp_proxy.ext' dir/package where placed some set of extensions
+    - All orm-related logic facored out into separate package *openerp_proxy.orm*
+    - session's database's aliases. to easily get some database in futuer, You could give it alias name
+    - 
 

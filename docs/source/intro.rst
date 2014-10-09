@@ -44,7 +44,7 @@ Near future plans
 ~~~~~~~~~~~~~~~~~
 
 -  Better plugin system which will allow to extend API on database,
-   object, and record levels
+   object, and record levels.  **DONE**
 -  Django-like search and write API implemented as extension
 
 
