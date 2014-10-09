@@ -81,6 +81,30 @@ class Record(Extensible):
         return unicode(self).encode('utf-8')
     __repr__ = __str__
 
+    def __int__(self):
+        return self._id
+
+    def __hash__(self):
+        return hash(self._object.name, self._id)
+
+    def __eq__(self, other):
+        if isinstance(other, Record):
+            return other._id == self._id
+
+        if isinstance(other, (int, long)):
+            return self._id == other
+
+        return False
+
+    def __ne__(self, other):
+        if isinstance(other, Record):
+            return other._id != self._id
+
+        if isinstance(other, (int, long)):
+            return self._id != other
+
+        return True
+
     def _get_field(self, ftype, name):
         """ Returns value for field 'name' of type 'type'
 
