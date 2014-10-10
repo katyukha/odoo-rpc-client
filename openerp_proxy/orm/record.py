@@ -85,7 +85,7 @@ class Record(Extensible):
         return self._id
 
     def __hash__(self):
-        return hash(self._object.name, self._id)
+        return hash((self._object.name, self._id))
 
     def __eq__(self, other):
         if isinstance(other, Record):
@@ -219,6 +219,14 @@ class RecordList(Extensible):
 
     def __len__(self):
         return self.length
+
+    def __contains__(self, item):
+        if isinstance(item, (int, long)):
+            return item in self.ids
+        if isinstance(item, Record):
+            # TODO: think about smth like: item in self.records
+            return item.id in self.ids)
+        return False
 
     # Overridden to make ability to call methods of object on list of IDs
     # present in this RecordList
