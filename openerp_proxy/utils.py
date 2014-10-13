@@ -1,6 +1,21 @@
 import sys
+import functools
 
-__all__ = ('ustr', 'AttrDict')
+__all__ = ('ustr', 'AttrDict', 'wpartial')
+
+
+def wpartial(func, *args, **kwargs):
+    """Wrapped partial, same as functools.partial decorator,
+       but also calls functools.wrap on its result thus shwing correct
+       function name and representation.
+    """
+    partial = functools.partial(func, *args, **kwargs)
+
+    @functools.wraps(func)
+    def wrapper(*a, **kw):
+        return partial(*a, **kw)
+    return wrapper
+
 
 # Copied from OpenERP source ustr function
 def get_encodings(hint_encoding='utf-8'):

@@ -1,4 +1,4 @@
-import functools
+from openerp_proxy.utils import wpartial
 from openerp_proxy.orm.object import Object
 from extend_me import Extensible
 
@@ -120,6 +120,9 @@ class Record(Extensible):
 
     # Allow dictionary access to data fields
     def __getitem__(self, name):
+        if name == 'id':
+            return self.id
+
         field = self._columns_info.get(name, None)
 
         if field is None:
@@ -135,7 +138,7 @@ class Record(Extensible):
             res = self[name]   # Try to get data field
         except KeyError:
             method = getattr(self._object, name)
-            res = functools.partial(method, [self.id])
+            res = wpartial(method, [self.id])
             setattr(self, name, res)
         return res
 
@@ -225,14 +228,14 @@ class RecordList(Extensible):
             return item in self.ids
         if isinstance(item, Record):
             # TODO: think about smth like: item in self.records
-            return item.id in self.ids)
+            return item.id in self.ids
         return False
 
     # Overridden to make ability to call methods of object on list of IDs
     # present in this RecordList
     def __getattr__(self, name):
         method = getattr(self.object, name)
-        res = functools.partial(method, self.ids)
+        res = wpartial(method, self.ids)
         setattr(self, name, res)
         return res
 

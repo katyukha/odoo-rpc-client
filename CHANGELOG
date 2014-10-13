@@ -10,5 +10,7 @@ Version 0.4
       'openerp_proxy.ext' dir/package where placed some set of extensions
     - All orm-related logic facored out into separate package *openerp_proxy.orm*
     - session's database's aliases. to easily get some database in futuer, You could give it alias name
-    - 
+    - Not it is posible to enable automatic conversion of date/time field value to datetime objects.
+      Implemented via extension
+    - Sugar extension: less typing)
 
