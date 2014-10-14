@@ -45,11 +45,13 @@ class RecordListData(RecordList):
 
             for example we have list of sale orders and want to group it by state:
 
+            ::
+
                 # so_list - variable that contains list of sale orders selected
                 # by some criterias. so to group it by state we will do:
                 group = so_list.group_by('state')
                 for state, rlist in group.iteritems():  # Iterate over resulting dictionary
-                    print state, rlist.length    # Print state and amount of items with such state
+                    print state, rlist.length           # Print state and amount of items with such state
         """
         cls_init = functools.partial(RecordList,
                                      self.object,
@@ -72,11 +74,14 @@ class ObjectData(ObjectRecords):
 
     def data__get_grouped(self, group_rules, count=False):
         """ Returns dictionary with grouped data. if count=True returns only amount of items found for rule
-            otherwise returns list of ids found for each rule
+            otherwise returns list of records found for each rule
 
-            @param group_rules: dictionary with keys = group_names and values are domains or other dictionary
+            @param group_rules: dictionary with keys=group_names and values are domains or other dictionary
                                 with domains.
-                                For example:
+                                For example
+
+                                ::
+
                                     group_rules = {'g1': [('state','=','done')],
                                                    'g2': {
                                                         '__sub_domain': [('partner_id','=',5)],
@@ -84,11 +89,12 @@ class ObjectData(ObjectRecords):
                                                         'done': [('state', '=', 'done')],
                                                         'cancel': [('state', '=', 'cancel')]
                                                     }}
+
                                 Each group may contain '__sub_domain' field with domain applied to all
                                 items of group
             @param count: if True then result dictinary will contain only counts
-                        otherwise each group in result dictionary will contain RecordList of records found
-            @return: dictionary like 'group_rules' but with domains replaced by search result
+                          otherwise each group in result dictionary will contain RecordList of records found
+            @return: dictionary like 'group_rules' but with domains replaced by search result.
         """
         result = {}
         sub_domain = group_rules.pop('__sub_domain', [])

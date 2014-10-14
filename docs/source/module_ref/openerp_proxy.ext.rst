@@ -32,3 +32,19 @@
     :undoc-members:
     :show-inheritance:
 
+:mod:`field_datetime` Module
+----------------------------
+
+.. automodule:: openerp_proxy.ext.field_datetime
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`repr` Module
+------------------
+
+.. automodule:: openerp_proxy.ext.repr
+    :members:
+    :undoc-members:
+    :show-inheritance:
+

@@ -1,3 +1,11 @@
+""" This extension module provides aditional logic
+to ease work with workflows. For example it provides methods
+to easily get workflow instance or workflow workitems related
+to specific record, or to easily get workflow related to Object.
+Also it provides simple methods to easily send workflow signals
+to records from Object and Record interfaces.
+"""
+
 from openerp_proxy.orm.record import Record
 from openerp_proxy.orm.record import ObjectRecords
 from openerp_proxy.exceptions import ObjectException
@@ -7,6 +15,8 @@ __all__ = ('RecordWorkflow', 'ObjectWorkflow')
 
 
 class ObjectWorkflow(ObjectRecords):
+    """ Modifies Object class, adding methods related to Workflow
+    """
     def __init__(self, *args, **kwargs):
         super(ObjectWorkflow, self).__init__(*args, **kwargs)
         self._workflow = None
