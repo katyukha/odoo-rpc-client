@@ -37,12 +37,12 @@
     >>> move.state
     ... 'assigned'
     >>> move.picking_id
-    ... [12, 'OUT-12']
-    >>> move.picking_id__obj.id
+    ... R('stock.picking', 12)['OUT-12']
+    >>> move.picking_id.id
     ... 12
-    >>> move.picking_id__obj.name
+    >>> move.picking_id.name
     ... 'OUT-12'
-    >>> move.picking_id__obj.state
+    >>> move.picking_id_.state
     ... 'assigned'
 """
 
@@ -99,14 +99,21 @@ class ERP_Proxy(Extensible):
 
     @property
     def services(self):
+        """ ServiceManager instance, which contains list
+            of all available services for current connection,
+            accessible by name::
+
+                db.services.report   # report service
+
+        """
         if self._services is None:
             self._services = ServiceManager(self)
         return self._services
 
     @property
     def connection(self):
-        """ Automatically connects to OpenERP and returns
-            connection instance
+        """ Connection to server.
+            Automatically connects to OpenERP if not connected yet
         """
         if self._connection is None:
             connector = get_connector(self.protocol)
@@ -180,6 +187,10 @@ class ERP_Proxy(Extensible):
 
     # TODO: think to reimplement as property
     def get_url(self):
+        """ Returns dabase URL
+
+            At this moment mostly used internaly in session
+        """
         return "%(protocol)s://%(user)s@%(host)s:%(port)s/%(database)s" % dict(user=self.user,
                                                                                host=self.host,
                                                                                database=self.dbname,

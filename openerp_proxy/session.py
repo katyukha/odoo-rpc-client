@@ -97,11 +97,28 @@ class ERP_Session(object):
 
     @property
     def aliases(self):
+        """ List of database aliases
+
+            To add new database aliase, use method *aliase*::
+
+                session.aliase('mdb', db)  # db is instance of ERP_Proxy
+        """
         return self._db_aliases.copy()
 
     def aliase(self, name, val):
-        """ Sets up aliase 'name' for val, where val
-            could be index, url or ERP_Proxy object
+        """ Sets up aliase 'name' for *val*
+
+            *val* could be index, url or ERP_Proxy object::
+
+                session.aliase('tdb', 1)
+                session.aliase('mdb', 'xml-rpc://me@my.example.com:8069/my_db')
+                session.aliase('xdb', db)
+
+            And now You can use this aliase like::
+
+                session.tdb
+                session.mdb
+                session.xdb
 
             @return: val
         """
@@ -127,6 +144,13 @@ class ERP_Session(object):
 
     @property
     def start_up_imports(self):
+        """ List of start-up imports
+
+            If You want some module to be automaticaly imported on
+            when session starts, that just add it to this list:::
+
+                session.start_up_imports.append('openerp_proxy.ext.sugar')
+        """
         return self._start_up_imports
 
     def _index_url(self, url):
@@ -151,6 +175,11 @@ class ERP_Session(object):
         """ Returns instance of ERP_Proxy object, that represents single
             OpenERP database it connected to, specified by passed index (integer) or
             url (string) of database, previously saved in session.
+
+            Examples::
+
+                session.get_db(1)
+                session.get_db('xml-rpc://katyukha@erp.jbm.int:8069/jbm0')
 
             @param url_or_index: must be integer (if index) or string (if url). this parametr
                                  specifies database to get from session

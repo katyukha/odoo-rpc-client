@@ -285,7 +285,7 @@ So let's start
                 emp = emp_obj.read(emp_id, ['state'])
                 return emp[0]['state']
 
-4. Not Your plugin is done. Let's test it.
+4. Now Your plugin is done. Let's test it.
    Run ``openerp_proxy`` and try to import it
 
     ::
@@ -305,8 +305,8 @@ So let's start
         >>> db.plugin.attendance.get_sign_state()
         'present'
 
-        >>> If You want some plugins or extensions or other
-        >>> modules imported at start-up of session, do this
+        >>> # If You want some plugins or extensions or other
+        >>> # modules imported at start-up of session, do this
         >>> session.start_up_imports.add('attendance')
 
 As You see above, to use plugin (or extension), just import it module (better at startu-up)

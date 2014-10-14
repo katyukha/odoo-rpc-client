@@ -14,6 +14,8 @@ class Plugin(object):
 
     @property
     def proxy(self):
+        """ Related ERP_Proxy instance
+        """
         return self._erp_proxy
 
 
