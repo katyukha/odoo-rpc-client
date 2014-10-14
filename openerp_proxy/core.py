@@ -157,11 +157,23 @@ class ERP_Proxy(Extensible):
     def execute(self, obj, method, *args, **kwargs):
         """First arguments should be 'object' and 'method' and next
            will be passed to method of given object
+
+           :param obj: object name to call method for
+           :type obj: string
+           :param method: name of method to call
+           :type method: string
         """
         return self.services['object'].execute(obj, method, *args, **kwargs)
 
     def execute_wkf(self, object_name, signal, object_id):
         """ Triggers workflow event on specified object
+
+            :param object_name: send workflow signal for
+            :type object_name: string
+            :param signal: name of signal to send
+            :type signal: string
+            :param object_id: ID of document (record) to send signal to
+            :type obejct_id: int
         """
         result_wkf = self.services['object'].exec_workflow(object_name, signal, object_id)
         return result_wkf
@@ -169,8 +181,9 @@ class ERP_Proxy(Extensible):
     def get_obj(self, object_name):
         """ Returns wraper around openERP object 'object_name' which is instance of Object
 
-            @param object_name: name of an object to get wraper for
-            @return: instance of Object which wraps choosen object
+            :param object_name: name of an object to get wraper for
+            :return: instance of Object which wraps choosen object
+            :rtype: Object instance
         """
         return self.services['object'].get_obj(object_name)
 

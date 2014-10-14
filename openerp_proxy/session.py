@@ -26,9 +26,14 @@ class ERP_Session(object):
         And You will get all databases You worked with listed as (index, url) pairs.
         to connect to one of thouse databases just call session[index|url] and required
         ERP_Proxy object will be returned.
+
+        :param data_file: path to session file
+        :type data_file: string
     """
 
     def __init__(self, data_file='~/.openerp_proxy.json'):
+        """
+        """
         self.data_file = os.path.expanduser(data_file)
         self._databases = {}  # key: url; value: instance of DB or dict with init args
         self._db_aliases = {}  # key: aliase name; value: url
@@ -52,7 +57,7 @@ class ERP_Session(object):
     def _init_databases(self, data):
         """ Initializes databases from passed data.
 
-            @param data: dictionary with data read from saved session file
+            :param data: dictionary with data read from saved session file
         """
         if data.get('databases', False) is not False:  # For compatability with older versions
             self._databases = data['databases']
@@ -62,7 +67,7 @@ class ERP_Session(object):
     def _init_aliases(self, data):
         """ Loads db aliases saved in previous session
 
-            @param data: dictionary with data read from saved session file
+            :param data: dictionary with data read from saved session file
         """
         self._db_aliases = data.get('aliases', {})
 
@@ -70,7 +75,7 @@ class ERP_Session(object):
         """ Loads list of modules/packages names to be imported at start-up,
             saved in previous session
 
-            @param data: dictionary with data read from saved session file
+            :param data: dictionary with data read from saved session file
         """
         self._start_up_imports += data.get('start_up_imports', [])
         for i in self._start_up_imports:
@@ -89,11 +94,15 @@ class ERP_Session(object):
     def add_path(self, path):
         """ Adds extra path to python import path.
 
+            :param path: Paths to be added
+            :type path: string
+            :return: None
+
             Note: this way path will be saved in session
         """
         if path not in sys.path:
             sys.path.append(path)
-            self._extra_paths.add(path)
+        self._extra_paths.add(path)
 
     @property
     def aliases(self):
@@ -108,6 +117,11 @@ class ERP_Session(object):
     def aliase(self, name, val):
         """ Sets up aliase 'name' for *val*
 
+            :param name: new aliase
+            :type name: string
+            :param val: database to create aliase for
+            :type val: int|string|ERP_Proxy instance
+
             *val* could be index, url or ERP_Proxy object::
 
                 session.aliase('tdb', 1)
@@ -120,7 +134,7 @@ class ERP_Session(object):
                 session.mdb
                 session.xdb
 
-            @return: val
+            :return: unchanged val
         """
         if val in self._databases:
             self._db_aliases[name] = val
@@ -147,7 +161,7 @@ class ERP_Session(object):
         """ List of start-up imports
 
             If You want some module to be automaticaly imported on
-            when session starts, that just add it to this list:::
+            when session starts, that just add it to this list::
 
                 session.start_up_imports.append('openerp_proxy.ext.sugar')
         """
@@ -176,15 +190,16 @@ class ERP_Session(object):
             OpenERP database it connected to, specified by passed index (integer) or
             url (string) of database, previously saved in session.
 
+            :param url_or_index: must be integer (if index) or string (if url). this parametr
+                                 specifies database to get from session
+            :type url_or_index: int|string
+            :param kwargs: can contain aditional arguments to be passed on init of ERP_Proxy
+            :return: ERP_Proxy instance
+
             Examples::
 
                 session.get_db(1)
                 session.get_db('xml-rpc://katyukha@erp.jbm.int:8069/jbm0')
-
-            @param url_or_index: must be integer (if index) or string (if url). this parametr
-                                 specifies database to get from session
-            @param kwargs: can contain aditional arguments to be passed on init of ERP_Proxy
-            @return: ERP_Proxy instance
         """
         if isinstance(url_or_index, (int, long)):
             url = self.index[url_or_index]
@@ -216,20 +231,30 @@ class ERP_Session(object):
     @property
     def db_list(self):
         """ Returns list of URLs of databases available in current session
+
+            :return: list of urls of databases from session
+            :rtype: list of strings
         """
         return self._databases.keys()
 
     def connect(self, dbname=None, host=None, user=None, pwd=None, port=8069, protocol='xml-rpc', verbose=False, no_save=False):
         """ Wraper aroun ERP_Proxy constructor class to simplify connect from shell.
 
-            @param dbname: name of database to connect to (will be asked interactvely if not provided)
-            @param host: host name to connect to (will be asked interactvely if not provided)
-            @param user: user name to connect as (will be asked interactvely if not provided)
-            @param pwd: password for selected user (will be asked interactvely if not provided)
-            @param port: port to connect to. (default: 8069)
-            @param verbose: to be verbose, or not to be. (default: False)
-            @param no_save: if set to True database will not be saved to session
-            @return: ERP_Proxy object
+            :param dbname: name of database to connect to (will be asked interactvely if not provided)
+            :type dbname: string
+            :param host: host name to connect to (will be asked interactvely if not provided)
+            :type host: string
+            :param user: user name to connect as (will be asked interactvely if not provided)
+            :type user: string
+            :param pwd: password for selected user (will be asked interactvely if not provided)
+            :type pwd: string
+            :param port: port to connect to. (default: 8069)
+            :type port: int
+            :param verbose: to be verbose, or not to be. (default: False)
+            :type verbose: boolean
+            :param no_save: if set to True database will not be saved to session
+            :type no_save: boolean
+            :return: ERP_Proxy object
         """
         host = host or raw_input('Server Host: ')
         dbname = dbname or raw_input('Database name: ')

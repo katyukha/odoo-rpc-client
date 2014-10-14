@@ -16,8 +16,8 @@ class Record(Extensible):
 
     def __init__(self, obj, data):
         """ Constructor
-            @param obj: instance of object this record is related to
-            @param data: dictionary with initial data for a record
+            :param obj: instance of object this record is related to
+            :param data: dictionary with initial data for a record
                          or integer ID of database record to fetch data from
         """
         assert isinstance(obj, Object), "obj should be Object"
