@@ -12,14 +12,14 @@ __all__ = (
 
 class Record(Extensible):
     """ Base class for all Records
-    """
 
-    def __init__(self, obj, data):
-        """ Constructor
+        Constructor
             :param obj: instance of object this record is related to
             :param data: dictionary with initial data for a record
                          or integer ID of database record to fetch data from
-        """
+    """
+
+    def __init__(self, obj, data):
         assert isinstance(obj, Object), "obj should be Object"
         if isinstance(data, (int, long)):
             data = {'id': data}
@@ -62,6 +62,8 @@ class Record(Extensible):
 
     @property
     def id(self):
+        """ Record ID
+        """
         return self._id
 
     @property
@@ -144,7 +146,7 @@ class Record(Extensible):
 
     def refresh(self):
         self._name_get_result = None
-        self._data.update(self._object.read(self.id))
+        self._data.update(self._object.read(self.id, self._data.keys()))
         return self
 
 
@@ -152,20 +154,26 @@ class Record(Extensible):
 # TODO: completly refactor it
 class RecordList(Extensible):
     """Class to hold list of records with some extra functionality
+
+        :param obj: instance of Object to make this list related to
+        :type obj: Object instance
+        :param ids: list of IDs of objects to read data from
+        :type ids: list of int
+        :param fields: list of field names to read by default
+        :type fields: list of strings
+        :param context: context to be passed automatocally to methods called from this list
+        :type context: dict
+
     """
 
     def __init__(self, obj, ids=None, fields=None, context=None):
         """
-            @param obj: instance of Object to make this list related to
-            @param ids: list of IDs of objects to read data from
-            @param fields: list of field names to read by default
-            @param context: context to be passed automatocally to methods called from this list
         """
         # TODO: add checks to check if fields are real fields in
         # object.columns_info
         self._ids = [] if ids is None else ids
         self._object = obj
-        self._fields = fields
+        self._fields = obj.simple_fields if fields is None else fields
         self._context = context
 
         self._raw_data = None  # Raw data got from object's 'read' method
@@ -254,6 +262,23 @@ class RecordList(Extensible):
         self.records.append(item)
         return self
 
+    # remote method overrides
+    def search(self, domain, *args, **kwargs):
+        """ Performs normal search, but with addins ``('id', 'in', seld.ids)`` in domain
+
+            :returns: list of IDs found
+            :rtype: list of integers
+        """
+        return self.object.search([('id', 'in', self.ids)] + domain, *args, **kwargs)
+
+    def search_records(self, domain, *args, **kwargs):
+        """ Performs normal search_records, but with addins ``('id', 'in', seld.ids)`` in domain
+
+            :returns: RecordList of records found
+            :rtype: RecordList instance
+        """
+        return self.object.search_records([('id', 'in', self.ids)] + domain, *args, **kwargs)
+
 
 class RecordRelations(Record):
     """ Adds ability to browse related fields from record
@@ -322,6 +347,17 @@ class ObjectRecords(Object):
     """ Adds support to use records from Object classes
     """
 
+    @property
+    def simple_fields(self):
+        """ List of simple fields which could be fetched fast enough
+
+            This list contains all fields that are not function nor binary
+
+            :type: list of strings
+        """
+        return [f for f, d in self.columns_info.iteritems()
+                if d['type'] != 'binary' and not d.get('function', False)]
+
     def search_records(self, *args, **kwargs):
         """ Return instance or list of instances of Record class,
             making available to work with data simpler:
@@ -360,8 +396,7 @@ class ObjectRecords(Object):
         assert isinstance(ids, (int, long, list, tuple)), "ids must be instance of (int, long, list, tuple)"
 
         if fields is None:
-            fields = [f for f, d in self.columns_info.iteritems()
-                      if d['type'] != 'binary' and not d.get('function', False)]
+            fields = self.simple_fields
 
         if isinstance(ids, (int, long)):
             return Record(self, self.read(ids, fields, *args, **kwargs))

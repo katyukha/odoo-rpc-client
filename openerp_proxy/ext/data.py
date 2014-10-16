@@ -25,7 +25,6 @@ class RecordListData(RecordList):
                 #    {id: record}
                 # Where 'id' is ID of related field record and 'record' is
                 # Record instance to be update with data read for this ID
-                import pudb; pudb.set_trace()  # XXX BREAKPOINT
                 prefetch_ids = {r[field].id: r[field] for r in self.records if r[field]}
                 for data in rel_obj.read(prefetch_ids.keys()):
                     r = prefetch_ids[data['id']]
@@ -61,6 +60,20 @@ class RecordListData(RecordList):
         for record in self.records:
             res[record[field_name]].append(record)
         return res
+
+    def filter(self, func):
+        """ Filters items using *func*.
+
+            :param func: callable to check if record should be included in result.
+            :type func: callable(record)->bool
+            :return: RecordList which contains records that matches results
+            :rtype: RecordList
+        """
+        result_ids = []
+        for record in self.records:
+            if func(record):
+                result_ids.append(record.id)
+        return RecordList(self.object, ids=result_ids, fields=self._fields, context=self._context)
 
 
 # TODO: implement some class wrapper to by default load only count of domains,
