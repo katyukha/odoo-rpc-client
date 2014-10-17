@@ -2,12 +2,21 @@ from openerp_proxy.utils import wpartial
 from openerp_proxy.orm.object import Object
 from extend_me import Extensible
 
+from collections import defaultdict
+
 __all__ = (
     'Record',
     'RecordRelations',
     'ObjectRecords',
     'RecordList',
+    'empty_cache',
 )
+
+
+def empty_cache():
+    """ Created instance of empty cache for Record
+    """
+    return defaultdict(lambda: defaultdict(dict))
 
 
 class Record(Extensible):
@@ -17,23 +26,36 @@ class Record(Extensible):
             :param obj: instance of object this record is related to
             :param data: dictionary with initial data for a record
                          or integer ID of database record to fetch data from
+            :param cache: dictionary of structure {object.name: {object_id: data} }
+            :type cache: defaultdict(lambda: defaultdict(dict))
+
+        Note to create instance of cache call *empty_cache*
     """
 
-    def __init__(self, obj, data):
+    def __init__(self, obj, data, cache=None):
         assert isinstance(obj, Object), "obj should be Object"
-        if isinstance(data, (int, long)):
-            data = {'id': data}
-        assert isinstance(data, dict), "data should be dictionary structure returned by Object.read"
-        self._object = obj
-        self._data = data
-        self._id = data['id']
 
-        self._name_get_result = None
+        self._object = obj
+        self._cache = empty_cache() if cache is None else cache
+        self._lcache = self._cache[obj.name]
+
+        if isinstance(data, (int, long)):
+            self._id = data
+            self._data = self._lcache[self._id]
+            if self._data.get('id', None) != data:
+                self._data.clear()
+                self._data['id'] = data
+        elif isinstance(data, dict):
+            self._id = data['id']
+            self._data = self._lcache[self._id]
+            self._data.update(data)
+        else:
+            raise ValueError("data should be dictionary structure returned by Object.read or int representing ID of record")
 
     def __dir__(self):
         res = dir(super(Record, self))
         res.extend(self._columns_info.keys())
-        res.extend(['read', 'search', 'write', 'unlink', 'create'])
+        res.extend(['read', 'search', 'write', 'unlink'])
         return res
 
     @property
@@ -70,11 +92,11 @@ class Record(Extensible):
     def _name(self):
         """ Returns result of name_get for this record
         """
-        if self._name_get_result is None:
-            _id, name = self.name_get()[0]
-            assert self.id == _id, "Record ID and name_get res id must be same"
-            self._name_get_result = name
-        return self._name_get_result
+        if self._data.get('__name_get_result', None) is None:
+            data = self._object.name_get(self._lcache.keys())
+            for _id, name in data:
+                self._lcache[_id]['__name_get_result'] = name
+        return self._data['__name_get_result']
 
     def __unicode__(self):
         return u"R(%s, %s)[%s]" % (self._object.name, self.id, self._name)
@@ -112,13 +134,12 @@ class Record(Extensible):
 
             Should be overridden by extensions to provide better hadling for diferent field values
         """
-        try:
-            res = self._data[name]
-        except KeyError:
-            #res = self.refresh()._data[name]
-            res = self.read([name])[0][name]
-            self._data[name] = res
-        return res
+        if name not in self._data:
+            # TODO: think about reading all simple fields here
+            for data in self._object.read(self._lcache.keys(), [name]):
+                self._lcache[data['id']].update(data)
+
+        return self._data[name]
 
     # Allow dictionary access to data fields
     def __getitem__(self, name):
@@ -145,7 +166,6 @@ class Record(Extensible):
         return res
 
     def refresh(self):
-        self._name_get_result = None
         self._data.update(self._object.read(self.id, self._data.keys()))
         return self
 
@@ -159,24 +179,26 @@ class RecordList(Extensible):
         :type obj: Object instance
         :param ids: list of IDs of objects to read data from
         :type ids: list of int
-        :param fields: list of field names to read by default
-        :type fields: list of strings
+        :param fields: list of field names to read by default  (not used now)
+        :type fields: list of strings (not used now)
+        :param cache: dictionary of structure {object.name: {object_id: data} }
+        :type cache: defaultdict(lambda: defaultdict(dict))
         :param context: context to be passed automatocally to methods called from this list
         :type context: dict
 
     """
 
-    def __init__(self, obj, ids=None, fields=None, context=None):
+    def __init__(self, obj, ids=None, fields=None, cache=None, context=None):
         """
         """
         # TODO: add checks to check if fields are real fields in
         # object.columns_info
         self._ids = [] if ids is None else ids
         self._object = obj
+        self._cache = empty_cache() if cache is None else cache
         self._fields = obj.simple_fields if fields is None else fields
         self._context = context
 
-        self._raw_data = None  # Raw data got from object's 'read' method
         self._records = None  # simple list of Records
 
     @property
@@ -192,27 +214,12 @@ class RecordList(Extensible):
         return self._object
 
     @property
-    def raw_data(self):
-        """ Raw data in format: [{'id': 1}, {'id': 2}, {'id': 3}, ...]
-        """
-        if self._raw_data is None:
-            kwargs = {}
-            if self._fields is not None:
-                kwargs['fields'] = self._fields
-            if self._context is not None:
-                kwargs['context'] = self._context
-
-            self._raw_data = self.object.read(self.ids, **kwargs)
-        return self._raw_data  # no copy, brcause of data may be too big to copy it every time
-
-    @property
     def records(self):
         """ Returns list (class 'list') of records
         """
         if self._records is None:
-            # TODO: think about using iterator here
-            self._records = [Record(self.object, data)
-                             for data in self.raw_data]
+            self._records = [Record(self.object, id_, cache=self._cache)
+                             for id_ in self.ids]
         return self._records
 
     @property
@@ -252,8 +259,9 @@ class RecordList(Extensible):
     __repr__ = __str__
 
     def refresh(self):
-        self._raw_data = None
         self._records = None
+        for id_ in self.ids:
+            del self._cache[self.object.name]
         return self
 
     def append(self, item):
@@ -292,41 +300,49 @@ class RecordRelations(Record):
             ... R(sale.order, 25)[SO025]
     """
 
-    def __init__(self, obj, data):
-        super(RecordRelations, self).__init__(obj, data)
+    def __init__(self, *args, **kwargs):
+        super(RecordRelations, self).__init__(*args, **kwargs)
         self._related_objects = {}
 
-    def _get_many2one_rel_obj(self, name, cached=True):
+    def _get_many2one_rel_obj(self, name, rel_data, cached=True):
         """ Method used to fetch related object by name of field that points to it
         """
         if name not in self._related_objects or not cached:
-            rel_data = self._data[name]
+            relation = self._columns_info[name]['relation']
+            # Update related cache with data been read
+            for _cdata in self._lcache.values():
+                _cval = _cdata.get(name, False)
+                if _cval and _cval[0] not in self._cache[relation]:
+                    self._cache[relation][_cval[0]].update({
+                        'id': _cval[0],
+                        '__name_get_result': _cval[1],
+                    })
+            # End cache related code
+
             if rel_data:
                 rel_id = rel_data[0]  # Do not forged about relations in form [id, name]
-                relation = self._columns_info[name]['relation']
                 rel_obj = self._service.get_obj(relation)
-                self._related_objects[name] = Record(rel_obj, rel_id)
+                self._related_objects[name] = Record(rel_obj, rel_id, cache=self._cache)
             else:
                 self._related_objects[name] = False
         return self._related_objects[name]
 
-    def _get_one2many_rel_obj(self, name, cached=True, limit=None):
+    def _get_one2many_rel_obj(self, name, rel_ids, cached=True, limit=None):
         """ Method used to fetch related objects by name of field that points to them
             using one2many relation
         """
         if name not in self._related_objects or not cached:
             relation = self._columns_info[name]['relation']
             rel_obj = self._service.get_obj(relation)
-            rel_ids = self._data[name]   # Take in mind that field value is list of IDS
-            self._related_objects[name] = RecordList(rel_obj, rel_ids)
+            self._related_objects[name] = RecordList(rel_obj, rel_ids, cache=self._cache)
         return self._related_objects[name]
 
     def _get_field(self, ftype, name):
         res = super(RecordRelations, self)._get_field(ftype, name)
         if ftype == 'many2one':
-            return self._get_many2one_rel_obj(name)
+            return self._get_many2one_rel_obj(name, res)
         if ftype in ('one2many', 'many2many'):
-            return self._get_one2many_rel_obj(name)
+            return self._get_one2many_rel_obj(name, res)
         return res
 
     def __getitem__(self, name):
