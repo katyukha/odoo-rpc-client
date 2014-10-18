@@ -9,7 +9,7 @@ import openerp_proxy.version
 
 setup(name='openerp_proxy',
       version=openerp_proxy.version.version,
-      description='OpenERP CLI interface and libraray for RPC',
+      description='Odoo/OpenERP CLI interface and library for RPC',
       author='Dmytro Katyukha',
       author_email='firemage.dima@gmail.com',
       url='https://github.com/katyukha/openerp-proxy',
@@ -30,7 +30,7 @@ setup(name='openerp_proxy',
           'Topic :: Utilities',
           'Topic :: Software Development :: Libraries',
       ],
-      keywords=['openerp', 'rpc', 'xmlrpc', 'xml-rpc'],
+      keywords=['openerp', 'odoo', 'rpc', 'xmlrpc', 'xml-rpc', 'json-rpc', 'jsonrpc'],
       extras_require={
           'ipython_shell': ['ipython'],
       },
