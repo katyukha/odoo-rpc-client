@@ -405,15 +405,25 @@ class ObjectRecords(Object):
 
     def search_records(self, *args, **kwargs):
         """ Return instance or list of instances of Record class,
-            making available to work with data simpler:
+            making available to work with data simpler
 
-                >>> so_obj = db['sale.order']
-                >>> data = so_obj.search_records([('date','>=','2013-01-01')])
-                >>> for order in data:
-                        order.write({'note': 'order date is %s'%order.date})
+            :param domain: list of tuples, specifying search domain
+            :param int offset: optional number of results to skip inthe returned values (default:0)
+            :param limit: optional max number of record in results (default: False)
+            :type limit: int|False
+            :param order: optional columns to sort
+            :type order: str
+            :param dict context: optional context to pass to *search* method
+            :param count: if set to True, then only amount of recrods found will be returned. (default: False)
+            :param read_fields: optional. specifies list of fields to read. (Not used at the moment)
+            :type read_fields: list of strings
+            :return: RecordList contains records found, or integer representing amount of records found (if count=True)
+            :rtype: RecordList|int
 
-            Additionally accepts keyword argument 'read_field' which can be used to specify
-            list of fields to read
+            >>> so_obj = db['sale.order']
+            >>> data = so_obj.search_records([('date','>=','2013-01-01')])
+            >>> for order in data:
+                    order.write({'note': 'order date is %s'%order.date})
         """
 
         read_fields = kwargs.pop('read_fields', None)
@@ -441,10 +451,10 @@ class ObjectRecords(Object):
                      if *ids* is list of ints
             :rtype: Record|RecordList
 
-                >>> so_obj = db['sale.order']
-                >>> data = so_obj.read_records([1,2,3,4,5])
-                >>> for order in data:
-                        order.write({'note': 'order data is %s'%order.data})
+            >>> so_obj = db['sale.order']
+            >>> data = so_obj.read_records([1,2,3,4,5])
+            >>> for order in data:
+                    order.write({'note': 'order data is %s'%order.data})
         """
         assert isinstance(ids, (int, long, list, tuple)), "ids must be instance of (int, long, list, tuple)"
 
