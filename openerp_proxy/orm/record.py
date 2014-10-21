@@ -166,7 +166,13 @@ class Record(Extensible):
         return res
 
     def refresh(self):
-        self._data.update(self._object.read(self.id, self._data.keys()))
+        """Reread data and clean-up the caches
+
+           :returns: self
+           :rtype: instance of Record
+        """
+        self._data.clear()
+        self._data['id'] = self._id
         return self
 
 
@@ -259,9 +265,23 @@ class RecordList(Extensible):
     __repr__ = __str__
 
     def refresh(self):
-        self._records = None
-        for id_ in self.ids:
-            del self._cache[self.object.name]
+        """ Cleanup data caches. nest try to get data will cause rereading of it
+
+           :returns: self
+           :rtype: instance of RecordList
+        """
+        if self._records is not None:
+            # next two lines are coded to avoid infinite recursion, when som of
+            # recrods will point to this list instance
+            records = self._records
+            self._records = None
+            for record in records:
+                record.refresh()
+        else:
+            lcache = self._cache[self.object.name]
+            for id_ in self.ids:
+                if id_ in lcache:
+                    del lcache[id_]
         return self
 
     def append(self, item):
@@ -352,10 +372,19 @@ class RecordRelations(Record):
         return super(RecordRelations, self).__getitem__(name)
 
     def refresh(self):
+        """Reread data and clean-up the caches
+
+           :returns: self
+           :rtype: instance of Record
+        """
         super(RecordRelations, self).refresh()
 
         # Update related objects cache
+        rel_objects = self._related_objects
         self._related_objects = {}
+
+        for rel in rel_objects.values():
+            rel.refresh()  # both, Record and RecordList objects have 'refresh* method
         return self
 
 
@@ -404,6 +433,14 @@ class ObjectRecords(Object):
         """ Return instance or list of instances of Record class,
             making available to work with data simpler:
 
+            :param ids: ID or list of IDS to read data for
+            :type ids: int|list of int
+            :param fields: list of fields to read (*optional*)
+            :type fields: list of strings
+            :return: Record instance if *ids* is int or RecordList instance
+                     if *ids* is list of ints
+            :rtype: Record|RecordList
+
                 >>> so_obj = db['sale.order']
                 >>> data = so_obj.read_records([1,2,3,4,5])
                 >>> for order in data:
@@ -422,5 +459,8 @@ class ObjectRecords(Object):
         raise ValueError("Wrong type for ids args")
 
     def browse(self, *args, **kwargs):
+        """ Aliase to *read_records* method. In most cases same as serverside *browse*
+            (i mean server version 7.0)
+        """
         return self.read_records(*args, **kwargs)
 

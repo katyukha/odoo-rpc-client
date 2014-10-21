@@ -314,7 +314,8 @@ As You see above, to use plugin (or extension), just import it module (better at
 --------------
 
 For more information see `source
-code <https://github.com/katyukha/openerp-proxy>`_.
+code <https://github.com/katyukha/openerp-proxy>`_ or
+`documentation <https://github.com/katyukha/openerp-proxy>`_.
 
 
 Alternatives
