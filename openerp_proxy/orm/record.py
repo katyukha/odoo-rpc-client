@@ -332,7 +332,12 @@ class RecordRelations(Record):
             # Update related cache with data been read
             for _cdata in self._lcache.values():
                 _cval = _cdata.get(name, False)
-                if _cval and _cval[0] not in self._cache[relation]:
+                if not _cval:
+                    continue
+
+                if isinstance(_cval, (int, long)) and _cval not in self._cache[relation]:
+                    self._cache[relation][_cval[0]].update({'id': _cval})
+                elif isinstance(_cval, (list, tuple)) and _cval[0] not in self._cache[relation]:
                     self._cache[relation][_cval[0]].update({
                         'id': _cval[0],
                         '__name_get_result': _cval[1],

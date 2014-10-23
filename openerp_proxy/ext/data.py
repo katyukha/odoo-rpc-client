@@ -39,18 +39,31 @@ class RecordListData(RecordList):
                     #record._related_objects[field] = [rel_recs[i] for i in record[field]]
         return self
 
-    def group_by(self, field_name):
-        """ Groups all records in list by specifed field.
+    def group_by(self, grouper):
+        """ Groups all records in list by specifed grouper.
 
-            for example we have list of sale orders and want to group it by state:
+            :param grouper: field name or callable to group results by.
+                            if function is passed, it should receive only
+                            one argument - record instance, and result of
+                            calling grouper will be used to group records.
+            :type grouper: string|callable(record)
 
-            ::
+            for example we have list of sale orders and want to group it by state::
 
                 # so_list - variable that contains list of sale orders selected
                 # by some criterias. so to group it by state we will do:
                 group = so_list.group_by('state')
                 for state, rlist in group.iteritems():  # Iterate over resulting dictionary
                     print state, rlist.length           # Print state and amount of items with such state
+
+            or imagine that we would like to groupe records by last letter of sale order number::
+
+                # so_list - variable that contains list of sale orders selected
+                # by some criterias. so to group it by last letter of sale
+                # order name  we will do:
+                group = so_list.group_by(lambda so: so.name[-1])
+                for letter, rlist in group.iteritems():  # Iterate over resulting dictionary
+                    print letter, rlist.length           # Print state and amount of items with such state
         """
         cls_init = functools.partial(RecordList,
                                      self.object,
@@ -59,7 +72,12 @@ class RecordListData(RecordList):
                                      context=self._context)
         res = collections.defaultdict(cls_init)
         for record in self.records:
-            res[record[field_name]].append(record)
+            if isinstance(grouper, basestring):
+                key = record[grouper]
+            elif callable(grouper):
+                key = grouper(record)
+
+            res[key].append(record)
         return res
 
     def filter(self, func):
