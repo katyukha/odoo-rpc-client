@@ -26,18 +26,23 @@ class Record(Extensible):
             :param obj: instance of object this record is related to
             :param data: dictionary with initial data for a record
                          or integer ID of database record to fetch data from
+            :param fields: list of field names to read by default  (not used yet)
+            :type fields: list of strings (not used now)
             :param cache: dictionary of structure {object.name: {object_id: data} }
             :type cache: defaultdict(lambda: defaultdict(dict))
 
         Note to create instance of cache call *empty_cache*
     """
 
-    def __init__(self, obj, data, cache=None):
+    def __init__(self, obj, data, fields=None, cache=None):
         assert isinstance(obj, Object), "obj should be Object"
 
         self._object = obj
         self._cache = empty_cache() if cache is None else cache
         self._lcache = self._cache[obj.name]
+
+        # TODO: choose what fields should be read by default
+        #self._fields = set(['id'] if fields is None else fields)
 
         if isinstance(data, (int, long)):
             self._id = data
@@ -49,6 +54,7 @@ class Record(Extensible):
             self._id = data['id']
             self._data = self._lcache[self._id]
             self._data.update(data)
+            # TODO: update fields with data caches
         else:
             raise ValueError("data should be dictionary structure returned by Object.read or int representing ID of record")
 
@@ -135,7 +141,8 @@ class Record(Extensible):
             Should be overridden by extensions to provide better hadling for diferent field values
         """
         if name not in self._data:
-            # TODO: think about reading all simple fields here
+            # TODO: read all fields for self._fields and if name not in
+            # self._fields update them with name
             for data in self._object.read(self._lcache.keys(), [name]):
                 self._lcache[data['id']].update(data)
 
@@ -176,8 +183,6 @@ class Record(Extensible):
         return self
 
 
-# TODO: make it lazy
-# TODO: completly refactor it
 class RecordList(Extensible):
     """Class to hold list of records with some extra functionality
 
@@ -189,7 +194,7 @@ class RecordList(Extensible):
         :type fields: list of strings (not used now)
         :param cache: dictionary of structure {object.name: {object_id: data} }
         :type cache: defaultdict(lambda: defaultdict(dict))
-        :param context: context to be passed automatocally to methods called from this list
+        :param context: context to be passed automatocally to methods called from this list (not used yet)
         :type context: dict
 
     """
@@ -197,21 +202,24 @@ class RecordList(Extensible):
     def __init__(self, obj, ids=None, fields=None, cache=None, context=None):
         """
         """
+        # TODO: store fields in cache instead of objects. this way should
+        # reduce memory usage. for example:
+        # cache['sale_order']['__read_fields']
         # TODO: add checks to check if fields are real fields in
         # object.columns_info
-        self._ids = [] if ids is None else ids
         self._object = obj
         self._cache = empty_cache() if cache is None else cache
-        self._fields = obj.simple_fields if fields is None else fields
-        self._context = context
+        self._fields = fields
+        self._context = context  # not used yet
 
-        self._records = None  # simple list of Records
+        self._records = [Record(self.object, id_, fields=self._fields, cache=self._cache)
+                         for id_ in ids]
 
     @property
     def ids(self):
         """ IDs of records present in this RecordList
         """
-        return self._ids
+        return [r.id for r in self._records]
 
     @property
     def object(self):
@@ -223,16 +231,13 @@ class RecordList(Extensible):
     def records(self):
         """ Returns list (class 'list') of records
         """
-        if self._records is None:
-            self._records = [Record(self.object, id_, cache=self._cache)
-                             for id_ in self.ids]
         return self._records
 
     @property
     def length(self):
         """ Returns length of this record list
         """
-        return len(self.ids)
+        return len(self._records)
 
     # Container related methods
     def __getitem__(self, index):
@@ -248,7 +253,6 @@ class RecordList(Extensible):
         if isinstance(item, (int, long)):
             return item in self.ids
         if isinstance(item, Record):
-            # TODO: think about smth like: item in self.records
             return item.id in self.ids
         return False
 
@@ -265,29 +269,25 @@ class RecordList(Extensible):
     __repr__ = __str__
 
     def refresh(self):
-        """ Cleanup data caches. nest try to get data will cause rereading of it
+        """ Cleanup data caches. next try to get data will cause rereading of it
 
            :returns: self
            :rtype: instance of RecordList
         """
-        if self._records is not None:
-            # next two lines are coded to avoid infinite recursion, when som of
-            # recrods will point to this list instance
-            records = self._records
-            self._records = None
-            for record in records:
-                record.refresh()
-        else:
-            lcache = self._cache[self.object.name]
-            for id_ in self.ids:
-                if id_ in lcache:
-                    del lcache[id_]
+        for record in self.records:
+            record.refresh()
         return self
 
     def append(self, item):
+        """ Append record to list
+
+            :param item: Record instance to be added to list
+            :type item: Record
+            :return: self
+            :rtype: RecordList
+        """
         assert isinstance(item, Record), "Only Record instances could be added to list"
-        self.ids.append(item.id)
-        self.records.append(item)
+        self._records.append(item)
         return self
 
     # remote method overrides
@@ -336,7 +336,7 @@ class RecordRelations(Record):
                     continue
 
                 if isinstance(_cval, (int, long)) and _cval not in self._cache[relation]:
-                    self._cache[relation][_cval[0]].update({'id': _cval})
+                    self._cache[relation][_cval].update({'id': _cval})
                 elif isinstance(_cval, (list, tuple)) and _cval[0] not in self._cache[relation]:
                     self._cache[relation][_cval[0]].update({
                         'id': _cval[0],
@@ -345,7 +345,11 @@ class RecordRelations(Record):
             # End cache related code
 
             if rel_data:
-                rel_id = rel_data[0]  # Do not forged about relations in form [id, name]
+                if isinstance(rel_data, (list, tuple)):
+                    rel_id = rel_data[0]  # Do not forged about relations in form [id, name]
+                else:
+                    rel_id = rel_data
+
                 rel_obj = self._service.get_obj(relation)
                 self._related_objects[name] = Record(rel_obj, rel_id, cache=self._cache)
             else:

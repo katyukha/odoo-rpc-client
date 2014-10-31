@@ -28,6 +28,7 @@ Features
    and easily use them from session. no packages for them required,
    just tell the path where script file is placed
 -  Support of JSON-RPC for version 8 of OpenERP (experimental)
+-  Support of using **named parametrs** in RPC method calls (only if server supports).
 
 What You can do with this
 ~~~~~~~~~~~~~~~~~~~~~~~~~
