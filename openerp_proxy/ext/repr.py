@@ -1,3 +1,10 @@
+""" This module privides additional representation capabilities
+of RecordList class, like representation as HTML table with
+ability to highlight specific rows, which is usefule when
+used inside IPython notebook
+
+"""
+
 from openerp_proxy.orm.record import RecordList
 
 
@@ -19,6 +26,19 @@ class HTMLTable(object):
         self._highlight_row = highlight_row
 
     def _get_field(self, record, field):
+        """ Returns value for requested field.
+            fields should be dotted path to value of record like::
+                'product_id.categ_id.name'
+            or function to get value from record like::
+                lambda r: r.product_id.categ_id.name
+
+            :param record: Record instance to get field from
+            :type: Record instance
+            :param field: path to field or function to get value from record
+            :type: string|func(record)->value
+            :return: requested value
+        """
+
         if callable(field):
             return field(record)
 
@@ -27,20 +47,22 @@ class HTMLTable(object):
         while fields:
             field = fields.pop(0)
             try:
-                r = r[field]
+                r = r[field]  # try to get normal field
             except KeyError:
                 try:
-                    r = r[int(field)]
+                    r = r[int(field)]  # try to get by index (to allow to get value from *2m fields)
                 except (KeyError, ValueError):
                     try:
-                        r = getattr(r, field)
-                        if callable(r):
+                        r = getattr(r, field)  # try to get attribute
+                        if callable(r):        # and if attribute is callable then call it
                             r = r()
                     except AttributeError:
                         raise
         return r
 
     def _repr_html_(self):
+        """ HTML representation
+        """
         table = "<table>%s</table>"
         trow = "<tr>%s</tr>"
         throw = '<tr style="background: #ffff99">%s</tr>'

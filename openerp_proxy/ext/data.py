@@ -1,3 +1,6 @@
+""" This module provides extension which allows aditional
+data manipulations, especialy filtering and grouping capabilities.
+"""
 from openerp_proxy.orm.record import ObjectRecords
 from openerp_proxy.orm.record import RecordList
 import collections
