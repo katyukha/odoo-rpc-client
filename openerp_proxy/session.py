@@ -6,7 +6,6 @@ from getpass import getpass
 
 # project imports
 from core import ERP_Proxy
-from plugin import ERP_PluginManager
 
 
 __all__ = ('ERP_Session',)
@@ -19,7 +18,7 @@ class ERP_Session(object):
         directory, and on init it loads history and allows simply connect
         to database by url or index. No more hosts, usernames, ports, etc...
         required to be memorized.
-        Just on session start call:
+        Just on session start call::
 
             >>> print session
 
@@ -195,11 +194,13 @@ class ERP_Session(object):
             :type url_or_index: int|string
             :param kwargs: can contain aditional arguments to be passed on init of ERP_Proxy
             :return: ERP_Proxy instance
+            :raises ValueError: if cannot find database by specified args
 
             Examples::
 
-                session.get_db(1)
-                session.get_db('xml-rpc://katyukha@erp.jbm.int:8069/jbm0')
+                session.get_db(1)   # using index
+                session.get_db('xml-rpc://katyukha@erp.jbm.int:8069/jbm0')  # using url
+                session.get_db('my_db')   # using aliase
         """
         if isinstance(url_or_index, (int, long)):
             url = self.index[url_or_index]
@@ -222,9 +223,6 @@ class ERP_Session(object):
             ep_args['pwd'] = getpass('Password: ')
 
         db = ERP_Proxy(**ep_args)
-        # injecting Plugins:
-        db.plugins = ERP_PluginManager(db)
-        # Plugins injected
         self._add_db(url, db)
         return db
 
@@ -309,6 +307,8 @@ class ERP_Session(object):
         with open(self.data_file, 'wt') as json_data:
             json.dump(data, json_data, indent=4)
 
+    # Overridden to be able to access database like
+    # session[url_or_index]
     def __getitem__(self, url_or_index):
         try:
             res = self.get_db(url_or_index)
@@ -316,6 +316,8 @@ class ERP_Session(object):
             raise KeyError(e.message)
         return res
 
+    # Overriden to be able to access database like
+    # session.my_db
     def __getattr__(self, name):
         try:
             res = self.get_db(name)

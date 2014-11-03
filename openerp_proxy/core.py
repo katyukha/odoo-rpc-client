@@ -51,6 +51,7 @@
 from openerp_proxy.connection import get_connector
 from openerp_proxy.exceptions import Error
 from openerp_proxy.service import ServiceManager
+from openerp_proxy.plugin import PluginManager
 
 # Activate orm internal logic
 # TODO: think about not enabling it by default, allowing users to choose what
@@ -101,6 +102,7 @@ class ERP_Proxy(Extensible):
 
         self._connection = get_connector(protocol)(host, port, verbose=verbose)
         self._services = ServiceManager(self)
+        self._plugins = PluginManager(self)
 
         self._uid = None
 
@@ -135,6 +137,12 @@ class ERP_Proxy(Extensible):
 
         """
         return self._services
+
+    @property
+    def plugins(self):
+        """ Plugins associated with this proxy instance
+        """
+        return self._plugins
 
     @property
     def connection(self):
