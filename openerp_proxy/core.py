@@ -96,15 +96,28 @@ class ERP_Proxy(Extensible):
 
     def __init__(self, dbname, host, user, pwd, port=8069, protocol='xml-rpc', verbose=False):
         # TODO: hide these fields behide properties
-        self.dbname = dbname
-        self.user = user  # TODO: rename. Use this name for property yo get logged in user record instace
-        self.pwd = pwd
+        self._dbname = dbname
+        self._username = user
+        self._pwd = pwd
 
         self._connection = get_connector(protocol)(host, port, verbose=verbose)
         self._services = ServiceManager(self)
         self._plugins = PluginManager(self)
 
         self._uid = None
+        self._user = None
+
+    @property
+    def dbname(self):
+        """ Name of database to connect to
+        """
+        return self._dbname
+
+    @property
+    def username(self):
+        """ Name of user to connect with (user login)
+        """
+        return self._username
 
     @property
     def host(self):
@@ -160,6 +173,15 @@ class ERP_Proxy(Extensible):
         return self._uid
 
     @property
+    def user(self):
+        """ Currenct logged in user instance
+            :rtype: Record instance
+        """
+        if self._user is None:
+            self._user = self.get_obj('res.users').read_records(self.uid)
+        return self._user
+
+    @property
     def registered_objects(self):
         """ Stores list of registered in ERP database objects
         """
@@ -173,7 +195,7 @@ class ERP_Proxy(Extensible):
             :raises ERPProxyException: if wrong login or password
         """
         # Get the uid
-        uid = self.services['common'].login(self.dbname, self.user, self.pwd)
+        uid = self.services['common'].login(self.dbname, self._username, self._pwd)
 
         if not uid:
             raise ERPProxyException("Bad login or password")
@@ -240,7 +262,7 @@ class ERP_Proxy(Extensible):
 
             At this moment mostly used internaly in session
         """
-        return "%(protocol)s://%(user)s@%(host)s:%(port)s/%(database)s" % dict(user=self.user,
+        return "%(protocol)s://%(user)s@%(host)s:%(port)s/%(database)s" % dict(user=self._username,
                                                                                host=self.host,
                                                                                database=self.dbname,
                                                                                port=self.port,

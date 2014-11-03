@@ -15,7 +15,7 @@ class ReportService(ServiceBase):
             @param context: Ususaly have to have 'model' and 'id' keys that describes object to get report for
             @return: ID of report to get by method *report_get*
         """
-        return self._service.report(self._erp_proxy.dbname, self._erp_proxy.uid, self._erp_proxy.pwd, report_name, ids, context)
+        return self._service.report(self._erp_proxy.dbname, self._erp_proxy.uid, self._erp_proxy._pwd, report_name, ids, context)
 
     def report_get(self, report_id):
         """ Proxy method to report servce *report_get* method
@@ -27,4 +27,4 @@ class ReportService(ServiceBase):
                         - 'format': string representing format, report generated in
 
         """
-        return self._service.report_get(self._erp_proxy.dbname, self._erp_proxy.uid, self._erp_proxy.pwd, report_id)
+        return self._service.report_get(self._erp_proxy.dbname, self._erp_proxy.uid, self._erp_proxy._pwd, report_id)

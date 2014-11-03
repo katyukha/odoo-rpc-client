@@ -279,7 +279,7 @@ class ERP_Session(object):
                 'dbname': database.dbname,
                 'host': database.host,
                 'port': database.port,
-                'user': database.user,
+                'user': database.username,
                 'protocol': database.protocol,
                 'verbose': database.connection.verbose,
             }
