@@ -15,6 +15,20 @@ __all__ = (
 
 def empty_cache():
     """ Created instance of empty cache for Record
+
+        Ususaly cache will be dictionary structure like::
+
+            cache = {
+                'product.product': {
+                    1: {
+                        'id': 1,
+                        'name': 'product1',
+                        'default_code': 'product1',
+                    },
+                    ...
+                },
+                ...
+            }
     """
     return defaultdict(lambda: defaultdict(dict))
 

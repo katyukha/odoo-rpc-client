@@ -74,9 +74,20 @@ class ERP_Proxy(Extensible):
        A simple class to connect ot ERP via xml_rpc
        Should be initialized with following arguments:
 
+       :param str dbname: name of database to connect to
+       :param str host: server host name to connect to
+       :param str user: username to login as
+       :param str pwd: password to log-in with
+       :param int port: port number of server
+       :param str protocol: protocol used to connect. To get list of available protcols call:
+                            ``openerp_proxy.connection.get_connector_names()``
+       :param bool verbose: Be verbose?
+
+       Example::
+
            >>> db = ERP_Proxy('dbname', 'host', 'user', pwd = 'Password', verbose = False)
 
-       Allows access to ERP objects via dictionary syntax:
+       Allows access to ERP objects via dictionary syntax::
 
            >>> db['sale.order']
                Object ('sale.order')
@@ -85,17 +96,31 @@ class ERP_Proxy(Extensible):
     def __init__(self, dbname, host, user, pwd, port=8069, protocol='xml-rpc', verbose=False):
         # TODO: hide these fields behide properties
         self.dbname = dbname
-        self.host = host
         self.user = user  # TODO: rename. Use this name for property yo get logged in user record instace
-        self.port = port
         self.pwd = pwd
-        self.verbose = verbose
-        self.protocol = protocol
 
-        self._connection = None
-        self._services = None
+        self._connection = get_connector(protocol)(host, port, verbose=verbose)
+        self._services = ServiceManager(self)
 
         self._uid = None
+
+    @property
+    def host(self):
+        """ Server host
+        """
+        return self._connection.host
+
+    @property
+    def port(self):
+        """ Server port
+        """
+        return self._connection.port
+
+    @property
+    def protocol(self):
+        """ Server protocol
+        """
+        return self._connection.Meta.name
 
     @property
     def services(self):
@@ -104,20 +129,17 @@ class ERP_Proxy(Extensible):
             accessible by name::
 
                 db.services.report   # report service
+                db.services.object   # object service (model related actions)
+                db.services.common   # used for login (db.services.common.login(dbname, username, password)
+                db.services.db       # database management service
 
         """
-        if self._services is None:
-            self._services = ServiceManager(self)
         return self._services
 
     @property
     def connection(self):
         """ Connection to server.
-            Automatically connects to OpenERP if not connected yet
         """
-        if self._connection is None:
-            connector = get_connector(self.protocol)
-            self._connection = connector(self.host, self.port, verbose=self.verbose)
         return self._connection
 
     @property
@@ -138,7 +160,9 @@ class ERP_Proxy(Extensible):
     def connect(self):
         """ Connects to the server
 
-            returns Id of user connected
+            :return: Id of user logged in
+            :rtype: int
+            :raises ERPProxyException: if wrong login or password
         """
         # Get the uid
         uid = self.services['common'].login(self.dbname, self.user, self.pwd)
@@ -150,6 +174,10 @@ class ERP_Proxy(Extensible):
 
     def reconnect(self):
         """ Recreates connection to the server and clears caches
+
+            :return: ID of user logged in
+            :rtype: int
+            :raises ERPProxyException: if wrong login or password
         """
         self._uid = self.connect()
         return self._uid

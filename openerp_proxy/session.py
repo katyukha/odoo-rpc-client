@@ -283,7 +283,7 @@ class ERP_Session(object):
                 'port': database.port,
                 'user': database.user,
                 'protocol': database.protocol,
-                'verbose': database.verbose,
+                'verbose': database.connection.verbose,
             }
         elif isinstance(database, dict):
             return database
