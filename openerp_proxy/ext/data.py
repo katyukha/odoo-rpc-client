@@ -14,33 +14,23 @@ class RecordListData(RecordList):
     """ Extend record list to add aditional method to work with lists of records
     """
 
-    def prefetch(self, *fields):
-        """ Prefetches related fields in one query
-        """
-        # TODO: refactor this ugly code to make it more readable
-        for field in fields:
-            ci = self.object.columns_info[field]
-            rel_obj = self.object.service.get_obj(ci['relation'])
+    #def prefetch(self, *fields):
+        #""" Prefetches related fields in one query
 
-            if ci['type'] == 'many2one':
-                # many2one field is usualy empty record, so we create
-                # dictionary of folowing format
-                #    {id: record}
-                # Where 'id' is ID of related field record and 'record' is
-                # Record instance to be update with data read for this ID
-                prefetch_ids = {r[field].id: r[field] for r in self.records if r[field]}
-                for data in rel_obj.read(prefetch_ids.keys()):
-                    r = prefetch_ids[data['id']]
-                    r._data.update(data)
-                    r._related_objects = {}
-            #
-            #elif ci.ttype in ('one2many', 'many2many'):
+            #NOTE: at this moment makes sense only for *2many fields
+        #"""
+        ## TODO: refactor this ugly code to make it more readable
+        #for field in fields:
+            #ci = self.object.columns_info[field]
+            #rel_obj = self.object.service.get_obj(ci['relation'])
+
+            #elif ci['type'] in ('one2many', 'many2many'):
                 #prefetch_records = sum((r[field] for r in self.records if r[field]))
                 #rel_recs = {r.id: r for r in rel_obj.read_records(prefetch_ids)}
                 #for record in self.records:
                     ## TODO: convert to recordlist
                     #record._related_objects[field] = [rel_recs[i] for i in record[field]]
-        return self
+        #return self
 
     def group_by(self, grouper):
         """ Groups all records in list by specifed grouper.

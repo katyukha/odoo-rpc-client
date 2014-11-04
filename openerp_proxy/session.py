@@ -36,6 +36,7 @@ class ERP_Session(object):
         self.data_file = os.path.expanduser(data_file)
         self._databases = {}  # key: url; value: instance of DB or dict with init args
         self._db_aliases = {}  # key: aliase name; value: url
+        self._options = {}
 
         self._db_index = {}  # key: index; value: url
         self._db_index_rev = {}  # key: url; value: index
@@ -48,27 +49,13 @@ class ERP_Session(object):
         if os.path.exists(self.data_file):
             with open(self.data_file, 'rt') as json_data:
                 data = json.load(json_data)
-                self._init_databases(data)
+
+                self._databases = data.get('databases', {})
+                self._db_aliases = data.get('aliases', {})
+                self._options = data.get('options', {})
+
                 self._init_paths(data)
-                self._init_aliases(data)
                 self._init_start_up_imports(data)
-
-    def _init_databases(self, data):
-        """ Initializes databases from passed data.
-
-            :param data: dictionary with data read from saved session file
-        """
-        if data.get('databases', False) is not False:  # For compatability with older versions
-            self._databases = data['databases']
-        else:
-            self._databases = data  # For compatability with older versions
-
-    def _init_aliases(self, data):
-        """ Loads db aliases saved in previous session
-
-            :param data: dictionary with data read from saved session file
-        """
-        self._db_aliases = data.get('aliases', {})
 
     def _init_start_up_imports(self, data):
         """ Loads list of modules/packages names to be imported at start-up,
@@ -103,6 +90,26 @@ class ERP_Session(object):
         if path not in sys.path:
             sys.path.append(path)
         self._extra_paths.add(path)
+
+    def option(self, opt, val=None):
+        """ Get or set option.
+            if *val* is passed, *val* will be set as value for option, else just option value
+            will be returned
+
+            :param str opt: option to get or set value for
+            :param val: value to be set for option *opt*
+            :return: value of option *opt*
+
+            Currently available options:
+
+                - store_passwords (bool)   If set to True then all used
+                  passwords will be stored on session.save. But be careful,
+                  because of encription used for stored passwords is very week.
+
+        """
+        if val is not None:
+            self._options[opt] = val
+        return self._options.get(opt, None)
 
     @property
     def aliases(self):
@@ -218,10 +225,14 @@ class ERP_Session(object):
         ep_args = db.copy()  # DB here is instance of dict
         ep_args.update(**kwargs)
 
-        # Check password, if not provided - ask
-        # TODO: implement correct behavior for IPython notebooks
         if 'pwd' not in ep_args:
-            ep_args['pwd'] = getpass('Password: ')
+            if self.option('store_passwords') and 'password' in ep_args:
+                from simplecrypt import decrypt
+                import base64
+                crypter, password = base64.decodestring(ep_args.pop('password')).split(':')
+                ep_args['pwd'] = decrypt(ERP_Proxy.to_url(ep_args), base64.decodestring(password))
+            else:
+                ep_args['pwd'] = getpass('Password: ')
 
         db = ERP_Proxy(**ep_args)
         self._add_db(url, db)
@@ -260,11 +271,13 @@ class ERP_Session(object):
         user = user or raw_input('ERP Login: ')
         pwd = pwd or getpass("Password: ")
 
-        url = "%(protocol)s://%(user)s@%(host)s:%(port)s/%(database)s" % dict(user=user,
-                                                                              host=host,
-                                                                              database=dbname,
-                                                                              port=port,
-                                                                              protocol=protocol)
+        url = ERP_Proxy.to_url(inst=None,
+                               user=user,
+                               host=host,
+                               dbname=dbname,
+                               port=port,
+                               protocol=protocol)
+
         db = self._databases.get(url, False)
         if isinstance(db, ERP_Proxy):
             return db
@@ -276,14 +289,13 @@ class ERP_Session(object):
 
     def _get_db_init_args(self, database):
         if isinstance(database, ERP_Proxy):
-            return {
-                'dbname': database.dbname,
-                'host': database.host,
-                'port': database.port,
-                'user': database.username,
-                'protocol': database.protocol,
-                'verbose': database.connection.verbose,
-            }
+            res = database.get_init_args()
+            if self.option('store_passwords') and database._pwd:
+                from simplecrypt import encrypt
+                import base64
+                password = base64.encodestring('simplecrypt:' + base64.encodestring(encrypt(database.get_url(), database._pwd)))
+                res.update({'password': password})
+            return res
         elif isinstance(database, dict):
             return database
         else:
@@ -303,6 +315,7 @@ class ERP_Session(object):
             'extra_paths': list(self._extra_paths),
             'aliases': self._db_aliases,
             'start_up_imports': self._start_up_imports,
+            'options': self._options,
         }
 
         with open(self.data_file, 'wt') as json_data:

@@ -259,17 +259,43 @@ class ERP_Proxy(Extensible):
 
         return res
 
+    def get_init_args(self):
+        """ Returns dictionary with init arguments which can be safely passed
+            to class constructor
+        """
+        return dict(user=self._username,
+                    host=self.host,
+                    port=self.port,
+                    dbname=self.dbname,
+                    protocol=self.protocol,
+                    verbose=self.connection.verbose)
+
+    @classmethod
+    def to_url(cls, inst, **kwargs):
+        """ Converts instance to url
+
+            :param inst: instance to convert to init args
+            :type inst: ERP_Proxy|dict
+            :return: generated URL
+            :rtype: str
+        """
+        url_tmpl = "%(protocol)s://%(user)s@%(host)s:%(port)s/%(dbname)s"
+        if isinstance(inst, ERP_Proxy):
+            return url_tmpl % inst.get_init_args()
+        elif isinstance(inst, dict):
+            return url_tmpl % inst
+        elif inst is None and kwargs:
+            return url_tmpl % kwargs
+        else:
+            raise ValueError("inst must be ERP_Proxy instance or dict")
+
     # TODO: think to reimplement as property
     def get_url(self):
         """ Returns dabase URL
 
             At this moment mostly used internaly in session
         """
-        return "%(protocol)s://%(user)s@%(host)s:%(port)s/%(database)s" % dict(user=self._username,
-                                                                               host=self.host,
-                                                                               database=self.dbname,
-                                                                               port=self.port,
-                                                                               protocol=self.protocol)
+        return self.to_url(self)
 
     def __str__(self):
         return "ERP_Proxy: %s" % self.get_url()
