@@ -167,6 +167,8 @@ class ERP_Proxy(Extensible):
     def uid(self):
         """ Returns ID of current user. if one is None,
             connects to database and returns it
+
+            :rtype: int
         """
         if self._uid is None:
             self._uid = self.connect()
@@ -175,6 +177,7 @@ class ERP_Proxy(Extensible):
     @property
     def user(self):
         """ Currenct logged in user instance
+
             :rtype: Record instance
         """
         if self._user is None:
