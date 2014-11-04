@@ -374,8 +374,17 @@ class RecordRelations(Record):
         """ Method used to fetch related objects by name of field that points to them
             using one2many relation
         """
+        relation = self._columns_info[name]['relation']
         if name not in self._related_objects or not cached:
-            relation = self._columns_info[name]['relation']
+            # cache related logic
+            #    This will fill the cache with ids of *2many value. so when
+            #    some related field will be asked for one value, then for all
+            #    values in cache it will be asked too
+            cids = set((cid for cval in self._lcache.values() for cid in cval[name] if cid not in self._cache[relation]))
+            for cid in cids:
+                self._cache[relation][cid]['id'] = cid
+            # end cache related logic
+
             rel_obj = self._service.get_obj(relation)
             self._related_objects[name] = RecordList(rel_obj, rel_ids, cache=self._cache)
         return self._related_objects[name]
