@@ -77,6 +77,7 @@ class ERP_Session(object):
             :param data: dictionary with data read from saved session file
         """
         self._start_up_imports += data.get('start_up_imports', [])
+        self._start_up_imports = list(set(self._start_up_imports))
         for i in self._start_up_imports:
             try:
                 __import__(i)
