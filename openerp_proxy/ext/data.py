@@ -60,6 +60,7 @@ class RecordListData(RecordList):
         """
         cls_init = functools.partial(RecordList,
                                      self.object,
+                                     ids=[],
                                      fields=self._fields,
                                      cache=self._cache,
                                      context=self._context)
@@ -77,6 +78,7 @@ class RecordListData(RecordList):
         """ Filters items using *func*.
 
             :param func: callable to check if record should be included in result.
+                         also *openerp_proxy.utils.r_eval* may be used
             :type func: callable(record)->bool
             :return: RecordList which contains records that matches results
             :rtype: RecordList

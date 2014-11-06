@@ -4,6 +4,19 @@ import functools
 __all__ = ('ustr', 'AttrDict', 'wpartial')
 
 
+def r_eval(code):
+    """ Helper function to be used in filters or so
+        At this moment this function mostly suitable for extensions like
+        'openerp_proxy.ext.data' or 'openerp_proxy.ext.repr'
+    """
+    def r_eval_internal(record):
+        return eval(code, {
+            'r': record,
+            'rec': record,
+            'record': record})
+    return r_eval_internal
+
+
 def wpartial(func, *args, **kwargs):
     """Wrapped partial, same as functools.partial decorator,
        but also calls functools.wrap on its result thus shwing correct

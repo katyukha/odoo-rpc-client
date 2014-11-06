@@ -6,6 +6,8 @@ used inside IPython notebook
 """
 
 from openerp_proxy.orm.record import RecordList
+from openerp_proxy.orm.record import Record
+from ipython.display import HTML
 
 
 class HTMLTable(object):
@@ -103,9 +105,26 @@ class RecordListData(RecordList):
                            of one argument (record instance)
             :type fields: list(string | callable)
             :param highlight_row: function to check if row to be highlighted
+                                  also *openerp_proxy.utils.r_eval* may be used
             :type highlight_row: callable(record) -> bool
         """
         return HTMLTable(self, fields, **kwargs)
+
+
+class HTMLRecord(Record):
+    """ Adds HTML representation of record
+    """
+
+    def as_html(self, fields=None):
+        self.read(fields)
+        table_tmpl = u"<table><caption>Record %s</caption><tr><th>Column</th><th>Value</th></tr>%s</table>"
+        row_tmpl = u"<tr><th>%s</th><td>%s</td></tr>"
+
+        body = ""
+        for col_name, col_data in self._columns_info.iteritems():
+            row = row_tmpl % (col_data.get('string', col_name), self[col_name])
+            body += row
+        return HTML(table_tmpl % (self._name, body))
 
 
 

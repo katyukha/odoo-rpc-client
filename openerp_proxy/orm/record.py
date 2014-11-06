@@ -196,6 +196,14 @@ class Record(Extensible):
         self._data['id'] = self._id
         return self
 
+    def read(self, fields=None):
+        if fields is None:
+            data = self._object.read(self.id)
+        else:
+            data = self._object.read(self.id, fields)
+        self._data.update(data)
+        return data
+
 
 class RecordList(Extensible):
     """Class to hold list of records with some extra functionality
