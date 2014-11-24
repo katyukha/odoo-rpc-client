@@ -424,7 +424,8 @@ class RecordRelations(Record):
         self._related_objects = {}
 
         for rel in rel_objects.values():
-            rel.refresh()  # both, Record and RecordList objects have 'refresh* method
+            if isinstance(rel, (Record, RecordList)):
+                rel.refresh()  # both, Record and RecordList objects have 'refresh* method
         return self
 
 
