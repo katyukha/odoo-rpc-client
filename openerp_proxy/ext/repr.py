@@ -7,7 +7,7 @@ used inside IPython notebook
 
 from openerp_proxy.orm.record import RecordList
 from openerp_proxy.orm.record import Record
-from ipython.display import HTML
+from IPython.display import HTML
 
 
 class HTMLTable(object):
@@ -22,10 +22,13 @@ class HTMLTable(object):
         :param highlight_row: function to check if row to be highlighted
         :type highlight_row: callable(record) -> bool
     """
-    def __init__(self, recordlist, fields, highlight_row=None):
+    def __init__(self, recordlist, fields, **kwargs):
         self._recordlist = recordlist
         self._fields = fields
-        self._highlight_row = highlight_row
+        self._highlighters = {}
+        if kwargs.get('highlight_row', False):
+            self._highlighters['#ffff99'] = kwargs['highlight_row']
+        self._highlighters.update(kwargs.get('highlighters', {}))
 
     def _get_field(self, record, field):
         """ Returns value for requested field.
@@ -62,12 +65,21 @@ class HTMLTable(object):
                         raise
         return r
 
+    def highlight_record(self, record):
+        """ Checks all highlighters related to this representation object
+            and return color of firest match highlighter
+        """
+        for color, highlighter in self._highlighters.items():
+            if highlighter(record):
+                return color
+        return False
+
     def _repr_html_(self):
         """ HTML representation
         """
         table = "<table>%s</table>"
         trow = "<tr>%s</tr>"
-        throw = '<tr style="background: #ffff99">%s</tr>'
+        throw = '<tr style="background: %s">%s</tr>'
         tcaption = "<caption>%s</caption>" % self._recordlist
         theaders = "".join(("<th>%s</th>" % field for field in self._fields))
         data = ""
@@ -75,8 +87,9 @@ class HTMLTable(object):
         data += trow % theaders
         for record in self._recordlist:
             tdata = "".join(("<td>%s</td>" % self._get_field(record, field) for field in self._fields))
-            if self._highlight_row is not None and self._highlight_row(record):
-                data += throw % tdata
+            hcolor = self.highlight_record(record)
+            if hcolor:
+                data += throw % (hcolor, tdata)
             else:
                 data += trow % tdata
         return table % data
