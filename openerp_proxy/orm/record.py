@@ -164,7 +164,8 @@ class Record(Extensible):
         if name not in self._data:
             # TODO: read all fields for self._fields and if name not in
             # self._fields update them with name
-            for data in self._object.read(self._lcache.keys(), [name]):
+            keys = [key for key, val in self._lcache.viewitems() if name not in val]
+            for data in self._object.read(keys, [name]):
                 self._cache_field_read(ftype, name, data)
 
         return self._data[name]
@@ -353,25 +354,33 @@ class RecordRelations(Record):
         super(RecordRelations, self).__init__(*args, **kwargs)
         self._related_objects = {}
 
+    def _cache_field_read(self, ftype, name, data):
+        """ Cache field had been read
+
+            (See *_get_field* method code)
+        """
+        super(RecordRelations, self)._cache_field_read(ftype, name, data)
+        if ftype == 'many2one':
+            relation = self._columns_info[name]['relation']
+            rcache = self._cache[relation]
+            cval = data[name]
+            if isinstance(cval, (int, long)):
+                rcache[cval]['id'] = cval
+            elif isinstance(cval, (list, tuple)):
+                rcache[cval[0]].update({
+                    'id': cval[0],
+                    '__name_get_result': cval[1],
+                })
+        elif ftype in ('many2many', 'one2many'):
+            relation = self._columns_info[name]['relation']
+            rcache = self._cache[relation]
+            rcache.update({cid: {'id': cid} for cid in set(data[name]).difference(rcache.viewkeys())})
+
     def _get_many2one_rel_obj(self, name, rel_data, cached=True):
         """ Method used to fetch related object by name of field that points to it
         """
         if name not in self._related_objects or not cached:
             relation = self._columns_info[name]['relation']
-            # Update related cache with data been read
-            for _cdata in self._lcache.itervalues():
-                _cval = _cdata.get(name, False)
-                if not _cval:
-                    continue
-
-                if isinstance(_cval, (int, long)) and _cval not in self._cache[relation]:
-                    self._cache[relation][_cval].update({'id': _cval})
-                elif isinstance(_cval, (list, tuple)) and _cval[0] not in self._cache[relation]:
-                    self._cache[relation][_cval[0]].update({
-                        'id': _cval[0],
-                        '__name_get_result': _cval[1],
-                    })
-            # End cache related code
 
             if rel_data:
                 if isinstance(rel_data, (list, tuple)):
@@ -391,15 +400,6 @@ class RecordRelations(Record):
         """
         relation = self._columns_info[name]['relation']
         if name not in self._related_objects or not cached:
-            # cache related logic
-            #    This will fill the cache with ids of *2many value. so when
-            #    some related field will be asked for one value, then for all
-            #    values in cache it will be asked too
-            cids = set((cid for cval in self._lcache.itervalues() for cid in cval.get(name, []) if cid not in self._cache[relation]))
-            for cid in cids:
-                self._cache[relation][cid]['id'] = cid
-            # end cache related logic
-
             rel_obj = self._service.get_obj(relation)
             self._related_objects[name] = RecordList(rel_obj, rel_ids, cache=self._cache)
         return self._related_objects[name]
