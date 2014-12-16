@@ -149,6 +149,13 @@ class Record(Extensible):
 
         return True
 
+    def _cache_field_read(self, ftype, name, data):
+        """ Cache field had been read
+
+            (See *_get_field* method code)
+        """
+        self._lcache[data['id']].update(data)
+
     def _get_field(self, ftype, name):
         """ Returns value for field 'name' of type 'type'
 
@@ -158,7 +165,7 @@ class Record(Extensible):
             # TODO: read all fields for self._fields and if name not in
             # self._fields update them with name
             for data in self._object.read(self._lcache.keys(), [name]):
-                self._lcache[data['id']].update(data)
+                self._cache_field_read(ftype, name, data)
 
         return self._data[name]
 
@@ -352,7 +359,7 @@ class RecordRelations(Record):
         if name not in self._related_objects or not cached:
             relation = self._columns_info[name]['relation']
             # Update related cache with data been read
-            for _cdata in self._lcache.values():
+            for _cdata in self._lcache.itervalues():
                 _cval = _cdata.get(name, False)
                 if not _cval:
                     continue
@@ -388,7 +395,7 @@ class RecordRelations(Record):
             #    This will fill the cache with ids of *2many value. so when
             #    some related field will be asked for one value, then for all
             #    values in cache it will be asked too
-            cids = set((cid for cval in self._lcache.values() for cid in cval[name] if cid not in self._cache[relation]))
+            cids = set((cid for cval in self._lcache.itervalues() for cid in cval.get(name, []) if cid not in self._cache[relation]))
             for cid in cids:
                 self._cache[relation][cid]['id'] = cid
             # end cache related logic
@@ -423,7 +430,7 @@ class RecordRelations(Record):
         rel_objects = self._related_objects
         self._related_objects = {}
 
-        for rel in rel_objects.values():
+        for rel in rel_objects.itervalues():
             if isinstance(rel, (Record, RecordList)):
                 rel.refresh()  # both, Record and RecordList objects have 'refresh* method
         return self
