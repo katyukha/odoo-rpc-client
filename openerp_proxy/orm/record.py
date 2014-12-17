@@ -357,16 +357,16 @@ class RecordRelations(Record):
     def _cache_field_read(self, ftype, name, data):
         """ Cache field had been read
 
-            (See *_get_field* method code)
+            (See *Record._get_field* method code)
         """
         super(RecordRelations, self)._cache_field_read(ftype, name, data)
         if ftype == 'many2one':
             relation = self._columns_info[name]['relation']
             rcache = self._cache[relation]
             cval = data[name]
-            if isinstance(cval, (int, long)):
+            if cval and isinstance(cval, (int, long)):
                 rcache[cval]['id'] = cval
-            elif isinstance(cval, (list, tuple)):
+            elif cval and isinstance(cval, (list, tuple)):
                 rcache[cval[0]].update({
                     'id': cval[0],
                     '__name_get_result': cval[1],
