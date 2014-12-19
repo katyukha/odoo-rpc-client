@@ -9,6 +9,8 @@ from openerp_proxy.orm.record import RecordList
 from openerp_proxy.orm.record import Record
 from IPython.display import HTML
 
+from openerp_proxy.utils import ustr as _
+
 
 class HTMLTable(object):
     """ HTML Table representation object for RecordList
@@ -77,16 +79,16 @@ class HTMLTable(object):
     def _repr_html_(self):
         """ HTML representation
         """
-        table = "<table>%s</table>"
-        trow = "<tr>%s</tr>"
-        throw = '<tr style="background: %s">%s</tr>'
-        tcaption = "<caption>%s</caption>" % self._recordlist
-        theaders = "".join(("<th>%s</th>" % field for field in self._fields))
-        data = ""
+        table = u"<table>%s</table>"
+        trow = u"<tr>%s</tr>"
+        throw = u'<tr style="background: %s">%s</tr>'
+        tcaption = u"<caption>%s</caption>" % _(self._recordlist)
+        theaders = u"".join((u"<th>%s</th>" % _(field) for field in self._fields))
+        data = u""
         data += tcaption
         data += trow % theaders
         for record in self._recordlist:
-            tdata = "".join(("<td>%s</td>" % self._get_field(record, field) for field in self._fields))
+            tdata = u"".join((u"<td>%s</td>" % _(self._get_field(record, field)) for field in self._fields))
             hcolor = self.highlight_record(record)
             if hcolor:
                 data += throw % (hcolor, tdata)
