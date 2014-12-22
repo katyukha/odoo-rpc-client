@@ -320,6 +320,12 @@ class RecordList(Extensible):
         self._records.append(item)
         return self
 
+    def sort(self, *args, **kwargs):
+        """ sort(cmp=None, key=None, reverse=False) -- inplace sort
+            cmp(x, y) -> -1, 0, 1
+        """
+        return self._records.sort(*args, **kwargs)
+
     # remote method overrides
     def search(self, domain, *args, **kwargs):
         """ Performs normal search, but with addins ``('id', 'in', seld.ids)`` in domain

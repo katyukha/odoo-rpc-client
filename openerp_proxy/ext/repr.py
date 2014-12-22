@@ -12,27 +12,13 @@ from IPython.display import HTML
 from openerp_proxy.utils import ustr as _
 
 
-class HTMLTable(object):
-    """ HTML Table representation object for RecordList
+class HField(object):
 
-        :param recordlist: record list to create represetation for
-        :type recordlist: RecordList instance
-        :param fields: list of fields to display. each field should be string
-                       with dot splitted names of related object, or callable
-                       of one argument (record instance)
-        :type fields: list(string | callable)
-        :param highlight_row: function to check if row to be highlighted
-        :type highlight_row: callable(record) -> bool
-    """
-    def __init__(self, recordlist, fields, **kwargs):
-        self._recordlist = recordlist
-        self._fields = fields
-        self._highlighters = {}
-        if kwargs.get('highlight_row', False):
-            self._highlighters['#ffff99'] = kwargs['highlight_row']
-        self._highlighters.update(kwargs.get('highlighters', {}))
+    def __init__(self, field, name=None):
+        self._field = field
+        self._name = name
 
-    def _get_field(self, record, field):
+    def _get_field(self, record):
         """ Returns value for requested field.
             fields should be dotted path to value of record like::
                 'product_id.categ_id.name'
@@ -46,10 +32,10 @@ class HTMLTable(object):
             :return: requested value
         """
 
-        if callable(field):
-            return field(record)
+        if callable(self._field):
+            return self._field(record)
 
-        fields = field.split('.')
+        fields = self._field.split('.')
         r = record
         while fields:
             field = fields.pop(0)
@@ -66,6 +52,44 @@ class HTMLTable(object):
                     except AttributeError:
                         raise
         return r
+
+    def __call__(self, record):
+        return self._get_field(record)
+
+    def __unicode__(self):
+        return _(self._name) if self._name is not None else _(self._field)
+
+
+class HTMLTable(object):
+    """ HTML Table representation object for RecordList
+
+        :param recordlist: record list to create represetation for
+        :type recordlist: RecordList instance
+        :param fields: list of fields to display. each field should be string
+                       with dot splitted names of related object, or callable
+                       of one argument (record instance)
+        :type fields: list(string | callable)
+        :param highlight_row: function to check if row to be highlighted
+        :type highlight_row: callable(record) -> bool
+    """
+    def __init__(self, recordlist, fields, **kwargs):
+        self._recordlist = recordlist
+        self._fields = []
+        for field in fields:
+            if isinstance(field, HField):
+                self._fields.append(field)
+            elif isinstance(field, basestring):
+                self._fields.append(HField(field))
+            elif callable(field):
+                self._fields.append(HField(field))
+            elif isinstance(field, (tuple, list)) and len(field) == 2:
+                self._fields.append(HField(field[0], name=field[1]))
+            else:
+                raise ValueError('Unsupported field type: %s' % repr(field))
+        self._highlighters = {}
+        if kwargs.get('highlight_row', False):
+            self._highlighters['#ffff99'] = kwargs['highlight_row']
+        self._highlighters.update(kwargs.get('highlighters', {}))
 
     def highlight_record(self, record):
         """ Checks all highlighters related to this representation object
@@ -88,7 +112,7 @@ class HTMLTable(object):
         data += tcaption
         data += trow % theaders
         for record in self._recordlist:
-            tdata = u"".join((u"<td>%s</td>" % _(self._get_field(record, field)) for field in self._fields))
+            tdata = u"".join((u"<td>%s</td>" % _(field(record)) for field in self._fields))
             hcolor = self.highlight_record(record)
             if hcolor:
                 data += throw % (hcolor, tdata)
