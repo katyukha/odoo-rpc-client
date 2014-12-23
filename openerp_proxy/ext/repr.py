@@ -12,23 +12,59 @@ from IPython.display import HTML
 from openerp_proxy.utils import ustr as _
 
 
-class HField(object):
+class FieldNotFoundException(Exception):
+    def __init__(self, obj, field, original_exc=None):
+        self.field = field
+        self.obj = obj
+        self.orig_exc = original_exc
 
-    def __init__(self, field, name=None):
+    def __unicode__(self):
+        return u"Field %s not found in obj %s" % (_(self.field), _(self.obj))
+
+
+class HField(object):
+    """ Describes how to get a field.
+        Primaraly used in html representation logic.
+
+        :param field: path to field or function to get value from record
+                      if path is string, then it should be dot separated list of
+                      fields/subfields to get value from. for example
+                      ``sale_line_id.order_id.name`` or ``picking_id.move_lines.0.location_id``
+        :type field: string|func(record)->value
+        :param string name: name of field. (optional)
+                            if specified, then this value will be used in column header of table.
+        :param bool silent: If set to True, then not exceptions will be raised and *default* value
+                            will be returned. (default=False)
+        :param default: default value to be returned if field not found. default=None
+    """
+
+    def __init__(self, field, name=None, silent=False, default=None):
         self._field = field
         self._name = name
+        self._silent = silent
+        self._default = default
 
-    def _get_field(self, record):
-        """ Returns value for requested field.
-            fields should be dotted path to value of record like::
-                'product_id.categ_id.name'
-            or function to get value from record like::
-                lambda r: r.product_id.categ_id.name
+    @classmethod
+    def _get_field(cls, obj, name):
+        """ Try to get field named *name* from object *obj*
+        """
+        try:
+            res = obj[name]
+        except:
+            try:
+                res = obj[int(name)]
+            except:
+                try:
+                    res = getattr(obj, name)
+                except:
+                    raise FieldNotFoundException(obj, name)
+        return res
 
-            :param record: Record instance to get field from
+    def get_field(self, record):
+        """ Returns requested value from specified record (object)
+
+            :param record: Record instance to get field from (also should work on any other object)
             :type: Record instance
-            :param field: path to field or function to get value from record
-            :type: string|func(record)->value
             :return: requested value
         """
 
@@ -40,21 +76,21 @@ class HField(object):
         while fields:
             field = fields.pop(0)
             try:
-                r = r[field]  # try to get normal field
-            except KeyError:
-                try:
-                    r = r[int(field)]  # try to get by index (to allow to get value from *2m fields)
-                except (KeyError, ValueError):
-                    try:
-                        r = getattr(r, field)  # try to get attribute
-                        if callable(r):        # and if attribute is callable then call it
-                            r = r()
-                    except AttributeError:
-                        raise
+                r = self._get_field(r, field)
+                if callable(r):        # and if attribute is callable then call it
+                    r = r()
+            except FieldNotFoundException:
+                if not self._silent:   # reraise exception if not silent
+                    raise
+                else:                  # or return default value
+                    r = self._default
+                    break
         return r
 
     def __call__(self, record):
-        return self._get_field(record)
+        """ Get value from specified record
+        """
+        return self.get_field(record)
 
     def __unicode__(self):
         return _(self._name) if self._name is not None else _(self._field)
@@ -67,9 +103,16 @@ class HTMLTable(object):
         :type recordlist: RecordList instance
         :param fields: list of fields to display. each field should be string
                        with dot splitted names of related object, or callable
-                       of one argument (record instance)
-        :type fields: list(string | callable)
-        :param highlight_row: function to check if row to be highlighted
+                       of one argument (record instance) or *HField* instance or
+                       tuple(field_path|callable, field_name)
+        :type fields: list(string | callable | HField instance | tuple(field, name))
+        :param dict highlighters: dictionary in format:
+                                      {color: callable(record)->bool}
+                                  where *color* any color suitable for HTML and
+                                  callable is function of *Record instance)* which decides,
+                                  if record should be colored by this color
+        :param highlight_row: function to check if row to be highlighteda (deprecated)
+                              (old_style)
         :type highlight_row: callable(record) -> bool
     """
     def __init__(self, recordlist, fields, **kwargs):
@@ -164,6 +207,3 @@ class HTMLRecord(Record):
             row = row_tmpl % (col_data.get('string', col_name), self[col_name])
             body += row
         return HTML(table_tmpl % (self._name, body))
-
-
-
