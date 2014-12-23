@@ -204,11 +204,22 @@ class Record(Extensible):
         self._data['id'] = self._id
         return self
 
-    def read(self, fields=None):
-        if fields is None:
-            data = self._object.read(self.id)
-        else:
-            data = self._object.read(self.id, fields)
+    def read(self, fields=None, context=None):
+        """ Rereads data for this record
+
+            :param list fields: list of fields to be read (optional)
+            :param dict context: context to be passed to read (optional)
+        """
+        args = [self.id]
+        kwargs = {}
+
+        if fields is not None:
+            args.append(fields)
+
+        if context is not None:
+            kwargs['context'] = context
+
+        data = self._object.read(*args, **kwargs)
         self._data.update(data)
         return data
 

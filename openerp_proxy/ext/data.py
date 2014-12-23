@@ -121,7 +121,7 @@ class ObjectData(ObjectRecords):
                                 items of group
             @param count: if True then result dictinary will contain only counts
                           otherwise each group in result dictionary will contain RecordList of records found
-            @return: dictionary like 'group_rules' but with domains replaced by search result.
+            @return: dictionary like 'group_rules' but with domains replaced by search result (RecordList instance).
         """
         result = {}
         sub_domain = group_rules.pop('__sub_domain', [])
