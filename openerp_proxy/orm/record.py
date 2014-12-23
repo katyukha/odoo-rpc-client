@@ -14,9 +14,9 @@ __all__ = (
 
 
 def empty_cache():
-    """ Created instance of empty cache for Record
+    """ Create instance of empty cache for Record
 
-        Ususaly cache will be dictionary structure like::
+        Usualy cache will be dictionary structure like::
 
             cache = {
                 'product.product': {
@@ -25,10 +25,9 @@ def empty_cache():
                         'name': 'product1',
                         'default_code': 'product1',
                     },
-                    ...
                 },
-                ...
             }
+
     """
     return defaultdict(lambda: defaultdict(dict))
 
@@ -356,15 +355,13 @@ class RecordList(Extensible):
 
 
 class RecordRelations(Record):
-    """ Adds ability to browse related fields from record
-
-        Allow using '__obj' suffix in field name to retrive Record
-        instance of object related via many2one or one2many or many2many
-        This means next:
+    """
+        Adds ability to browse related fields from record::
 
             >>> o = erp_proxy['sale.order.line'].read_records(1)
             >>> o.order_id
-            ... R(sale.order, 25)[SO025]
+            R(sale.order, 25)[SO025]
+
     """
 
     def __init__(self, *args, **kwargs):

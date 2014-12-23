@@ -3,9 +3,9 @@ from openerp_proxy.orm.object import Object
 
 
 class Service(ObjectService):
-    """ Service class to simplify interaction with 'object' service
+    """ Service class to simplify interaction with 'object' service.
         Particulary, implements logic of choosing execute method ('execute' or 'execute_kw')
-        The last one cannot work with keyword arguments(
+        The last one cannot work with keyword arguments
     """
 
     def __init__(self, *args, **kwargs):
@@ -13,10 +13,12 @@ class Service(ObjectService):
         self.__objects = {}   # cached objects
 
     def get_obj(self, object_name):
-        """ Returns wraper around OpenERP object 'object_name' which is instance of ERP_Object
+        """ Returns wraper around OpenERP object 'object_name' which is instance of Object
 
-            @param object_name: name of an object to get wraper for
-            @return: instance of ERP_Object which wraps choosen object
+            :param object_name: name of an object to get wraper for
+            :type object_name: string
+            :return: instance of Object which wraps choosen object
+            :rtype: Object instance
         """
         if object_name in self.__objects:
             return self.__objects[object_name]

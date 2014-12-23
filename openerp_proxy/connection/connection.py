@@ -31,4 +31,6 @@ class ConnectorBase(object):
         raise NotImplementedError
 
     def get_service(self, name):
+        """ Returns service for specified *name*
+        """
         return self._get_service(name)

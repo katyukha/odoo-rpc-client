@@ -64,7 +64,7 @@ class HField(object):
         """ Returns requested value from specified record (object)
 
             :param record: Record instance to get field from (also should work on any other object)
-            :type: Record instance
+            :type record: Record instance
             :return: requested value
         """
 
@@ -198,6 +198,11 @@ class HTMLRecord(Record):
     """
 
     def as_html(self, fields=None):
+        """ Returns HTML representation of this Record
+
+           :param list fields: list of field names to display in HTML representation
+           :return: ipython's HTML object representing this record
+        """
         self.read(fields)
         table_tmpl = u"<table><caption>Record %s</caption><tr><th>Column</th><th>Value</th></tr>%s</table>"
         row_tmpl = u"<tr><th>%s</th><td>%s</td></tr>"

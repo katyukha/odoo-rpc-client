@@ -103,7 +103,7 @@ class ObjectData(ObjectRecords):
         """ Returns dictionary with grouped data. if count=True returns only amount of items found for rule
             otherwise returns list of records found for each rule
 
-            @param group_rules: dictionary with keys=group_names and values are domains or other dictionary
+            :param group_rules: dictionary with keys=group_names and values are domains or other dictionary
                                 with domains.
                                 For example
 
@@ -119,9 +119,11 @@ class ObjectData(ObjectRecords):
 
                                 Each group may contain '__sub_domain' field with domain applied to all
                                 items of group
-            @param count: if True then result dictinary will contain only counts
+            :type group_rules: dict
+            :param count: if True then result dictinary will contain only counts
                           otherwise each group in result dictionary will contain RecordList of records found
-            @return: dictionary like 'group_rules' but with domains replaced by search result (RecordList instance).
+            :type count: boolean (default: False)
+            :return: dictionary like 'group_rules' but with domains replaced by search result (RecordList instance).
         """
         result = {}
         sub_domain = group_rules.pop('__sub_domain', [])

@@ -2,6 +2,18 @@ from openerp_proxy.plugin import Plugin
 
 
 class ModuleUtils(Plugin):
+    """ Utility plugin to simplify module management
+
+        Allows to acces module objects like::
+
+            db.plugins.module_utils.m_stock
+
+        which is equivalent to::
+
+            db.get_obj('ir.module.module').search_records([('name','=','stock')])[0]
+
+        Also autocomplete in IPython supported for this syntax
+    """
 
     class Meta:
         name = "module_utils"
@@ -12,9 +24,11 @@ class ModuleUtils(Plugin):
 
     @property
     def modules(self):
-        """ Returns dictionary of modules registered in system
-            dict is like: {'module_name': module_inst}
-            where module_inst i browse_record instance for this module
+        """ Returns dictionary of modules registered in system.
+
+            Result dict is like: ``{'module_name': module_inst}``
+
+            where *module_inst* is *Record* instance for this module
         """
         if self._modules is None:
             self._modules = {m.name: m for m in self.proxy['ir.module.module'].search_records([])}
