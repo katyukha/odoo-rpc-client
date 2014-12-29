@@ -6,9 +6,8 @@ Provides some syntax sugar to ease acces to objects, records, etc
 import numbers
 
 from openerp_proxy.orm.record import ObjectRecords
-from openerp_proxy.orm.record import RecordList
+from openerp_proxy.orm.record import RecordList, get_record_list
 from openerp_proxy.core import ERP_Proxy
-#from openerp_proxy.orm.record import get_record_list_class
 
 
 class ObjectSugar(ObjectRecords):
@@ -98,7 +97,7 @@ class ObjectSugar(ObjectRecords):
         ids = [i[0] for i in res]
         if len(ids) == 1:
             return self[ids[0]]  # user previously defined __getitem__ functionality
-        return RecordList(self, ids=ids)
+        return get_record_list(self, ids=ids)
 
 
 class ERP_Proxy_Sugar(ERP_Proxy):

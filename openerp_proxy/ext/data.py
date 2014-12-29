@@ -2,7 +2,7 @@
 data manipulations, especialy filtering and grouping capabilities.
 """
 from openerp_proxy.orm.record import ObjectRecords
-from openerp_proxy.orm.record import RecordList
+from openerp_proxy.orm.record import RecordList, get_record_list
 import collections
 import functools
 
@@ -87,7 +87,7 @@ class RecordListData(RecordList):
         for record in self.records:
             if func(record):
                 result_ids.append(record.id)
-        return RecordList(self.object, ids=result_ids, fields=self._fields, cache=self._cache, context=self._context)
+        return get_record_list(self.object, ids=result_ids, fields=self._fields, cache=self._cache, context=self._context)
 
 
 # TODO: implement some class wrapper to by default load only count of domains,

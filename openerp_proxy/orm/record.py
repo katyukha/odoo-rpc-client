@@ -1,7 +1,7 @@
 from openerp_proxy.utils import wpartial
 from openerp_proxy.utils import ustr
 from openerp_proxy.orm.object import Object
-from extend_me import Extensible, ExtensibleType
+from extend_me import ExtensibleType
 
 from collections import defaultdict
 
@@ -37,6 +37,18 @@ RecordMeta = ExtensibleType._('Record')
 
 
 def get_record(obj, rid, fields=None, cache=None, context=None):
+    """ Creates new Record instance
+
+            :param obj: instance of object this record is related to
+            :param data: dictionary with initial data for a record
+                         or integer ID of database record to fetch data from
+            :param fields: list of field names to read by default  (not used yet)
+            :type fields: list of strings (not used now)
+            :param cache: dictionary of structure {object.name: {object_id: data} }
+            :type cache: defaultdict(lambda: defaultdict(dict))
+            :return: created Record instance
+            :rtype: Record instance
+    """
     RecordClass = RecordMeta.get_class()
     return RecordClass(obj, rid, fields=fields, cache=cache, context=context)
 
@@ -240,7 +252,28 @@ class Record(object):
         return data
 
 
-class RecordList(Extensible):
+RecordListMeta = ExtensibleType._('RecordList')
+
+
+def get_record_list(obj, ids=None, fields=None, cache=None, context=None):
+    """ Returns new instance of RecordList object.
+
+        :param obj: instance of Object to make this list related to
+        :type obj: Object instance
+        :param ids: list of IDs of objects to read data from
+        :type ids: list of int
+        :param fields: list of field names to read by default  (not used now)
+        :type fields: list of strings (not used now)
+        :param cache: dictionary of structure {object.name: {object_id: data} }
+        :type cache: defaultdict(lambda: defaultdict(dict))
+        :param context: context to be passed automatocally to methods called from this list (not used yet)
+        :type context: dict
+    """
+    RecordListClass = RecordListMeta.get_class()
+    return RecordListClass(obj, ids, fields=fields, cache=cache, context=context)
+
+
+class RecordList(object):
     """Class to hold list of records with some extra functionality
 
         :param obj: instance of Object to make this list related to
@@ -255,6 +288,7 @@ class RecordList(Extensible):
         :type context: dict
 
     """
+    __metaclass__ = RecordListMeta
 
     __slots__ = ('_object', '_cache', '_fields', '_context', '_records')
 
@@ -270,6 +304,8 @@ class RecordList(Extensible):
         self._cache = empty_cache() if cache is None else cache
         self._fields = fields
         self._context = context  # not used yet
+
+        ids = [] if ids is None else ids
 
         self._records = [get_record(self.object, id_, fields=self._fields, cache=self._cache, context=self._context)
                          for id_ in ids]
@@ -437,7 +473,7 @@ class RecordRelations(Record):
         relation = self._columns_info[name]['relation']
         if name not in self._related_objects or not cached:
             rel_obj = self._service.get_obj(relation)
-            self._related_objects[name] = RecordList(rel_obj, rel_ids, cache=self._cache)
+            self._related_objects[name] = get_record_list(rel_obj, rel_ids, cache=self._cache)
         return self._related_objects[name]
 
     def _get_field(self, ftype, name):
@@ -517,7 +553,7 @@ class ObjectRecords(Object):
 
         res = self.search(*args, **kwargs)
         if not res:
-            return RecordList(self, [], read_fields)
+            return get_record_list(self, [], read_fields)
 
         if read_fields:
             return self.read_records(res, read_fields)
@@ -549,7 +585,7 @@ class ObjectRecords(Object):
             #return get_record(self, self.read(ids, fields, *args, **kwargs))
             return get_record(self, ids, fields=fields)
         if isinstance(ids, (list, tuple)):
-            return RecordList(self, ids, fields, *args, **kwargs)
+            return get_record_list(self, ids, fields, *args, **kwargs)
 
         raise ValueError("Wrong type for ids args")
 
