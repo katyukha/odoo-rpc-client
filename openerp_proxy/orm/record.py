@@ -1,6 +1,7 @@
 from openerp_proxy.utils import wpartial
+from openerp_proxy.utils import ustr
 from openerp_proxy.orm.object import Object
-from extend_me import Extensible
+from extend_me import Extensible, ExtensibleType
 
 from collections import defaultdict
 
@@ -32,7 +33,15 @@ def empty_cache():
     return defaultdict(lambda: defaultdict(dict))
 
 
-class Record(Extensible):
+RecordMeta = ExtensibleType._('Record')
+
+
+def get_record(obj, rid, fields=None, cache=None, context=None):
+    RecordClass = RecordMeta.get_class()
+    return RecordClass(obj, rid, fields=fields, cache=cache, context=context)
+
+
+class Record(object):
     """ Base class for all Records
 
         Constructor
@@ -47,10 +56,14 @@ class Record(Extensible):
         Note to create instance of cache call *empty_cache*
     """
 
-    def __init__(self, obj, data, fields=None, cache=None):
+    __metaclass__ = RecordMeta
+    __slots__ = ['__dict__', '_object', '_cache', '_lcache', '_id', '_data', '_context']
+
+    def __init__(self, obj, data, fields=None, cache=None, context=None):
         assert isinstance(obj, Object), "obj should be Object"
 
         self._object = obj
+        self._context = context
         self._cache = empty_cache() if cache is None else cache
         self._lcache = self._cache[obj.name]
 
@@ -118,7 +131,7 @@ class Record(Extensible):
         return self._data['__name_get_result']
 
     def __unicode__(self):
-        return u"R(%s, %s)[%s]" % (self._object.name, self.id, self._name)
+        return u"R(%s, %s)[%s]" % (self._object.name, self.id, ustr(self._name))
 
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -164,7 +177,11 @@ class Record(Extensible):
             # TODO: read all fields for self._fields and if name not in
             # self._fields update them with name
             keys = [key for key, val in self._lcache.viewitems() if name not in val]
-            for data in self._object.read(keys, [name]):
+            if self._context is None:
+                read_data = self._object.read(keys, [name])
+            else:
+                read_data = self._object.read(keys, [name], context=self._context)
+            for data in read_data:
                 self._cache_field_read(ftype, name, data)
 
         return self._data[name]
@@ -239,6 +256,8 @@ class RecordList(Extensible):
 
     """
 
+    __slots__ = ('_object', '_cache', '_fields', '_context', '_records')
+
     def __init__(self, obj, ids=None, fields=None, cache=None, context=None):
         """
         """
@@ -252,7 +271,7 @@ class RecordList(Extensible):
         self._fields = fields
         self._context = context  # not used yet
 
-        self._records = [Record(self.object, id_, fields=self._fields, cache=self._cache)
+        self._records = [get_record(self.object, id_, fields=self._fields, cache=self._cache, context=self._context)
                          for id_ in ids]
 
     @property
@@ -300,7 +319,10 @@ class RecordList(Extensible):
     # present in this RecordList
     def __getattr__(self, name):
         method = getattr(self.object, name)
-        res = wpartial(method, self.ids)
+        if self._context is None:
+            res = wpartial(method, self.ids)
+        else:
+            res = wpartial(method, self.ids, context=self._context)
         setattr(self, name, res)
         return res
 
@@ -403,7 +425,7 @@ class RecordRelations(Record):
                     rel_id = rel_data
 
                 rel_obj = self._service.get_obj(relation)
-                self._related_objects[name] = Record(rel_obj, rel_id, cache=self._cache)
+                self._related_objects[name] = get_record(rel_obj, rel_id, cache=self._cache)
             else:
                 self._related_objects[name] = False
         return self._related_objects[name]
@@ -524,7 +546,8 @@ class ObjectRecords(Object):
             fields = self.simple_fields
 
         if isinstance(ids, (int, long)):
-            return Record(self, self.read(ids, fields, *args, **kwargs))
+            #return get_record(self, self.read(ids, fields, *args, **kwargs))
+            return get_record(self, ids, fields=fields)
         if isinstance(ids, (list, tuple)):
             return RecordList(self, ids, fields, *args, **kwargs)
 

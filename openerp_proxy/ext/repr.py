@@ -18,8 +18,22 @@ class FieldNotFoundException(Exception):
         self.obj = obj
         self.orig_exc = original_exc
 
-    def __unicode__(self):
+    @property
+    def message(self):
         return u"Field %s not found in obj %s" % (_(self.field), _(self.obj))
+
+    # TODO: implement correct behavior. It fails in IPython notebook with
+    # UnicodeEncodeError because of python's standard warnings module
+    #def __unicode__(self):
+        #return message
+
+    def __str__(self):
+        # converting to ascii because of python's warnings module fails in
+        # UnicodeEncodeError when no-ascii symbols present in str(exception)
+        return self.message.encode('ascii', 'backslashreplace')
+
+    def __repr__(self):
+        return str(self)
 
 
 class HField(object):
