@@ -68,11 +68,16 @@ class Object(Extensible):
         return "Object ('%s')" % self.name
     __repr__ = __str__
 
+    def _get_columns_info(self):
+        """ Calculates columns info
+        """
+        return self.fields_get()
+
     @property
     def columns_info(self):
         """ Reads information about fields available on model
         """
         if self._columns_info is None:
-            self._columns_info = self.fields_get()
+            self._columns_info = self._get_columns_info()
 
         return self._columns_info

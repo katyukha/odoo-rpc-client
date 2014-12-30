@@ -7,6 +7,7 @@ used inside IPython notebook
 
 from openerp_proxy.orm.record import RecordList
 from openerp_proxy.orm.record import Record
+from openerp_proxy.orm.object import Object
 from IPython.display import HTML
 
 from openerp_proxy.utils import ustr as _
@@ -128,9 +129,12 @@ class HTMLTable(object):
         :param highlight_row: function to check if row to be highlighteda (deprecated)
                               (old_style)
         :type highlight_row: callable(record) -> bool
+        :param caption: String to be used as table caption
+        :type caption: str
     """
     def __init__(self, recordlist, fields, **kwargs):
         self._recordlist = recordlist
+        self._caption = kwargs.get('caption', None)
         self._fields = []
         for field in fields:
             if isinstance(field, HField):
@@ -163,7 +167,7 @@ class HTMLTable(object):
         table = u"<table>%s</table>"
         trow = u"<tr>%s</tr>"
         throw = u'<tr style="background: %s">%s</tr>'
-        tcaption = u"<caption>%s</caption>" % _(self._recordlist)
+        tcaption = u"<caption>%s</caption>" % _(self._caption or self._recordlist)
         theaders = u"".join((u"<th>%s</th>" % _(field) for field in self._fields))
         data = u""
         data += tcaption
@@ -226,3 +230,81 @@ class HTMLRecord(Record):
             row = row_tmpl % (col_data.get('string', col_name), self[col_name])
             body += row
         return HTML(table_tmpl % (self._name, body))
+
+
+class ColInfo(dict):
+    """ Columns info capable for IPython's HTML representation
+    """
+
+    def __init__(self, obj, *args, **kwargs):
+        self._html_table = None
+        self._object = obj
+        self._fields = None
+        super(ColInfo, self).__init__(*args, **kwargs)
+
+    @property
+    def default_fields(self):
+        """ Default fields displayed in resulting HTML table
+        """
+        if self._fields is None:
+            def _get_selection(x):
+                return u'<br/>\n'.join((u"%s - %s" % (_(repr(i[0])), _(i[1]))
+                                        for i in x['info'].get('selection', []) or []))
+
+            self._fields = [
+                HField('name', silent=True),
+                HField('info.string', silent=True),
+                HField('info.type', silent=True),
+                HField(_get_selection, silent=True, name='info.selection'),
+                HField('info.help', silent=True),
+                HField('info.readonly', silent=True),
+                HField('info.required', silent=True),
+                HField('info.relation_field', silent=True),
+                HField('info.select', silent=True),
+                #HField('info.domain', silent=True),
+                #HField('info.digits', silent=True),
+                #HField('info.fnct_inv_arg', silent=True),
+                #HField('info.selectable', silent=True),
+                #HField('info.m2m_join_columns', silent=True),
+                #HField('info.m2m_join_table', silent=True),
+                #HField('info.fnct_inv', silent=True),
+                #HField('info.size', silent=True),
+                #HField('info.store', silent=True),
+                #HField('info.context', silent=True),
+                #HField('info.function', silent=True),
+                #HField('info.fnct_search', silent=True),
+                #HField('info.states', silent=True),
+                #HField('info.relation', silent=True),
+            ]
+        return self._fields
+
+    def as_html_table(self, fields=None):
+        """ Generates HTMLTable representation for this columns info
+
+            :param fields: list of fields to display instead of defaults
+            :type fields: list
+            :return: generated HTMLTable instanse
+            :rtype: HTMLTable
+        """
+        fields = self.default_fields if fields is None else fields
+        info_struct = [{'name': key,
+                        'info': val} for key, val in self.iteritems()]
+        info_struct.sort(key=lambda x: x['name'])
+        return HTMLTable(info_struct, fields, caption=u'Fields for %s' % _(self._object.name))
+
+    def _repr_html_(self):
+        """ HTML representation for columns info
+        """
+        if self._html_table is None:
+            self._html_table = self.as_html_table()
+        return self._html_table._repr_html_()
+
+
+class ObjectHTML(Object):
+    """ Modifies object's columns_info to return HTML capable representation of Fields
+    """
+
+    def _get_columns_info(self):
+        res = super(ObjectHTML, self)._get_columns_info()
+        return ColInfo(self, res)
+
