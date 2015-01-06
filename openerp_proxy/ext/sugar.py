@@ -6,7 +6,7 @@ Provides some syntax sugar to ease acces to objects, records, etc
 import numbers
 
 from openerp_proxy.orm.record import ObjectRecords
-from openerp_proxy.orm.record import RecordList, get_record_list
+from openerp_proxy.orm.record import get_record_list
 from openerp_proxy.core import ERP_Proxy
 
 
@@ -74,6 +74,11 @@ class ObjectSugar(ObjectRecords):
             return self.read_records(name)
         raise KeyError("Bad key: %s! Only integer or list of intergers allowed" % name)
 
+    # Overridden to count all records in this object
+    def __len__(self):
+        return self.search([], count=True)
+
+    # Smart search and name search
     def __call__(self, *args, **kwargs):
         """ Performs name_search by specified 'name'
 
@@ -94,10 +99,11 @@ class ObjectSugar(ObjectRecords):
             return self.search_records(name, *args, **kwargs)
 
         res = self.name_search(name, *args, **kwargs)
+        context = kwargs.get('context', None)
         ids = [i[0] for i in res]
         if len(ids) == 1:
-            return self[ids[0]]  # user previously defined __getitem__ functionality
-        return get_record_list(self, ids=ids)
+            return self.read_records(ids[0], context=context)
+        return get_record_list(self, ids=ids, context=context)
 
 
 class ERP_Proxy_Sugar(ERP_Proxy):

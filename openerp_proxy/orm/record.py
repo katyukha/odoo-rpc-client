@@ -75,7 +75,7 @@ class Record(object):
         assert isinstance(obj, Object), "obj should be Object"
 
         self._object = obj
-        self._context = context
+        self._context = context   # TODO: store it in cache
         self._cache = empty_cache() if cache is None else cache
         self._lcache = self._cache[obj.name]
 
@@ -101,6 +101,12 @@ class Record(object):
         res.extend(self._columns_info.keys())
         res.extend(['read', 'search', 'write', 'unlink'])
         return res
+
+    @property
+    def context(self):
+        """ Returns context to be used for thist record
+        """
+        return self._context
 
     @property
     def _service(self):
@@ -157,7 +163,7 @@ class Record(object):
 
     def __eq__(self, other):
         if isinstance(other, Record):
-            return other._id == self._id
+            return other.id == self._id
 
         if isinstance(other, (int, long)):
             return self._id == other
@@ -166,7 +172,7 @@ class Record(object):
 
     def __ne__(self, other):
         if isinstance(other, Record):
-            return other._id != self._id
+            return other.id != self._id
 
         if isinstance(other, (int, long)):
             return self._id != other
@@ -176,6 +182,10 @@ class Record(object):
     def _cache_field_read(self, ftype, name, data):
         """ Cache field had been read
 
+            :param str ftype: type of field had been read
+            :param str name: name of field had been read
+            :param dict data: result of object.read operation, representing data had been read
+
             (See *_get_field* method code)
         """
         self._lcache[data['id']].update(data)
@@ -183,16 +193,19 @@ class Record(object):
     def _get_field(self, ftype, name):
         """ Returns value for field 'name' of type 'type'
 
+            :param str ftype: type of field to det value for
+            :param str name: name of field to read
+
             Should be overridden by extensions to provide better hadling for diferent field values
         """
         if name not in self._data:
             # TODO: read all fields for self._fields and if name not in
             # self._fields update them with name
             keys = [key for key, val in self._lcache.viewitems() if name not in val]
-            if self._context is None:
+            if self.context is None:
                 read_data = self._object.read(keys, [name])
             else:
-                read_data = self._object.read(keys, [name], context=self._context)
+                read_data = self._object.read(keys, [name], context=self.context)
             for data in read_data:
                 self._cache_field_read(ftype, name, data)
 
@@ -303,7 +316,7 @@ class RecordList(object):
         self._object = obj
         self._cache = empty_cache() if cache is None else cache
         self._fields = fields
-        self._context = context  # not used yet
+        self._context = context  # TODO: store in cache
 
         ids = [] if ids is None else ids
 
@@ -311,16 +324,22 @@ class RecordList(object):
                          for id_ in ids]
 
     @property
-    def ids(self):
-        """ IDs of records present in this RecordList
-        """
-        return [r.id for r in self._records]
-
-    @property
     def object(self):
         """ Object this record is related to
         """
         return self._object
+
+    @property
+    def context(self):
+        """ Returns context to be used for this list
+        """
+        return self._context
+
+    @property
+    def ids(self):
+        """ IDs of records present in this RecordList
+        """
+        return [r.id for r in self._records]
 
     @property
     def records(self):
@@ -355,10 +374,10 @@ class RecordList(object):
     # present in this RecordList
     def __getattr__(self, name):
         method = getattr(self.object, name)
-        if self._context is None:
+        if self.context is None:
             res = wpartial(method, self.ids)
         else:
-            res = wpartial(method, self.ids, context=self._context)
+            res = wpartial(method, self.ids, context=self.context)
         setattr(self, name, res)
         return res
 
@@ -396,7 +415,7 @@ class RecordList(object):
 
     # remote method overrides
     def search(self, domain, *args, **kwargs):
-        """ Performs normal search, but with addins ``('id', 'in', seld.ids)`` in domain
+        """ Performs normal search, but adds ``('id', 'in', seld.ids)`` to search domain
 
             :returns: list of IDs found
             :rtype: list of integers
@@ -404,7 +423,7 @@ class RecordList(object):
         return self.object.search([('id', 'in', self.ids)] + domain, *args, **kwargs)
 
     def search_records(self, domain, *args, **kwargs):
-        """ Performs normal search_records, but with addins ``('id', 'in', seld.ids)`` in domain
+        """ Performs normal search_records, but adds ``('id', 'in', seld.ids)`` to domain
 
             :returns: RecordList of records found
             :rtype: RecordList instance
@@ -427,7 +446,11 @@ class RecordRelations(Record):
         self._related_objects = {}
 
     def _cache_field_read(self, ftype, name, data):
-        """ Cache field had been read
+        """ Cache field that had been read
+
+            :param str ftype: type of field had been read
+            :param str name: name of field had been read
+            :param dict data: result of object.read operation, representing data had been read
 
             (See *Record._get_field* method code)
         """
@@ -461,7 +484,7 @@ class RecordRelations(Record):
                     rel_id = rel_data
 
                 rel_obj = self._service.get_obj(relation)
-                self._related_objects[name] = get_record(rel_obj, rel_id, cache=self._cache)
+                self._related_objects[name] = get_record(rel_obj, rel_id, cache=self._cache, context=self.context)
             else:
                 self._related_objects[name] = False
         return self._related_objects[name]
@@ -473,9 +496,10 @@ class RecordRelations(Record):
         relation = self._columns_info[name]['relation']
         if name not in self._related_objects or not cached:
             rel_obj = self._service.get_obj(relation)
-            self._related_objects[name] = get_record_list(rel_obj, rel_ids, cache=self._cache)
+            self._related_objects[name] = get_record_list(rel_obj, rel_ids, cache=self._cache, context=self.context)
         return self._related_objects[name]
 
+    # Overridden to allow browse for related fields
     def _get_field(self, ftype, name):
         res = super(RecordRelations, self)._get_field(ftype, name)
         if ftype == 'many2one':
@@ -483,12 +507,6 @@ class RecordRelations(Record):
         if ftype in ('one2many', 'many2many'):
             return self._get_one2many_rel_obj(name, res)
         return res
-
-    def __getitem__(self, name):
-        # For backward compatability
-        if name.endswith('__obj'):
-            name = name[:-5]
-        return super(RecordRelations, self).__getitem__(name)
 
     def refresh(self):
         """Reread data and clean-up the caches
@@ -547,26 +565,29 @@ class ObjectRecords(Object):
         """
 
         read_fields = kwargs.pop('read_fields', None)
+        context = kwargs.pop('context', None)
 
         if kwargs.get('count', False):
             return self.search(*args, **kwargs)
 
         res = self.search(*args, **kwargs)
         if not res:
-            return get_record_list(self, [], read_fields)
+            return get_record_list(self, ids=[], fields=read_fields, context=context)
 
         if read_fields:
-            return self.read_records(res, read_fields)
-        return self.read_records(res)
+            return self.read_records(res, read_fields, context=context)
+        return self.read_records(res, context=context)
 
-    def read_records(self, ids, fields=None, *args, **kwargs):
+    def read_records(self, ids, fields=None, context=None, cache=None):
         """ Return instance or list of instances of Record class,
             making available to work with data simpler:
 
             :param ids: ID or list of IDS to read data for
             :type ids: int|list of int
-            :param fields: list of fields to read (*optional*)
-            :type fields: list of strings
+            :param list fields: list of fields to read (*optional*)
+            :param dict context: context to be passed to read. default=None
+            :param cache: cache to use for records and record lists.
+                          Pass None to create new cache. default=None.
             :return: Record instance if *ids* is int or RecordList instance
                      if *ids* is list of ints
             :rtype: Record|RecordList
@@ -582,10 +603,9 @@ class ObjectRecords(Object):
             fields = self.simple_fields
 
         if isinstance(ids, (int, long)):
-            #return get_record(self, self.read(ids, fields, *args, **kwargs))
-            return get_record(self, ids, fields=fields)
+            return get_record(self, ids, fields=fields, context=context)
         if isinstance(ids, (list, tuple)):
-            return get_record_list(self, ids, fields, *args, **kwargs)
+            return get_record_list(self, ids, fields=fields, context=context)
 
         raise ValueError("Wrong type for ids args")
 
@@ -594,4 +614,3 @@ class ObjectRecords(Object):
             (i mean server version 7.0)
         """
         return self.read_records(*args, **kwargs)
-

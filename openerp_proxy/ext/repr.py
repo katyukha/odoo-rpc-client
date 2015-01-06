@@ -1,6 +1,6 @@
-""" This module privides additional representation capabilities
+""" This module provides additional representation capabilities
 of RecordList class, like representation as HTML table with
-ability to highlight specific rows, which is usefule when
+ability to highlight specific rows, which is useful when
 used inside IPython notebook
 
 """
@@ -104,6 +104,10 @@ class HField(object):
 
     def __call__(self, record):
         """ Get value from specified record
+
+            :param record: object to get field from
+            :type record: usualy Record instance
+            :return: value of self-field of record
         """
         return self.get_field(record)
 
