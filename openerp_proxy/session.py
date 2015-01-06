@@ -8,10 +8,11 @@ from getpass import getpass
 from core import ERP_Proxy
 
 
-__all__ = ('ERP_Session',)
+__all__ = ('ERP_Session', 'Session', 'IPYSession')
 
 
-class ERP_Session(object):
+# TODO: completly refactor
+class Session(object):
 
     """ Simple session manager which allows to manage databases easier
         This class stores information about databases You used in home
@@ -346,3 +347,42 @@ class ERP_Session(object):
         res = dir(super(ERP_Session, self))
         res += self.aliases.keys()
         return res
+
+
+# For Backward compatability
+ERP_Session = Session
+
+
+# TODO: move to rerp / ipython extension
+class IPYSession(Session):
+    def _repr_html_(self):
+        """ Provides HTML representation of session (Used for IPython)
+        """
+        from openerp_proxy.utils import ustr as _
+
+        def _get_data():
+            for url in self._databases.keys():
+                index = self._index_url(url)
+                aliases = (_(al) for al, aurl in self.aliases.items() if aurl == url)
+                yield url, index, u", ".join(aliases)
+        ttable = u"<table style='display:inline-block'>%s</table>"
+        trow = u"<tr>%s</tr>"
+        tdata = u"<td>%s</td>"
+        caption = u"<caption>Previous connections</caption>"
+        hrow = u"<tr><th>DB URL</th><th>DB Index</th><th>DB Aliases</th></tr>"
+        help_text = (u"<div style='display:inline-block;vertical-align:top;margin-left:10px;'>"
+                     u"To get connection just call<br/> <ul>"
+                     u"<li>session.<b>aliase</b></li>"
+                     u"<li>session[<b>index</b>]</li>"
+                     u"<li>session[<b>aliase</b>]</li> "
+                     u"<li>session[<b>url</b>]</li>"
+                     u"<li>session.get_db(<b>url</b>|<b>index</b>|<b>aliase</b>)</li>"
+                     u"</ul></div>")
+
+        data = u""
+        for row in _get_data():
+            data += trow % (u''.join((tdata % i for i in row)))
+
+        table = ttable % (caption + hrow + data)
+
+        return u"<div>%s %s</div>" % (table, help_text)

@@ -5,9 +5,14 @@ used inside IPython notebook
 
 """
 
+# TODO: rename to IPython or something like that
+
+# TODO: add ability to simply export data to csv
+
 from openerp_proxy.orm.record import RecordList
 from openerp_proxy.orm.record import Record
 from openerp_proxy.orm.object import Object
+from openerp_proxy.core import ERP_Proxy
 from IPython.display import HTML
 
 from openerp_proxy.utils import ustr as _
@@ -214,6 +219,37 @@ class RecordListData(RecordList):
         """
         return HTMLTable(self, fields, **kwargs)
 
+    def _repr_html_(self):
+        html = u"<div>%s</div>"
+        ttable = u"<table style='display:inline-block'>%s</table>"
+        trow = u"<tr>%s</tr>"
+        tdata = u"<td>%s</td>"
+        thead = u"<th>%s</th>"
+        caption = u"<caption>%s</caption>" % _(self)
+        help_text = (u"<div style='display:inline-block;vertical-align:top;margin-left:10px;'>"
+                     u"To get table representation of data call method<br/>"
+                     u"&nbsp;<i>.as_html_table</i><br/>"
+                     u"passing as arguments fields You want to see in resulting table<br/>"
+                     u"for better information get doc on as_html_table method:<br/>"
+                     u"&nbsp;<i>.as_html_table?</i><br/>"
+                     u"example of using this mehtod:<br/>"
+                     u"&nbsp;<i>.as_html_table('id','name','_name')</i><br/>"
+                     u"Here <i>_name</i> field is aliase for result of <i>name_get</i> method"
+                     u"called on record"
+                     u"</div>")
+
+        def to_row(header, val):
+            return trow % ((thead % _(header)) + (tdata % _(val)))
+
+        data = u""
+        data += to_row("Object", self.object)
+        data += to_row("Proxy", self.object.proxy.get_url())
+        data += to_row("Record count", len(self))
+
+        table = ttable % (caption + data)
+
+        return html % (table + help_text)
+
 
 class HTMLRecord(Record):
     """ Adds HTML representation of record
@@ -312,3 +348,50 @@ class ObjectHTML(Object):
         res = super(ObjectHTML, self)._get_columns_info()
         return ColInfo(self, res)
 
+    def _repr_html_(self):
+        model = self.proxy['ir.model'].search_records([('model', '=', self.name)])[0]
+        html = u"<div>%s</div>"
+        ttable = u"<table style='display:inline-block'>%s</table>"
+        trow = u"<tr>%s</tr>"
+        tdata = u"<td>%s</td>"
+        thead = u"<th>%s</th>"
+        caption = u"<caption>Object '%s'</caption>" % _(model.name)
+        help_text = (u"<div style='display:inline-block;vertical-align:top;margin-left:10px;'>"
+                     u"To get information about columns access property<br/>"
+                     u"&nbsp;<i>.columns_info</i><br/>"
+                     u"Also there are available standard server-side methods:<br/>"
+                     u"&nbsp;<i>search</i>, <i>read</i>, <i>write</i>, <i>unlink</i></br>"
+                     u"And special methods provided <i>openerp_proxy's orm</i>:"
+                     u"<ul style='margin-top:1px'>"
+                     u"<li><i>search_records</i> - same as <i>search</i> but returns <i>RecordList</i> instance</li>"
+                     u"<li><i>read_records</i> - same as <i>read</i> but returns <i>Record</i> or <i>RecordList</i> instance</li>"
+                     u"<ul><br/>"
+                     u"</div>")
+
+        def to_row(header, val):
+            return trow % ((thead % _(header)) + (tdata % _(val)))
+
+        data = u""
+        data += to_row("Name", model.name)
+        data += to_row("Proxy", self.proxy.get_url())
+        data += to_row("Model", model.model)
+        data += to_row("Record count", self.search([], count=True))
+
+        table = ttable % (caption + data)
+
+        return html % (table + help_text)
+
+
+class ERP_Proxy_HTML(ERP_Proxy):
+    """ HTML modifications for ERP_Proxy class
+    """
+
+    def _repr_html_(self):
+        html = u"<div>%(header)s %(help)s</div>"
+        header = u"<div><i>ERP_Proxy</i> instance for <b>%s</b></div><br/>" % self.get_url()
+        help_text = (u"<div>To get Object instance just call<br/>"
+                     u"<i>.get_obj(name)</i> method where <i>name</i> is name of Object You want to get"
+                     u"<br/>or use get item syntax instead:</br>"
+                     u"<i>[name]</i>"
+                     u"</div>")
+        return html % {'header': header, 'help': help_text}

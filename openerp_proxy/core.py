@@ -95,7 +95,6 @@ class ERP_Proxy(Extensible):
     """
 
     def __init__(self, dbname, host, user, pwd, port=8069, protocol='xml-rpc', verbose=False):
-        # TODO: hide these fields behide properties
         self._dbname = dbname
         self._username = user
         self._pwd = pwd

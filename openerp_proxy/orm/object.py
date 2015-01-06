@@ -38,7 +38,7 @@ class Object(Extensible):
         """
         return self.service.proxy
 
-    # Overeiddent to add some standard method to be available in introspection
+    # Overriden to add some standard method to be available in introspection
     # Useful for IPython auto completition
     def __dir__(self):
         res = dir(super(Object, self))
