@@ -265,11 +265,45 @@ class HTMLRecord(Record):
         table_tmpl = u"<table><caption>Record %s</caption><tr><th>Column</th><th>Value</th></tr>%s</table>"
         row_tmpl = u"<tr><th>%s</th><td>%s</td></tr>"
 
+        if fields is None:
+            columns = sorted(((col_name, col_data)
+                for col_name, col_data in self._columns_info.iteritems()), key=lambda x: x[1]['string'] or x[0])
+        else:
+            columns = ((col_name, self._columns_info[col_name]) for col_name in fields)
+
         body = ""
-        for col_name, col_data in self._columns_info.iteritems():
+        for col_name, col_data in columns:
             row = row_tmpl % (col_data.get('string', col_name), self[col_name])
             body += row
         return HTML(table_tmpl % (self._name, body))
+
+    def _repr_html_(self):
+        html = u"<div>%s</div>"
+        ttable = u"<table style='display:inline-block'>%s</table>"
+        trow = u"<tr>%s</tr>"
+        tdata = u"<td>%s</td>"
+        thead = u"<th>%s</th>"
+        caption = u"<caption>%s</caption>" % _(self)
+        help_text = (u"<div style='display:inline-block;vertical-align:top;margin-left:10px;'>"
+                     u"To get HTML Table representation of this record call method:<br/>"
+                     u"&nbsp;<i>.as_html()</i><br/>"
+                     u"Optionaly You can pass list of fields You want to see:<br/>"
+                     u"&nbsp;<i>.as_html(['name', 'origin'])</i><br/>"
+                     u"for better information get doc on <i>as_html</i> method:<br/>"
+                     u"&nbsp;<i>.as_html?</i><br/>"
+                     u"</div>")
+
+        def to_row(header, val):
+            return trow % ((thead % _(header)) + (tdata % _(val)))
+
+        data = u""
+        data += to_row("Object", self._object)
+        data += to_row("Proxy", self._proxy.get_url())
+        data += to_row("Name", self._name)
+
+        table = ttable % (caption + data)
+
+        return html % (table + help_text)
 
 
 class ColInfo(dict):
@@ -387,11 +421,32 @@ class ERP_Proxy_HTML(ERP_Proxy):
     """
 
     def _repr_html_(self):
-        html = u"<div>%(header)s %(help)s</div>"
-        header = u"<div><i>ERP_Proxy</i> instance for <b>%s</b></div><br/>" % self.get_url()
-        help_text = (u"<div>To get Object instance just call<br/>"
-                     u"<i>.get_obj(name)</i> method where <i>name</i> is name of Object You want to get"
+        html = u"<div>%s</div>"
+        ttable = u"<table style='display:inline-block'>%s</table>"
+        trow = u"<tr>%s</tr>"
+        tdata = u"<td>%s</td>"
+        thead = u"<th>%s</th>"
+        caption = u"<caption style='white-space:nowrap;font-weight: bold;'>%s</caption>" % self.get_url()
+        help_text = (u"<div style='display:inline-block;vertical-align:top;margin-left:10px;'>"
+                     u"To get list of registered objects for thist database<br/>"
+                     u"access <i>registered_objects</i> property:<br/>"
+                     u"&nbsp;<i>.registered_objects</i>"
+                     u"To get Object instance just call <i>get_obj</i> method<br/>"
+                     u"&nbsp;<i>.get_obj(name)</i><br/>"
+                     u"where <i>name</i> is name of Object You want to get"
                      u"<br/>or use get item syntax instead:</br>"
-                     u"<i>[name]</i>"
+                     u"&nbsp;<i>[name]</i>"
                      u"</div>")
-        return html % {'header': header, 'help': help_text}
+
+        def to_row(header, val):
+            return trow % ((thead % _(header)) + (tdata % _(val)))
+
+        data = u""
+        data += to_row("Host", self.host)
+        data += to_row("Port", self.port)
+        data += to_row("Protocol", self.protocol)
+        data += to_row("Database", self.dbname)
+        data += to_row("login", self.username)
+
+        table = ttable % (caption + data)
+        return html % (table + help_text)
