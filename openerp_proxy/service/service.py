@@ -9,6 +9,7 @@ class ServiceManager(object):
 
         Usage:
             services = ServiceManager(erp_proxy)
+            services.list    # get list of registered services
             services.object  # returns service with name 'object'
             services['common']  # returns service with name 'common'
             services.get_service('report')  # returns service with name 'report'
@@ -32,6 +33,17 @@ class ServiceManager(object):
     def __init__(self, erp_proxy):
         self._erp_proxy = erp_proxy
         self.__services = {}
+
+    def __dir__(self):
+        res = set(dir(super(ServiceManager, self)))
+        res.update(self.list)
+        return list(res)
+
+    @property
+    def list(self):
+        """ Returns list of all registered services
+        """
+        return list(set(self.__services.keys() + ServiceType.get_registered_names()))
 
     def get_service(self, name):
         """ Returns instance of service with specified name
