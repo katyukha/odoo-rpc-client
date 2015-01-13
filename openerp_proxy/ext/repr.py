@@ -267,7 +267,8 @@ class HTMLRecord(Record):
 
         if fields is None:
             columns = sorted(((col_name, col_data)
-                for col_name, col_data in self._columns_info.iteritems()), key=lambda x: x[1]['string'] or x[0])
+                              for col_name, col_data in self._columns_info.iteritems()),
+                             key=lambda x: x[1]['string'] or x[0])
         else:
             columns = ((col_name, self._columns_info[col_name]) for col_name in fields)
 
@@ -383,7 +384,7 @@ class ObjectHTML(Object):
         return ColInfo(self, res)
 
     def _repr_html_(self):
-        model = self.proxy['ir.model'].search_records([('model', '=', self.name)])[0]
+        model = self.model
         html = u"<div>%s</div>"
         ttable = u"<table style='display:inline-block'>%s</table>"
         trow = u"<tr>%s</tr>"

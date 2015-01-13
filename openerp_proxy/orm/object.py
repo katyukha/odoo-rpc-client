@@ -54,7 +54,8 @@ class Object(Extensible):
             """
             def wrapper(*args, **kwargs):
                 return self.service.execute(object_name, method_name, *args, **kwargs)
-            wrapper.__name__ = '%s:%s' % (object_name, method_name)
+            name = str('%s:%s' % (object_name, method_name))
+            wrapper.__name__ = name
             return wrapper
 
         # Private methods are not available to be called via RPC

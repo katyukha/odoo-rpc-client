@@ -153,7 +153,9 @@ class Record(object):
 
     def __str__(self):
         return unicode(self).encode('utf-8')
-    __repr__ = __str__
+
+    def __repr__(self):
+        return "R(%s, %s)" % (self._object.name, self.id)
 
     def __int__(self):
         return self._id
@@ -529,6 +531,28 @@ class RecordRelations(Record):
 class ObjectRecords(Object):
     """ Adds support to use records from Object classes
     """
+
+    def __init__(self, *args, **kwargs):
+        super(ObjectRecords, self).__init__(*args, **kwargs)
+        self._model = None
+
+    @property
+    def model(self):
+        """ Returns Record instance of model related to this object.
+            Useful to get additional info on object, like is it transient or not.
+        """
+        if self._model is None:
+            res = self.proxy.get_obj('ir.model').search_records([('model', '=', self.name)], limit=2)
+            assert res.length == 1, "There must be only one model for this name"
+            self._model = res[0]
+
+        return self._model
+
+    @property
+    def model_name(self):
+        """ Result of name_get called on object's model
+        """
+        return self.model._name
 
     @property
     def simple_fields(self):

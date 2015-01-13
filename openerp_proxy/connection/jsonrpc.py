@@ -10,7 +10,26 @@ import openerp_proxy.exceptions as exceptions
 
 
 class JSONRPCError(exceptions.ConnectorError):
-    pass
+    def __init__(self, message, code=None, data=None):
+        self.message = message
+        self.code = code
+        self.data = data
+
+    def __unicode__(self):
+        if self.data is None:
+            return self.message
+
+        if self.data.get('message', False) and self.data.get('debug', False):
+            res_tmpl = u"""%(message)s\n%(debug)s\n"""
+            return res_tmpl % self.data
+
+        return unicode(self.data)
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def _repr_pretty_(self):
+        return "TEST"
 
 
 class JSONRPCMethod(object):
@@ -53,7 +72,10 @@ class JSONRPCMethod(object):
             raise JSONRPCError("Cannot decode JSON: %s" % info)
 
         if result.get("error", None):
-            raise JSONRPCError(ustr(result["error"]))
+            error = result['error']
+            raise JSONRPCError(error['message'],
+                               code=error.get('code', None),
+                               data=error.get('data', None))
         return result["result"]
 
 
