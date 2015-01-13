@@ -120,6 +120,8 @@ class HField(object):
         return _(self._name) if self._name is not None else _(self._field)
 
 
+# TODO: also implement vertiacl table orientation, which could be usefult for
+# comparing few records or reuse same code for displaying single record.
 class HTMLTable(object):
     """ HTML Table representation object for RecordList
 
@@ -255,27 +257,44 @@ class HTMLRecord(Record):
     """ Adds HTML representation of record
     """
 
-    def as_html(self, fields=None):
-        """ Returns HTML representation of this Record
+    def as_html(self, *fields):
+        """ Returns HTML representation of this Record.
+            By default show all record fields.
+            all passed positional arguments are treated as field names to be displayed.
+            Also posible to pass dotted related fields like ('move_dest_id.location_dest_id')
+            Type of all positional arguments should be string or HField instances
 
            :param list fields: list of field names to display in HTML representation
            :return: ipython's HTML object representing this record
         """
-        self.read(fields)
         table_tmpl = u"<table><caption>Record %s</caption><tr><th>Column</th><th>Value</th></tr>%s</table>"
         row_tmpl = u"<tr><th>%s</th><td>%s</td></tr>"
 
-        if fields is None:
-            columns = sorted(((col_name, col_data)
-                              for col_name, col_data in self._columns_info.iteritems()),
-                             key=lambda x: x[1]['string'] or x[0])
+        if not fields:
+            fields = sorted((HField(col_name, name=col_data['string'])
+                             for col_name, col_data in self._columns_info.iteritems()),
+                            key=lambda x: _(x))
+            self.read()
         else:
-            columns = ((col_name, self._columns_info[col_name]) for col_name in fields)
+            # TODO: implement in better way this prefetching
+            read_fields = (f.split('.')[0] for f in fields if isinstance(f, basestring) and f.split('.')[0] in self._columns_info)
+            prefetch_fields = [f for f in read_fields if f not in self._data]
+            self.read(prefetch_fields)
+
+        parsed_fields = []
+        for field in fields:
+            if isinstance(field, HField):
+                parsed_fields.append(field)
+            elif isinstance(field, basestring):
+                parsed_fields.append(HField(field))
+            else:
+                raise TypeError("Bad type of field %s" % repr(field))
 
         body = ""
-        for col_name, col_data in columns:
-            row = row_tmpl % (col_data.get('string', col_name), self[col_name])
+        for field in parsed_fields:
+            row = row_tmpl % (_(field), field(self))
             body += row
+
         return HTML(table_tmpl % (self._name, body))
 
     def _repr_html_(self):
@@ -289,7 +308,7 @@ class HTMLRecord(Record):
                      u"To get HTML Table representation of this record call method:<br/>"
                      u"&nbsp;<i>.as_html()</i><br/>"
                      u"Optionaly You can pass list of fields You want to see:<br/>"
-                     u"&nbsp;<i>.as_html(['name', 'origin'])</i><br/>"
+                     u"&nbsp;<i>.as_html('name', 'origin')</i><br/>"
                      u"for better information get doc on <i>as_html</i> method:<br/>"
                      u"&nbsp;<i>.as_html?</i><br/>"
                      u"</div>")

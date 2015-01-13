@@ -189,13 +189,23 @@ class ERP_Proxy(Extensible):
         """
         return self.services['object'].get_registered_objects()
 
-    def connect(self):
+    def connect(self, **kwargs):
         """ Connects to the server
+
+            if any keyword arguments will be passed, new Proxy instnace
+            will be created using folowing algorithm: get init args from
+            self instance and update them with passed keyword arguments,
+            and call Proxy class constructor passing result as arguments.
 
             :return: Id of user logged in
             :rtype: int
             :raises ERPProxyException: if wrong login or password
         """
+        if kwargs:
+            init_kwargs = self.get_init_args()
+            init_kwargs.update(kwargs)
+            return ERP_Proxy(**init_kwargs)
+
         # Get the uid
         uid = self.services['common'].login(self.dbname, self._username, self._pwd)
 

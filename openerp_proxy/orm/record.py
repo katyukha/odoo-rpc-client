@@ -155,7 +155,7 @@ class Record(object):
         return unicode(self).encode('utf-8')
 
     def __repr__(self):
-        return "R(%s, %s)" % (self._object.name, self.id)
+        return str(self)
 
     def __int__(self):
         return self._id
