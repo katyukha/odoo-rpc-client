@@ -1,14 +1,14 @@
 Master:
     - Refactored ``openerp_proxy.core`` module. + better docstrings
-    - ``openerp_proxy.ext.data``:
+    - ``openerp_proxy.ext.data``
         - ``RecordList.prefetch`` is disabled at the moment. Will be integrated in code, or atleast
           reimplemented in different way
         - Better ``RecordList.group_by`` method. Now it colud receive callable which should
           calculate key for records to group them by
         - Added ``RecordList.filter`` method. Useful when You want to filter records by functional field.
-    - Added ``openerp_proxy.ext.log_execute_console`` extension.
+    - Added ``openerp_proxy.ext.log_execute_console`` extension
     - HTML representation for IPython notebook extension ``openerp_proxy.ext.repr``
-        - Added HTML representation of:
+        - Added HTML representation of
             - Record
             - Record.as_table (user is able to specify fields of record to display)
             - RecordList
