@@ -173,13 +173,7 @@ class Record(object):
         return False
 
     def __ne__(self, other):
-        if isinstance(other, Record):
-            return other.id != self._id
-
-        if isinstance(other, (int, long)):
-            return self._id != other
-
-        return True
+        return not self.__eq__(other)
 
     def _cache_field_read(self, ftype, name, data):
         """ Cache field had been read

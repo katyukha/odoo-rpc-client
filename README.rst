@@ -15,7 +15,10 @@ Features
 -  supports call to all public methods on any OpenERP/Odoo object including:
    *read*, *search*, *write*, *unlink* and others
 -  Designed not for speed but to be useful like cli client to OpenERP/Odoo
--  Desinged to take as more benefits of *IPython autocomplete* as posible
+-  Desinged to take as more benefits of **IPython autocomplete** as posible
+-  Also it works good enough in **IPython Notebook** providing HTML representation
+   for a lot of objects.
+-  Ability to display set of records as **HTML Table** including **row highlighting**
 -  Provides session/history functionality, so if You used it to connect to
    some database before, new connection will be simpler (just enter password).
 -  Provides *browse\_record* like interface, allowing to browse related
@@ -29,6 +32,12 @@ Features
    just tell the path where script file is placed
 -  Support of JSON-RPC for version 8 of OpenERP (experimental)
 -  Support of using **named parametrs** in RPC method calls (only if server supports).
+
+
+Examples
+~~~~~~~~
+-  `Examples & HTML tests <http://nbviewer.ipython.org/github/katyukha/openerp-proxy/blob/master/examples/Examples%20&%20HTML%20tests.ipynb>`_
+
 
 What You can do with this
 ~~~~~~~~~~~~~~~~~~~~~~~~~

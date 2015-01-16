@@ -13,6 +13,9 @@ class ReportResult(object):
 
         As variant of usage - wrap result returned by server methods
         ``report_get`` and ``render_report`` like::
+
+            ReportResult(report_get(report_id))
+
     """
     __metaclass__ = ExtensibleType._('ReportResult')
 
