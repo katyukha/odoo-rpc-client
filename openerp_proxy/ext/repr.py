@@ -99,7 +99,7 @@ class HField(object):
                 r = self._get_field(r, field)
                 if callable(r):        # and if attribute is callable then call it
                     r = r()
-            except FieldNotFoundException:
+            except:  # FieldNotFoundException:
                 if not self._silent:   # reraise exception if not silent
                     raise
                 else:                  # or return default value
