@@ -56,13 +56,24 @@ class HField(object):
         :param bool silent: If set to True, then not exceptions will be raised and *default* value
                             will be returned. (default=False)
         :param default: default value to be returned if field not found. default=None
+        :param args: if specified, then it means that field is callable, and *args* should be passed
+                     to it as positional arguments. This may be useful to call *as_html_table* method
+                     of internal field. for example::
+
+                         HField('picking_id.move_lines.as_html_table',
+                                args=('id', '_name', HField('location_id._name', 'Location')))
+
+        :type args: list|tuple
+        :param dict kwargs: same as *args* but for keyword arguments
     """
 
-    def __init__(self, field, name=None, silent=False, default=None):
+    def __init__(self, field, name=None, silent=False, default=None, args=None, kwargs=None):
         self._field = field
         self._name = name
         self._silent = silent
         self._default = default
+        self._args = tuple() if args is None else args
+        self._kwargs = dict() if kwargs is None else kwargs
 
     @classmethod
     def _get_field(cls, obj, name):
@@ -97,8 +108,12 @@ class HField(object):
             field = fields.pop(0)
             try:
                 r = self._get_field(r, field)
-                if callable(r):        # and if attribute is callable then call it
+                if callable(r) and fields:  # and if attribute is callable and
+                                            # it is not last field then call
+                                            # it without arguments
                     r = r()
+                elif callable(r) and not fields:  # last fild and if is callable
+                    r = r(*self._args, **self._kwargs)
             except:  # FieldNotFoundException:
                 if not self._silent:   # reraise exception if not silent
                     raise
@@ -122,7 +137,7 @@ class HField(object):
 
 # TODO: also implement vertiacl table orientation, which could be usefult for
 # comparing few records or reuse same code for displaying single record.
-class HTMLTable(object):
+class HTMLTable(HTML):
     """ HTML Table representation object for RecordList
 
         :param recordlist: record list to create represetation for
@@ -132,12 +147,14 @@ class HTMLTable(object):
                        of one argument (record instance) or *HField* instance or
                        tuple(field_path|callable, field_name)
         :type fields: list(string | callable | HField instance | tuple(field, name))
-        :param dict highlighters: dictionary in format:
+        :param dict highlighters: dictionary in format::
+
                                       {color: callable(record)->bool}
+
                                   where *color* any color suitable for HTML and
-                                  callable is function of *Record instance)* which decides,
+                                  callable is function of *Record instance* which decides,
                                   if record should be colored by this color
-        :param highlight_row: function to check if row to be highlighteda (deprecated)
+        :param highlight_row: function to check if row to be highlighteda (**deprecated**)
                               (old_style)
         :type highlight_row: callable(record) -> bool
         :param caption: String to be used as table caption
@@ -175,6 +192,13 @@ class HTMLTable(object):
     def _repr_html_(self):
         """ HTML representation
         """
+        def preprocess_field(field):
+            """ Process some special cases of field to be correctly displayed
+            """
+            if isinstance(field, HTML):
+                return field._repr_html_()
+            return _(field)
+
         table = u"<table>%s</table>"
         trow = u"<tr>%s</tr>"
         throw = u'<tr style="background: %s">%s</tr>'
@@ -184,7 +208,8 @@ class HTMLTable(object):
         data += tcaption
         data += trow % theaders
         for record in self._recordlist:
-            tdata = u"".join((u"<td>%s</td>" % _(field(record)) for field in self._fields))
+            tdata = u"".join((u"<td>%s</td>" % preprocess_field(field(record))
+                              for field in self._fields))
             hcolor = self.highlight_record(record)
             if hcolor:
                 data += throw % (hcolor, tdata)
@@ -208,6 +233,18 @@ class RecordListData(RecordList):
             return res
         raise NotImplementedError()
 
+    def as_html_list(self):
+        """ HTML List representation of RecordList
+        """
+        html = u"<div>%s</div>"
+        tlist = u"<ul>%s</ul>"
+        tli = u"<li><i>%d</i>: %s</li>"
+
+        data = ""
+        for rec in self:
+            data += tli % (rec.id, rec._name)
+        return HTML(html % (tlist % data))
+
     def as_html_table(self, *fields, **kwargs):
         """ HTML Table representation object for RecordList
 
@@ -219,6 +256,8 @@ class RecordListData(RecordList):
                                   also *openerp_proxy.utils.r_eval* may be used
             :type highlight_row: callable(record) -> bool
         """
+        if not fields:
+            fields = ('id', '_name')
         return HTMLTable(self, fields, **kwargs)
 
     def _repr_html_(self):
