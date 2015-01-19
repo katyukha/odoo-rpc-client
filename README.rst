@@ -15,8 +15,8 @@ Features
 -  supports call to all public methods on any OpenERP/Odoo object including:
    *read*, *search*, *write*, *unlink* and others
 -  Designed not for speed but to be useful like cli client to OpenERP/Odoo
-   - Now *orm* optimizations and using of cache and read many records at once
-     seems to solve most of speed problem.
+    - Now *orm* optimizations and using of cache and read many records at once
+      seems to solve most of speed problem.
 -  Desinged to take as more benefits of **IPython autocomplete** as posible
 -  Also it works good enough in **IPython Notebook** providing **HTML
    representation** for a lot of objects.
@@ -24,8 +24,8 @@ Features
    including **row highlighting**
 -  Provides session/history functionality, so if You used it to connect to
    some database before, new connection will be simpler (just enter password).
-   - Version 0.5 and higher have ability to store passwords. just use
-     ``session.option('store_passwords', True); session.save()``
+    - Version 0.5 and higher have ability to store passwords. just use
+      ``session.option('store_passwords', True); session.save()``
 -  Provides *browse\_record* like interface, allowing to browse related
    models too. But use's methods *search\_records* and *browse\_records*
    instead of *browse*. (From version 0.4 *browse* works too)
@@ -63,9 +63,9 @@ Near future plans
 -  Better plugin system which will allow to extend API on database,
    object, and record levels.  **DONE**
 -  Django-like search API implemented as extension
-   - Something like ``F`` or ``Q`` expressions from Django
-   - to make working constructions like:
-     - ``object.filter((F('price') > 100.0) & (F('price') != F('Price2')))``
+    - Something like ``F`` or ``Q`` expressions from Django
+    - to make working constructions like:
+        - ``object.filter((F('price') > 100.0) & (F('price') != F('Price2')))``
 
 
 Install
