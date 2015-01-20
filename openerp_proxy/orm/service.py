@@ -1,5 +1,5 @@
 from openerp_proxy.service.object import ObjectService
-from openerp_proxy.orm.object import Object
+from openerp_proxy.orm.object import get_object
 
 
 class Service(ObjectService):
@@ -26,7 +26,7 @@ class Service(ObjectService):
         if object_name not in self.get_registered_objects():
             raise ValueError("There is no object named '%s' in ERP" % object_name)
 
-        obj = Object(self, object_name)
+        obj = get_object(self, object_name)
         self.__objects[object_name] = obj
         return obj
 

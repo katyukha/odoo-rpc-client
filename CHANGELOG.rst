@@ -1,4 +1,8 @@
 Master:
+    - Changed ``Object`` class. Now it have ``extend_me.ExtensibleByHashType`` metaclass
+      which allows it to be extended separatly for each model, and in general way.
+      For example of extending for specific model look at ``openerp_proxy.plugins.module_utils``
+      module.
     - Refactored ``openerp_proxy.core`` module. + better docstrings
     - ``openerp_proxy.ext.data``
         - ``RecordList.prefetch`` is disabled at the moment. Will be integrated in code, or atleast

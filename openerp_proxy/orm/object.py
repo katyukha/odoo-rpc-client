@@ -1,10 +1,27 @@
-from extend_me import Extensible
+from extend_me import ExtensibleByHashType
 
-__all__ = ('Object',)
+__all__ = ('Object', 'get_object')
+
+
+ObjectType = ExtensibleByHashType._('Object', hashattr='name')
+
+
+def get_object(proxy, name):
+    """ Create new Objct instance.
+
+        :param proxy: ERP_Proxy instance to bind this object to
+        :type proxy: ERP_Proxy
+        :param name: name of object. Ex. 'sale.order'
+        :type name: string
+        :return: Created Object instance
+        :rtype: Object instance
+    """
+    cls = ObjectType.get_class(name, default=True)
+    return cls(proxy, name)
 
 
 # TODO: think about connecting it to service instead of Proxy
-class Object(Extensible):
+class Object(object):
     """ Base class for all Objects
 
         Provides simple interface to remote osv.osv objects
@@ -13,6 +30,7 @@ class Object(Extensible):
             sale_obj = Object(erp, 'sale.order')
             sale_obj.search([('state','not in',['done','cancel'])])
     """
+    __metaclass__ = ObjectType
 
     def __init__(self, service, object_name):
         self._service = service

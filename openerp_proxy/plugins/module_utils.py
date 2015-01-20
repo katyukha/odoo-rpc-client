@@ -1,4 +1,19 @@
 from openerp_proxy.plugin import Plugin
+from openerp_proxy.orm.object import Object
+
+
+# Overriden to add shortcut for module update
+class ModuleObject(Object):
+    """ Add shortcut method to upgrade module
+    """
+
+    class Meta:
+        name = 'ir.module.module'
+
+    def upgrade(self, ids):
+        """ Immediatly upgrades module
+        """
+        return self.button_immediate_upgrade(ids)
 
 
 class ModuleUtils(Plugin):

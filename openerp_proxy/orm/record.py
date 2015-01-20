@@ -92,11 +92,11 @@ class Record(object):
             self._id = data['id']
             self._data = self._lcache[self._id]
             self._data.update(data)
-            # TODO: update fields with data caches
         else:
             raise ValueError("data should be dictionary structure returned by Object.read or int representing ID of record")
 
     def __dir__(self):
+        # TODO: expose also object's methods
         res = dir(super(Record, self))
         res.extend(self._columns_info.keys())
         res.extend(['read', 'search', 'write', 'unlink'])
@@ -300,6 +300,8 @@ class RecordList(object):
     __metaclass__ = RecordListMeta
 
     __slots__ = ('_object', '_cache', '_fields', '_context', '_records')
+
+    # TODO: expose object's methods via implementation of __dir__
 
     def __init__(self, obj, ids=None, fields=None, cache=None, context=None):
         """
