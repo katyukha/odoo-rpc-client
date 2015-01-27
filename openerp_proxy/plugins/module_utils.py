@@ -15,6 +15,11 @@ class ModuleObject(Object):
         """
         return self.button_immediate_upgrade(ids)
 
+    def install(self, ids):
+        """ Immediatly install module
+        """
+        return self.button_immediate_install(ids)
+
 
 class ModuleUtils(Plugin):
     """ Utility plugin to simplify module management
