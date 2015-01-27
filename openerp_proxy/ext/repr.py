@@ -162,7 +162,7 @@ class HTMLTable(HTML):
     """
     def __init__(self, recordlist, fields, **kwargs):
         self._recordlist = recordlist
-        self._caption = kwargs.get('caption', None)
+        self._caption = _(kwargs.get('caption', self._recordlist))
         self._fields = []
         for field in fields:
             if isinstance(field, HField):
@@ -175,10 +175,53 @@ class HTMLTable(HTML):
                 self._fields.append(HField(field[0], name=field[1]))
             else:
                 raise ValueError('Unsupported field type: %s' % repr(field))
+
         self._highlighters = {}
         if kwargs.get('highlight_row', False):
             self._highlighters['#ffff99'] = kwargs['highlight_row']
         self._highlighters.update(kwargs.get('highlighters', {}))
+
+    @property
+    def caption(self):
+        """ Table caption
+        """
+        return self._caption
+
+    @property
+    def fields(self):
+        """ List of fields of table.
+            :type: list of HField instances
+        """
+        return self._fields
+
+    @property
+    def iheaders(self):
+        """ Iterator in headers
+            :type: list of unicode strings
+        """
+        return (_(field) for field in self.fields)
+
+    @property
+    def irecords(self):
+        """ Returns iterator on records, where each record
+            is dictionary of two fields: 'row', 'color'.
+
+            'row' dictionary field is iterator in fields of this record
+
+            so result of this property colud be used to build representation
+        """
+        def preprocess_field(field):
+            """ Process some special cases of field to be correctly displayed
+            """
+            if isinstance(field, HTML):
+                return field._repr_html_()
+            return _(field)
+
+        for record in self._recordlist:
+            yield {
+                'color': self.highlight_record(record),
+                'row': (preprocess_field(field(record)) for field in self.fields),
+            }
 
     def highlight_record(self, record):
         """ Checks all highlighters related to this representation object
@@ -192,25 +235,18 @@ class HTMLTable(HTML):
     def _repr_html_(self):
         """ HTML representation
         """
-        def preprocess_field(field):
-            """ Process some special cases of field to be correctly displayed
-            """
-            if isinstance(field, HTML):
-                return field._repr_html_()
-            return _(field)
-
-        table = u"<table>%s</table>"
+        theaders = u"".join((u"<th>%s</th>" % header for header in self.iheaders))
+        table = (u"<div><table>"
+                 u"<caption>{self.caption}</caption>"
+                 u"<tr>{headers}</tr>"
+                 u"%s</table><div>").format(self=self,
+                                            headers=theaders)
         trow = u"<tr>%s</tr>"
         throw = u'<tr style="background: %s">%s</tr>'
-        tcaption = u"<caption>%s</caption>" % _(self._caption or self._recordlist)
-        theaders = u"".join((u"<th>%s</th>" % _(field) for field in self._fields))
         data = u""
-        data += tcaption
-        data += trow % theaders
-        for record in self._recordlist:
-            tdata = u"".join((u"<td>%s</td>" % preprocess_field(field(record))
-                              for field in self._fields))
-            hcolor = self.highlight_record(record)
+        for record in self.irecords:
+            hcolor = record['color']
+            tdata = u"".join((u"<td>%s</td>" % fval for fval in record['row']))
             if hcolor:
                 data += throw % (hcolor, tdata)
             else:
