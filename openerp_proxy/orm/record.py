@@ -36,21 +36,22 @@ def empty_cache():
 RecordMeta = ExtensibleType._('Record')
 
 
-def get_record(obj, rid, fields=None, cache=None, context=None):
+def get_record(obj, rid, cache=None, context=None):
     """ Creates new Record instance
+
+        Use this method to create new records, because of standard
+        object creation bypasses extension's magic.
 
             :param obj: instance of object this record is related to
             :param data: dictionary with initial data for a record
                          or integer ID of database record to fetch data from
-            :param fields: list of field names to read by default  (not used yet)
-            :type fields: list of strings (not used now)
             :param cache: dictionary of structure {object.name: {object_id: data} }
             :type cache: defaultdict(lambda: defaultdict(dict))
             :return: created Record instance
             :rtype: Record instance
     """
     RecordClass = RecordMeta.get_class()
-    return RecordClass(obj, rid, fields=fields, cache=cache, context=context)
+    return RecordClass(obj, rid, cache=cache, context=context)
 
 
 class Record(object):
@@ -60,8 +61,6 @@ class Record(object):
             :param obj: instance of object this record is related to
             :param data: dictionary with initial data for a record
                          or integer ID of database record to fetch data from
-            :param fields: list of field names to read by default  (not used yet)
-            :type fields: list of strings (not used now)
             :param cache: dictionary of structure {object.name: {object_id: data} }
             :type cache: defaultdict(lambda: defaultdict(dict))
 
@@ -71,7 +70,7 @@ class Record(object):
     __metaclass__ = RecordMeta
     __slots__ = ['__dict__', '_object', '_cache', '_lcache', '_id', '_data', '_context']
 
-    def __init__(self, obj, data, fields=None, cache=None, context=None):
+    def __init__(self, obj, data, cache=None, context=None):
         assert isinstance(obj, Object), "obj should be Object"
 
         self._object = obj
@@ -79,15 +78,10 @@ class Record(object):
         self._cache = empty_cache() if cache is None else cache
         self._lcache = self._cache[obj.name]
 
-        # TODO: choose what fields should be read by default
-        #self._fields = set(['id'] if fields is None else fields)
-
         if isinstance(data, (int, long)):
             self._id = data
             self._data = self._lcache[self._id]
-            if self._data.get('id', None) != data:
-                self._data.clear()
-                self._data['id'] = data
+            self._data['id'] = data
         elif isinstance(data, dict):
             self._id = data['id']
             self._data = self._lcache[self._id]
@@ -241,13 +235,23 @@ class Record(object):
         self._data['id'] = self._id
         return self
 
-    def read(self, fields=None, context=None):
+    def read(self, fields=None, context=None, multi=False):
         """ Rereads data for this record
 
             :param list fields: list of fields to be read (optional)
             :param dict context: context to be passed to read (optional)
+            :param bool multi: if set to True, that data will be read for
+                               all records of this object in current
+                               cache (query).
+            :return: dict with data had been read
+            :rtype: dict
         """
-        args = [self.id]
+        # TODO: think about returning self instead
+        if multi:
+            args = [self._lcache.keys()]
+        else:
+            args = [[self.id]]
+
         kwargs = {}
 
         if fields is not None:
@@ -257,8 +261,12 @@ class Record(object):
             kwargs['context'] = context
 
         data = self._object.read(*args, **kwargs)
-        self._data.update(data)
-        return data
+        res = {}
+        for rdata in data:
+            self._lcache[rdata['id']].updata(rdata)
+            if rdata['id'] == self.id:
+                res = rdata
+        return res
 
 
 RecordListMeta = ExtensibleType._('RecordList')
@@ -289,8 +297,8 @@ class RecordList(object):
         :type obj: Object instance
         :param ids: list of IDs of objects to read data from
         :type ids: list of int
-        :param fields: list of field names to read by default  (not used now)
-        :type fields: list of strings (not used now)
+        :param fields: list of field names to read by default
+        :type fields: list of strings
         :param cache: dictionary of structure {object.name: {object_id: data} }
         :type cache: defaultdict(lambda: defaultdict(dict))
         :param context: context to be passed automatocally to methods called from this list (not used yet)
@@ -299,27 +307,25 @@ class RecordList(object):
     """
     __metaclass__ = RecordListMeta
 
-    __slots__ = ('_object', '_cache', '_fields', '_context', '_records')
+    __slots__ = ('_object', '_cache', '_context', '_records')
 
     # TODO: expose object's methods via implementation of __dir__
 
     def __init__(self, obj, ids=None, fields=None, cache=None, context=None):
         """
         """
-        # TODO: store fields in cache instead of objects. this way should
-        # reduce memory usage. for example:
-        # cache['sale_order']['__read_fields']
-        # TODO: add checks to check if fields are real fields in
-        # object.columns_info
         self._object = obj
         self._cache = empty_cache() if cache is None else cache
-        self._fields = fields
         self._context = context  # TODO: store in cache
 
         ids = [] if ids is None else ids
 
-        self._records = [get_record(self.object, id_, fields=self._fields, cache=self._cache, context=self._context)
+        self._records = [get_record(self.object, id_, cache=self._cache, context=self._context)
                          for id_ in ids]
+
+        # if there some fields prefetching was requested, do it
+        if fields is not None:
+            self.prefetch(*fields)
 
     @property
     def object(self):
@@ -411,6 +417,28 @@ class RecordList(object):
         """
         return self._records.sort(*args, **kwargs)
 
+    def prefetch(self, *fields):
+        """ Prefetches specified fields into cache
+
+            By default field read performed only when that field is requested,
+            thus when You need to read more then one field, few rpc requests
+            will be performed. to avoid multiple unneccessary rpc calls this
+            method is implemented.
+
+            :return: self, which allows chaining of operations
+            :rtype: RecordList
+        """
+        # TODO: add checks to check if fields are real fields in
+        # object.columns_info
+        if not fields:
+            fields = self.object.simple_fields
+
+        lcache = self._cache[self.object.name]
+        for data in self.read(fields):
+            lcache[data['id']].update(data)
+
+        return self
+
     # remote method overrides
     def search(self, domain, *args, **kwargs):
         """ Performs normal search, but adds ``('id', 'in', seld.ids)`` to search domain
@@ -457,9 +485,12 @@ class RecordRelations(Record):
             relation = self._columns_info[name]['relation']
             rcache = self._cache[relation]
             cval = data[name]
-            if cval and isinstance(cval, (int, long)):
+            if not cval:
+                return
+
+            if isinstance(cval, (int, long)):
                 rcache[cval]['id'] = cval
-            elif cval and isinstance(cval, (list, tuple)):
+            elif isinstance(cval, (list, tuple)):
                 rcache[cval[0]].update({
                     'id': cval[0],
                     '__name_get_result': cval[1],
@@ -599,8 +630,8 @@ class ObjectRecords(Object):
         return self.read_records(res, context=context)
 
     def read_records(self, ids, fields=None, context=None, cache=None):
-        """ Return instance or list of instances of Record class,
-            making available to work with data simpler:
+        """ Return instance or RecordList class,
+            making available to work with data simpler
 
             :param ids: ID or list of IDS to read data for
             :type ids: int|list of int
@@ -619,11 +650,14 @@ class ObjectRecords(Object):
         """
         assert isinstance(ids, (int, long, list, tuple)), "ids must be instance of (int, long, list, tuple)"
 
-        if fields is None:
-            fields = self.simple_fields
+        #if fields is None:
+            #fields = self.simple_fields
 
         if isinstance(ids, (int, long)):
-            return get_record(self, ids, fields=fields, context=context)
+            record = get_record(self, ids, context=context)
+            if fields is not None:
+                record.read(fields)  # read specified fields
+            return record
         if isinstance(ids, (list, tuple)):
             return get_record_list(self, ids, fields=fields, context=context)
 
