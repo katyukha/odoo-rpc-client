@@ -269,7 +269,7 @@ class Record(object):
         data = self._object.read(*args, **kwargs)
         res = {}
         for rdata in data:
-            self._lcache[rdata['id']].updata(rdata)
+            self._lcache[rdata['id']].update(rdata)
             if rdata['id'] == self.id:
                 res = rdata
         return res
@@ -440,8 +440,24 @@ class RecordList(object):
             fields = self.object.simple_fields
 
         lcache = self._cache[self.object.name]
+        col_info = self.object.columns_info
         for data in self.read(fields):
             lcache[data['id']].update(data)
+            for field, value in data.iteritems():
+                if not value:
+                    continue
+
+                # Fill related cache
+                fdata = col_info.get(field, None)
+                if fdata and fdata['type'] == 'many2one':
+                    rcache = self._cache[fdata['relation']]
+                    if isinstance(value, (int, long)):
+                        rcache[value]  # intrnal dict {'id': key} will be created by default (see ObjectCache)
+                    elif isinstance(value, (list, tuple)):
+                        rcache[value[0]]['__name_get_result'] = value[1]
+                elif fdata and fdata['type'] in ('many2many', 'one2many'):
+                    rcache = self._cache[fdata['relation']]
+                    rcache.update({cid: {'id': cid} for cid in set(value).difference(rcache.viewkeys())})
 
         return self
 

@@ -1,4 +1,4 @@
-Master:
+0.5:
     - Addef ``RecordList.prefetch`` method. Als *RecordList's* *fields* argument
       now works.
     - Changed ``Object`` class. Now it have ``extend_me.ExtensibleByHashType`` metaclass

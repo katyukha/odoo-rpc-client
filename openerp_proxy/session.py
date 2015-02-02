@@ -353,7 +353,7 @@ class Session(object):
 ERP_Session = Session
 
 
-# TODO: move to rerp / ipython extension
+# TODO: move to repr / ipython extension
 class IPYSession(Session):
     def _repr_html_(self):
         """ Provides HTML representation of session (Used for IPython)
