@@ -14,6 +14,13 @@ __all__ = (
 )
 
 
+class ObjectCache(dict):
+
+    def __missing__(self, key):
+        self[key] = {'id': key}
+        return self[key]
+
+
 def empty_cache():
     """ Create instance of empty cache for Record
 
@@ -30,7 +37,7 @@ def empty_cache():
             }
 
     """
-    return defaultdict(lambda: defaultdict(dict))
+    return defaultdict(ObjectCache)
 
 
 RecordMeta = ExtensibleType._('Record')
@@ -81,7 +88,6 @@ class Record(object):
         if isinstance(data, (int, long)):
             self._id = data
             self._data = self._lcache[self._id]
-            self._data['id'] = data
         elif isinstance(data, dict):
             self._id = data['id']
             self._data = self._lcache[self._id]
@@ -482,19 +488,17 @@ class RecordRelations(Record):
         """
         super(RecordRelations, self)._cache_field_read(ftype, name, data)
         if ftype == 'many2one':
-            relation = self._columns_info[name]['relation']
-            rcache = self._cache[relation]
             cval = data[name]
             if not cval:
                 return
 
+            rcache = self._cache[self._columns_info[name]['relation']]
+
             if isinstance(cval, (int, long)):
-                rcache[cval]['id'] = cval
+                rcache[cval]  # intrnal dict {'id': key} will be created by default (see ObjectCache)
             elif isinstance(cval, (list, tuple)):
-                rcache[cval[0]].update({
-                    'id': cval[0],
-                    '__name_get_result': cval[1],
-                })
+                rcache[cval[0]]['__name_get_result'] = cval[1]
+
         elif ftype in ('many2many', 'one2many'):
             relation = self._columns_info[name]['relation']
             rcache = self._cache[relation]
