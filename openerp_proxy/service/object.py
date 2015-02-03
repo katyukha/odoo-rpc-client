@@ -40,6 +40,10 @@ class ObjectService(ServiceBase):
 
     def execute_wkf(self, object_name, signal, object_id):
         """ Triggers workflow event on specified object
+
+            :param str object_name: name of object/model to trigger workflow on
+            :param str signal: name of signal to send to workflow
+            :param int|long object_id: ID of document (record) to send signal to
         """
         result_wkf = self._service.exec_workflow(self.proxy.dbname, self.proxy.uid, self.proxy._pwd, object_name, signal, object_id)
         return result_wkf

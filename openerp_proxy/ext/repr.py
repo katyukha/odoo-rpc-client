@@ -297,6 +297,8 @@ class RecordListData(RecordList):
         return HTMLTable(self, fields, **kwargs)
 
     def _repr_html_(self):
+        """ Builds HTML representation for IPython
+        """
         html = u"<div>%s</div>"
         ttable = u"<table style='display:inline-block'>%s</table>"
         trow = u"<tr>%s</tr>"
@@ -373,6 +375,8 @@ class HTMLRecord(Record):
         return HTML(table_tmpl % (self._name, body))
 
     def _repr_html_(self):
+        """ Builds HTML representation for IPython
+        """
         html = u"<div>%s</div>"
         ttable = u"<table style='display:inline-block'>%s</table>"
         trow = u"<tr>%s</tr>"
@@ -430,20 +434,6 @@ class ColInfo(dict):
                 HField('info.required', silent=True),
                 HField('info.relation_field', silent=True),
                 HField('info.select', silent=True),
-                #HField('info.domain', silent=True),
-                #HField('info.digits', silent=True),
-                #HField('info.fnct_inv_arg', silent=True),
-                #HField('info.selectable', silent=True),
-                #HField('info.m2m_join_columns', silent=True),
-                #HField('info.m2m_join_table', silent=True),
-                #HField('info.fnct_inv', silent=True),
-                #HField('info.size', silent=True),
-                #HField('info.store', silent=True),
-                #HField('info.context', silent=True),
-                #HField('info.function', silent=True),
-                #HField('info.fnct_search', silent=True),
-                #HField('info.states', silent=True),
-                #HField('info.relation', silent=True),
             ]
         return self._fields
 
@@ -478,6 +468,8 @@ class ObjectHTML(Object):
         return ColInfo(self, res)
 
     def _repr_html_(self):
+        """ Builds HTML representation for IPython
+        """
         model = self.model
         html = u"<div>%s</div>"
         ttable = u"<table style='display:inline-block'>%s</table>"
@@ -516,6 +508,8 @@ class ERP_Proxy_HTML(ERP_Proxy):
     """
 
     def _repr_html_(self):
+        """ Builds HTML representation for IPython
+        """
         html = u"<div>%s</div>"
         ttable = u"<table style='display:inline-block'>%s</table>"
         trow = u"<tr>%s</tr>"

@@ -221,17 +221,25 @@ class ERP_Proxy(Extensible):
             :rtype: int
             :raises ERPProxyException: if wrong login or password
         """
+        self.services.clean_cache()
+        self._uid = None
+        self._user = None
         self._uid = self.connect()
         return self._uid
 
     def execute(self, obj, method, *args, **kwargs):
-        """First arguments should be 'object' and 'method' and next
-           will be passed to method of given object
+        """Call method *method* on object *obj* passing all next
+           positional and keyword (if available on server)
+           arguments to remote method
+
+           Note that passing keyword argments not available on
+           OpenERp/Odoo server 6.0 and older
 
            :param obj: object name to call method for
            :type obj: string
            :param method: name of method to call
            :type method: string
+           :return: result of RPC method call
         """
         return self.services['object'].execute(obj, method, *args, **kwargs)
 

@@ -43,7 +43,6 @@ class RecordListData(RecordList):
         cls_init = functools.partial(RecordList,
                                      self.object,
                                      ids=[],
-                                     fields=self._fields,
                                      cache=self._cache,
                                      context=self._context)
         res = collections.defaultdict(cls_init)
@@ -69,7 +68,7 @@ class RecordListData(RecordList):
         for record in self.records:
             if func(record):
                 result_ids.append(record.id)
-        return get_record_list(self.object, ids=result_ids, fields=self._fields, cache=self._cache, context=self._context)
+        return get_record_list(self.object, ids=result_ids, cache=self._cache, context=self._context)
 
 
 # TODO: implement some class wrapper to by default load only count of domains,
