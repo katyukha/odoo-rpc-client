@@ -31,7 +31,7 @@ setup(name='openerp_proxy',
           'Topic :: Utilities',
           'Topic :: Software Development :: Libraries',
       ],
-      keywords=['openerp', 'odoo', 'rpc', 'xmlrpc', 'xml-rpc', 'json-rpc', 'jsonrpc'],
+      keywords=['openerp', 'odoo', 'odoo-rpc', 'rpc', 'xmlrpc', 'xml-rpc', 'json-rpc', 'jsonrpc', 'odoo-client', 'ipython'],
       extras_require={
           'ipython_shell': ['ipython'],
       },

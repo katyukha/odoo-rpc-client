@@ -70,15 +70,24 @@ Near future plans
 Install
 -------
 
-Install package with ``pip install openerp_proxy``, this will make
-available package *openerp\_proxy* and also shell will be available by
+To install package just use PIP::
+
+    pip install openerp_proxy
+    
+this will make available package *openerp\_proxy* and also shell will be available by
 command ``$ openerp_proxy``
 
-If You want to install development version of *OpenERP Proxy* you can do it via
-
-::
+If You want to install development version of *OpenERP Proxy* you can do it via::
 
     pip install -e git+https://github.com/katyukha/openerp-proxy.git#egg=openerp_proxy
+
+
+Also if You plan to use this project as shell client, it is recommended to install IPython
+and If You  would like to have ability to play with Odoo / OpenERP data in IPython notebook,
+it is recommended to also install IPython's Notebook support. To install IPython and IPython Notebook
+just type::
+
+    pip install ipython ipython[notebook]
 
 
 Use as shell

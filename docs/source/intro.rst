@@ -15,19 +15,35 @@ Features
 -  supports call to all public methods on any OpenERP/Odoo object including:
    *read*, *search*, *write*, *unlink* and others
 -  Designed not for speed but to be useful like cli client to OpenERP/Odoo
--  Desinged to take as more benefits of *IPython autocomplete* as posible
+   (*Versiion 0.5 introduces orm optimizations*)
+-  Desinged to take as more benefits of **IPython autocomplete** as posible
+-  Also it works good enough in **IPython Notebook** providing **HTML
+   representation** for a lot of objects.
+-  Ability to display set of records as **HTML Table**
+   including **row highlighting**
 -  Provides session/history functionality, so if You used it to connect to
    some database before, new connection will be simpler (just enter password).
+   Version 0.5 and higher have ability to store passwords. just use
+   ``session.option('store_passwords', True); session.save()``
 -  Provides *browse\_record* like interface, allowing to browse related
    models too. But use's methods *search\_records* and *browse\_records*
-   instead of *browse*
--  *Extension support*. You can modify most of components of this app/lib
+   instead of *browse*. (From version 0.4 *browse* works too)
+-  *Extension support*. You can easily modify most of components of this app/lib
    creating Your own extensions. It is realy simple. See for examples in
    openerp_proxy/ext/ directory.
--  *Plugin Support*. You can write Your scripts that uses this lib,
-   and easily use them from session. no packages for them required,
-   just tell the path where script file is placed
--  Support of JSON-RPC for version 8 of OpenERP (experimental)
+-  *Plugin Support*. Plugins here meant utils, which could store some aditional
+   logic, to simplify routine operations.
+   Accessible from ``db.plugins.<plugin_name>`` attribute.
+-  Support of **JSON-RPC** for *version 8* of OpenERP/Odoo (*experimental*)
+-  Support of using **named parametrs** in RPC method calls (server version 6.1 and higher).
+
+-  Missed feature? ask in `Project Issues <https://github.com/katyukha/openerp-proxy/issues>`_
+
+
+Examples
+~~~~~~~~
+-  `Examples & HTML tests <http://nbviewer.ipython.org/github/katyukha/openerp-proxy/blob/master/examples/Examples%20&%20HTML%20tests.ipynb>`_
+
 
 What You can do with this
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -45,21 +61,33 @@ Near future plans
 
 -  Better plugin system which will allow to extend API on database,
    object, and record levels.  **DONE**
--  Django-like search and write API implemented as extension
+-  Django-like search API implemented as extension
+    - Something like ``F`` or ``Q`` expressions from Django
+    - to make working constructions like:
+      ``object.filter((F('price') > 100.0) & (F('price') != F('Price2')))``
 
 
 Install
 -------
 
-Install package with ``pip install openerp_proxy``, this will make
-available package *openerp\_proxy* and also shell will be available by
+To install package just use PIP::
+
+    pip install openerp_proxy
+    
+this will make available package *openerp\_proxy* and also shell will be available by
 command ``$ openerp_proxy``
 
-If You want to install development version of *OpenERP Proxy* you can do it via
-
-::
+If You want to install development version of *OpenERP Proxy* you can do it via::
 
     pip install -e git+https://github.com/katyukha/openerp-proxy.git#egg=openerp_proxy
+
+
+Also if You plan to use this project as shell client, it is recommended to install IPython
+and If You  would like to have ability to play with Odoo / OpenERP data in IPython notebook,
+it is recommended to also install IPython's Notebook support. To install IPython and IPython Notebook
+just type::
+
+    pip install ipython ipython[notebook]
 
 
 Use as shell
@@ -107,6 +135,31 @@ So here is a way to create connection
                            pwd='my_password here')
 
 And next all there same, no more differences betwen shell and lib usage.
+
+
+Use in IPYthon's notebook
+-------------------------
+
+To better suit for HTML capable notebook You would like to use IPython's version of *session*
+object and *openerp_proxy.ext.repr* extension.
+So in first cell of notebook import session and extensions/plugins You want::
+
+    from openerp_proxy.session import IPYSession as Session # Use IPython-itegrated session class
+    import openerp_proxy.ext.repr              # Enable representation extension. This provides HTML representation of objects
+    from openerp_proxy.ext.repr import HField  # Used in .as_html_table method of RecordList
+
+Now most things same as for shell usage, but...
+In some versions of IPython's notebook not patched version of *getpass* func/module,
+so if You not provide password when getting database (*connect*, *get_db* methods, You would be asked
+for it, but this prompt will be displayed in shell where notebook server is running, not on webpage.
+To solve this, it is recommended to uses *store_passwords* option::
+    
+    session.option('store_passwords', True)
+    session.save()
+
+In this way, only when You connect first time, You need to explicitly pass password to *connect* of *get_db* methods.
+
+(*do not forget to save session, after new connection*)
 
 
 General usage
