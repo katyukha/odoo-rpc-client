@@ -137,16 +137,18 @@ So here is a way to create connection
 And next all there same, no more differences betwen shell and lib usage.
 
 
-Use in IPYthon's notebook
+Use in IPython's notebook
 -------------------------
 
 To better suit for HTML capable notebook You would like to use IPython's version of *session*
 object and *openerp_proxy.ext.repr* extension.
 So in first cell of notebook import session and extensions/plugins You want::
 
-    from openerp_proxy.session import IPYSession as Session # Use IPython-itegrated session class
+    from openerp_proxy.session import IPYSession as Session  # Use IPython-itegrated session class
     import openerp_proxy.ext.repr              # Enable representation extension. This provides HTML representation of objects
     from openerp_proxy.ext.repr import HField  # Used in .as_html_table method of RecordList
+
+    session = Session()
 
 Now most things same as for shell usage, but...
 In some versions of IPython's notebook not patched version of *getpass* func/module,
@@ -368,7 +370,7 @@ As You see above, to use plugin (or extension), just import it module (better at
 
 For more information see `source
 code <https://github.com/katyukha/openerp-proxy>`_ or
-`documentation <https://github.com/katyukha/openerp-proxy>`_.
+`documentation <http://pythonhosted.org//openerp_proxy/>`_.
 
 
 Alternatives
