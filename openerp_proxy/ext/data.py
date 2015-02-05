@@ -40,7 +40,7 @@ class RecordListData(RecordList):
                 for letter, rlist in group.iteritems():  # Iterate over resulting dictionary
                     print letter, rlist.length           # Print state and amount of items with such state
         """
-        cls_init = functools.partial(RecordList,
+        cls_init = functools.partial(get_record_list,
                                      self.object,
                                      ids=[],
                                      cache=self._cache,
