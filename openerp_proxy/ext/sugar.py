@@ -91,15 +91,21 @@ class ObjectSugar(ObjectRecords):
         args = list(args)
         name = args.pop(0) if args else None
 
+        # no arguments, only keyword arguments passsed,
+        # so build domain based on keyword arguments
         if name is None:
             domain = [(k, '=', v) for k, v in kwargs.iteritems()]
             return self.search_records(domain, *args)
 
+
+        # normal domain passed, then just forward all arguments and
+        # keyword arguments to *search_records* method
         if isinstance(name, (list, tuple)):
             return self.search_records(name, *args, **kwargs)
 
-        res = self.name_search(name, *args, **kwargs)
+        # implement name_search capability
         context = kwargs.get('context', None)
+        res = self.name_search(name, *args, **kwargs)
         ids = [i[0] for i in res]
         if len(ids) == 1:
             return self.read_records(ids[0], context=context)

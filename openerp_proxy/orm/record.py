@@ -16,6 +16,10 @@ __all__ = (
 
 class ObjectCache(dict):
 
+    def __init__(self, *args, **kwargs):
+        self.context = kwargs.pop('context', None)
+        super(ObjectCache, self).__init__(*args, **kwargs)
+
     def __missing__(self, key):
         self[key] = {'id': key}
         return self[key]
@@ -54,6 +58,7 @@ def get_record(obj, rid, cache=None, context=None):
                          or integer ID of database record to fetch data from
             :param cache: dictionary of structure {object.name: {object_id: data} }
             :type cache: defaultdict(lambda: defaultdict(dict))
+            :param dict context: if specified, then cache's context will be updated
             :return: created Record instance
             :rtype: Record instance
     """
@@ -70,24 +75,30 @@ class Record(object):
                          or integer ID of database record to fetch data from
             :param cache: dictionary of structure {object.name: {object_id: data} }
             :type cache: defaultdict(lambda: defaultdict(dict))
+            :param dict context: if specified, then cache's context will be updated
 
         Note to create instance of cache call *empty_cache*
     """
 
     __metaclass__ = RecordMeta
-    __slots__ = ['__dict__', '_object', '_cache', '_lcache', '_id', '_data', '_context']
+    __slots__ = ['__dict__', '_object', '_cache', '_lcache', '_id', '_data']
 
     def __init__(self, obj, data, cache=None, context=None):
         assert isinstance(obj, Object), "obj should be Object"
 
         self._object = obj
-        self._context = context   # TODO: store it in cache
         self._cache = empty_cache() if cache is None else cache
         self._lcache = self._cache[obj.name]
 
+        if context is not None:
+            if self._lcache.context is None:
+                self._lcache.context = context
+            else:
+                self._lcache.context.update(context)
+
         if isinstance(data, (int, long)):
             self._id = data
-            self._data = self._lcache[self._id]
+            self._data = self._lcache[self._id]  # TODO: think about implementing data as property that gets it from cache
         elif isinstance(data, dict):
             self._id = data['id']
             self._data = self._lcache[self._id]
@@ -106,7 +117,7 @@ class Record(object):
     def context(self):
         """ Returns context to be used for thist record
         """
-        return self._context
+        return self._lcache.context   # self._context
 
     @property
     def _service(self):
@@ -246,6 +257,7 @@ class Record(object):
 
             :param list fields: list of fields to be read (optional)
             :param dict context: context to be passed to read (optional)
+                                 does not midify record's context
             :param bool multi: if set to True, that data will be read for
                                all records of this object in current
                                cache (query).
@@ -263,8 +275,14 @@ class Record(object):
         if fields is not None:
             args.append(fields)
 
+
+        ctx = {} if self.context is None else self.context
+
         if context is not None:
-            kwargs['context'] = context
+            ctx.update(context)
+
+        if ctx:
+            kwargs['context'] = ctx
 
         data = self._object.read(*args, **kwargs)
         res = {}
@@ -296,6 +314,8 @@ def get_record_list(obj, ids=None, fields=None, cache=None, context=None):
     return RecordListClass(obj, ids, fields=fields, cache=cache, context=context)
 
 
+# TODO: add .copy() method to be able to create for exemple copy of list with
+# another context
 class RecordList(object):
     """Class to hold list of records with some extra functionality
 
@@ -313,7 +333,7 @@ class RecordList(object):
     """
     __metaclass__ = RecordListMeta
 
-    __slots__ = ('_object', '_cache', '_context', '_records')
+    __slots__ = ('_object', '_cache', '_records')
 
     # TODO: expose object's methods via implementation of __dir__
 
@@ -322,11 +342,17 @@ class RecordList(object):
         """
         self._object = obj
         self._cache = empty_cache() if cache is None else cache
-        self._context = context  # TODO: store in cache
+
+        # Store context in cache
+        if context is not None:
+            if self._cache[obj.name].context is None:
+                self._cache[obj.name].context = context
+            else:
+                self._cache[obj.name].context.update(context)
 
         ids = [] if ids is None else ids
 
-        self._records = [get_record(self.object, id_, cache=self._cache, context=self._context)
+        self._records = [get_record(self.object, id_, cache=self._cache)
                          for id_ in ids]
 
         # if there some fields prefetching was requested, do it
@@ -343,7 +369,7 @@ class RecordList(object):
     def context(self):
         """ Returns context to be used for this list
         """
-        return self._context
+        return self._cache[self._object.name].context
 
     @property
     def ids(self):
@@ -436,8 +462,7 @@ class RecordList(object):
         """
         # TODO: add checks to check if fields are real fields in
         # object.columns_info
-        if not fields:
-            fields = self.object.simple_fields
+        fields = fields if fields else self.object.simple_fields
 
         lcache = self._cache[self.object.name]
         col_info = self.object.columns_info
@@ -468,6 +493,12 @@ class RecordList(object):
             :returns: list of IDs found
             :rtype: list of integers
         """
+        if self.context is not None:
+            if kwargs.get('context', None):
+                kwargs['context'].update(self.context)
+            else:
+                kwargs['context'] = self.context.copy()
+
         return self.object.search([('id', 'in', self.ids)] + domain, *args, **kwargs)
 
     def search_records(self, domain, *args, **kwargs):
@@ -476,7 +507,33 @@ class RecordList(object):
             :returns: RecordList of records found
             :rtype: RecordList instance
         """
+        if self.context is not None:
+            if kwargs.get('context', None):
+                kwargs['context'].update(self.context)
+            else:
+                kwargs['context'] = self.context.copy()
+
         return self.object.search_records([('id', 'in', self.ids)] + domain, *args, **kwargs)
+
+    def read(self, fields=None, context=None):
+        """ Read wrapper. Takes care about adding RecordList's context to
+            object's read method
+        """
+        kwargs = {}
+        args = []
+
+        ctx = {} if self.context is None else self.context
+
+        if context is not None:
+            ctx.update(context)
+
+        if ctx:
+            kwargs['context'] = ctx
+
+        if fields is not None:
+            args.append(fields)
+
+        return self.object.read(self.ids, *args, **kwargs)
 
 
 class RecordRelations(Record):
@@ -636,7 +693,7 @@ class ObjectRecords(Object):
         """
 
         read_fields = kwargs.pop('read_fields', None)
-        context = kwargs.pop('context', None)
+        context = kwargs.get('context', None)
 
         if kwargs.get('count', False):
             return self.search(*args, **kwargs)

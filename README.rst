@@ -40,6 +40,12 @@ Features
 -  Missed feature? ask in `Project Issues <https://github.com/katyukha/openerp-proxy/issues>`_
 
 
+Constraints
+~~~~~~~~~~~
+
+For High level functionality Odoo server must be of version 6.1 or higher
+
+
 Examples
 ~~~~~~~~
 -  `Examples & HTML tests <http://nbviewer.ipython.org/github/katyukha/openerp-proxy/blob/master/examples/Examples%20&%20HTML%20tests.ipynb>`_
