@@ -1,5 +1,6 @@
 from extend_me import ExtensibleByHashType
 
+
 __all__ = ('Object', 'get_object')
 
 

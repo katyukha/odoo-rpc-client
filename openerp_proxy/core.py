@@ -241,6 +241,11 @@ class ERP_Proxy(Extensible):
            :type method: string
            :return: result of RPC method call
         """
+        # avoid sending context when it is set to None
+        # because of it is problem of xmlrpc
+        if 'context' in kwargs and kwargs['context'] is None:
+            kwargs = kwargs.copy()
+            del kwargs['context']
         return self.services['object'].execute(obj, method, *args, **kwargs)
 
     def execute_wkf(self, object_name, signal, object_id):

@@ -20,6 +20,19 @@ class ObjectCache(dict):
         self.context = kwargs.pop('context', None)
         super(ObjectCache, self).__init__(*args, **kwargs)
 
+    def update_context(self, new_context):
+        """ Updates or sets new context for thes ObjectCache instance
+
+            :param dict new_context: context dictionary to update cached context with
+            :return: updated context
+        """
+        if new_context is not None:
+            if self.context is None:
+                self.context = new_context
+            else:
+                self.context.update(new_context)
+        return self.context
+
     def __missing__(self, key):
         self[key] = {'id': key}
         return self[key]
@@ -89,12 +102,7 @@ class Record(object):
         self._object = obj
         self._cache = empty_cache() if cache is None else cache
         self._lcache = self._cache[obj.name]
-
-        if context is not None:
-            if self._lcache.context is None:
-                self._lcache.context = context
-            else:
-                self._lcache.context.update(context)
+        self._lcache.update_context(context)
 
         if isinstance(data, (int, long)):
             self._id = data
@@ -154,7 +162,7 @@ class Record(object):
         """ Returns result of name_get for this record
         """
         if self._data.get('__name_get_result', None) is None:
-            data = self._object.name_get(self._lcache.keys())
+            data = self._object.name_get(self._lcache.keys(), context=self.context)
             for _id, name in data:
                 self._lcache[_id]['__name_get_result'] = name
         return self._data['__name_get_result']
@@ -209,10 +217,7 @@ class Record(object):
             # TODO: read all fields for self._fields and if name not in
             # self._fields update them with name
             keys = [key for key, val in self._lcache.viewitems() if name not in val]
-            if self.context is None:
-                read_data = self._object.read(keys, [name])
-            else:
-                read_data = self._object.read(keys, [name], context=self.context)
+            read_data = self._object.read(keys, [name], context=self.context)
             for data in read_data:
                 self._cache_field_read(ftype, name, data)
 
@@ -275,8 +280,7 @@ class Record(object):
         if fields is not None:
             args.append(fields)
 
-
-        ctx = {} if self.context is None else self.context
+        ctx = {} if self.context is None else self.context.copy()
 
         if context is not None:
             ctx.update(context)
@@ -343,12 +347,7 @@ class RecordList(object):
         self._object = obj
         self._cache = empty_cache() if cache is None else cache
 
-        # Store context in cache
-        if context is not None:
-            if self._cache[obj.name].context is None:
-                self._cache[obj.name].context = context
-            else:
-                self._cache[obj.name].context.update(context)
+        self._cache[obj.name].update_context(context)
 
         ids = [] if ids is None else ids
 
@@ -389,6 +388,21 @@ class RecordList(object):
         """
         return len(self._records)
 
+    def _new_context(self, new_context=None):
+        """ Create new context which is combination of self.context and passed context argument
+            mostly for internal usage
+
+            :param dict new_context: new context. default is None
+            :return: new context dict which is combination of self.context and new_context or None
+            :rtype: dict|None
+        """
+        if new_context is None:
+            return self.context
+
+        ctx = {} if self.context is None else self.context.copy()
+        ctx.update(new_context)
+        return ctx
+
     # Container related methods
     def __getitem__(self, index):
         return self.records[index]
@@ -410,11 +424,8 @@ class RecordList(object):
     # present in this RecordList
     def __getattr__(self, name):
         method = getattr(self.object, name)
-        if self.context is None:
-            res = wpartial(method, self.ids)
-        else:
-            res = wpartial(method, self.ids, context=self.context)
-        setattr(self, name, res)
+        res = wpartial(method, self.ids, context=self.context)
+        #setattr(self, name, res)  # commented because of __slots__
         return res
 
     def __str__(self):
@@ -493,12 +504,7 @@ class RecordList(object):
             :returns: list of IDs found
             :rtype: list of integers
         """
-        if self.context is not None:
-            if kwargs.get('context', None):
-                kwargs['context'].update(self.context)
-            else:
-                kwargs['context'] = self.context.copy()
-
+        kwargs['context'] = self._new_context(kwargs.get('context', None))
         return self.object.search([('id', 'in', self.ids)] + domain, *args, **kwargs)
 
     def search_records(self, domain, *args, **kwargs):
@@ -507,12 +513,7 @@ class RecordList(object):
             :returns: RecordList of records found
             :rtype: RecordList instance
         """
-        if self.context is not None:
-            if kwargs.get('context', None):
-                kwargs['context'].update(self.context)
-            else:
-                kwargs['context'] = self.context.copy()
-
+        kwargs['context'] = self._new_context(kwargs.get('context', None))
         return self.object.search_records([('id', 'in', self.ids)] + domain, *args, **kwargs)
 
     def read(self, fields=None, context=None):
@@ -522,13 +523,7 @@ class RecordList(object):
         kwargs = {}
         args = []
 
-        ctx = {} if self.context is None else self.context
-
-        if context is not None:
-            ctx.update(context)
-
-        if ctx:
-            kwargs['context'] = ctx
+        kwargs['context'] = self._new_context(kwargs.get('context', None))
 
         if fields is not None:
             args.append(fields)
