@@ -12,7 +12,7 @@ used inside IPython notebook
 from openerp_proxy.orm.record import RecordList
 from openerp_proxy.orm.record import Record
 from openerp_proxy.orm.object import Object
-from openerp_proxy.core import ERP_Proxy
+from openerp_proxy.core import Client
 from IPython.display import HTML
 
 from openerp_proxy.utils import ustr as _
@@ -503,8 +503,8 @@ class ObjectHTML(Object):
         return html % (table + help_text)
 
 
-class ERP_Proxy_HTML(ERP_Proxy):
-    """ HTML modifications for ERP_Proxy class
+class ClientHTML(Client):
+    """ HTML modifications for Client class
     """
 
     def _repr_html_(self):

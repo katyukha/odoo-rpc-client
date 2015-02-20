@@ -8,8 +8,8 @@ class Plugin(object):
 
         (uses metaclass extend_me.ExtensibleByHashType)
 
-        :param erp_proxy: instance of ERP_Proxy to bind plugins to
-        :type erp_proxy: openerp_proxy.core.ERP_Proxy instance
+        :param erp_proxy: instance of Client to bind plugins to
+        :type erp_proxy: openerp_proxy.core.Client instance
 
         Example of simple plugin::
 
@@ -38,7 +38,7 @@ class Plugin(object):
 
     @property
     def proxy(self):
-        """ Related ERP_Proxy instance
+        """ Related Client instance
         """
         return self._erp_proxy
 
@@ -67,8 +67,8 @@ class TestPlugin(Plugin):
 class PluginManager(object):
     """ Class that holds information about all plugins
 
-        :param erp_proxy: instance of ERP_Proxy to bind plugins to
-        :type erp_proxy: openerp_proxy.core.ERP_Proxy instance
+        :param erp_proxy: instance of Client to bind plugins to
+        :type erp_proxy: openerp_proxy.core.Client instance
 
         Plugiins will be accessible via index or attribute syntax::
 

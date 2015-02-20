@@ -4,7 +4,7 @@
 
     Example ussage of this module:
 
-    >>> erp_db = ERP_Proxy('dbname', 'server.com', 'some_user', 'mypassword')
+    >>> erp_db = Client('server.com', 'dbname', 'some_user', 'mypassword')
     >>> sale_obj = erp_db['sale_order']
     >>> sale_ids = sale_obj.search([('state','not in',['done','cancel'])])
     >>> sale_data = sale_obj.read(sale_ids, ['name'])
@@ -13,7 +13,7 @@
     >>> tmpl_ids = erp_db['product.template'].search([('name','ilike','template_name')])
     >>> print erp_db['product.product'].search([('product_tmpl_id','in',tmpl_ids)])
 
-    >>> db = ERP_Proxy(dbname='db0', 'erp.host.com', 'your_user')
+    >>> db = Client('erp.host.com', 'dbname='db0', user='your_user')
     >>> so = db['sale.order']
     >>> order_ids = so.search([('state','=','done')])
     >>> order = so.read(order_ids[0])
@@ -53,6 +53,7 @@ from openerp_proxy.exceptions import Error
 from openerp_proxy.service import ServiceManager
 from openerp_proxy.plugin import PluginManager
 
+
 # Activate orm internal logic
 # TODO: think about not enabling it by default, allowing users to choose what
 # thay woudld like to use. Or simply create two entry points (one with all
@@ -63,14 +64,21 @@ import openerp_proxy.orm
 from extend_me import Extensible
 
 
-__all__ = ('ERPProxyException', 'ERP_Proxy')
+__all__ = ('ERPProxyException', 'Client', 'ERP_Proxy')
 
 
-class ERPProxyException(Error):
+class ClientException(Error):
+    pass
+
+# Backward compatability
+ERPProxyException = ClientException
+
+
+class LoginException(ClientException):
     pass
 
 
-class ERP_Proxy(Extensible):
+class Client(Extensible):
     """
        A simple class to connect ot ERP via xml_rpc
        Should be initialized with following arguments:
@@ -86,7 +94,7 @@ class ERP_Proxy(Extensible):
 
        Example::
 
-           >>> db = ERP_Proxy('dbname', 'host', 'user', pwd = 'Password', verbose = False)
+           >>> db = Client('dbname', 'host', 'user', pwd = 'Password', verbose = False)
 
        Allows access to ERP objects via dictionary syntax::
 
@@ -94,7 +102,7 @@ class ERP_Proxy(Extensible):
                Object ('sale.order')
     """
 
-    def __init__(self, dbname, host, user, pwd, port=8069, protocol='xml-rpc', verbose=False):
+    def __init__(self, host, dbname=None, user=None, pwd=None, port=8069, protocol='xml-rpc', verbose=False):
         self._dbname = dbname
         self._username = user
         self._pwd = pwd
@@ -114,7 +122,7 @@ class ERP_Proxy(Extensible):
 
     @property
     def username(self):
-        """ Name of user to connect with (user login)
+        """ User login used to access DB
         """
         return self._username
 
@@ -184,6 +192,14 @@ class ERP_Proxy(Extensible):
         return self._user
 
     @property
+    def server_version(self):
+        """ Server version
+
+            :rtype: str
+        """
+        return self.services.db.server_version()
+
+    @property
     def registered_objects(self):
         """ Stores list of registered in ERP database objects
         """
@@ -199,18 +215,21 @@ class ERP_Proxy(Extensible):
 
             :return: Id of user logged in
             :rtype: int
-            :raises ERPProxyException: if wrong login or password
+            :raises ClientException: if wrong login or password
         """
         if kwargs:
             init_kwargs = self.get_init_args()
             init_kwargs.update(kwargs)
-            return ERP_Proxy(**init_kwargs)
+            return Client(**init_kwargs)
 
         # Get the uid
-        uid = self.services['common'].login(self.dbname, self._username, self._pwd)
+        if self._pwd is None or self.username is None or self.dbname is None:
+            raise LoginException("User login and password required for this operation")
+
+        uid = self.services['common'].login(self.dbname, self.username, self._pwd)
 
         if not uid:
-            raise ERPProxyException("Bad login or password")
+            raise ClientException("Bad login or password")
 
         return uid
 
@@ -219,7 +238,7 @@ class ERP_Proxy(Extensible):
 
             :return: ID of user logged in
             :rtype: int
-            :raises ERPProxyException: if wrong login or password
+            :raises ClientException: if wrong login or password
         """
         self.services.clean_cache()
         self._uid = None
@@ -241,11 +260,6 @@ class ERP_Proxy(Extensible):
            :type method: string
            :return: result of RPC method call
         """
-        # avoid sending context when it is set to None
-        # because of it is problem of xmlrpc
-        if 'context' in kwargs and kwargs['context'] is None:
-            kwargs = kwargs.copy()
-            del kwargs['context']
         return self.services['object'].execute(obj, method, *args, **kwargs)
 
     def execute_wkf(self, object_name, signal, object_id):
@@ -297,19 +311,19 @@ class ERP_Proxy(Extensible):
         """ Converts instance to url
 
             :param inst: instance to convert to init args
-            :type inst: ERP_Proxy|dict
+            :type inst: Client|dict
             :return: generated URL
             :rtype: str
         """
         url_tmpl = "%(protocol)s://%(user)s@%(host)s:%(port)s/%(dbname)s"
-        if isinstance(inst, ERP_Proxy):
+        if isinstance(inst, Client):
             return url_tmpl % inst.get_init_args()
         elif isinstance(inst, dict):
             return url_tmpl % inst
         elif inst is None and kwargs:
             return url_tmpl % kwargs
         else:
-            raise ValueError("inst must be ERP_Proxy instance or dict")
+            raise ValueError("inst must be Client instance or dict")
 
     # TODO: think to reimplement as property
     def get_url(self):
@@ -320,5 +334,7 @@ class ERP_Proxy(Extensible):
         return self.to_url(self)
 
     def __str__(self):
-        return "ERP_Proxy: %s" % self.get_url()
+        return "Client: %s" % self.get_url()
     __repr__ = __str__
+
+ERP_Proxy = Client

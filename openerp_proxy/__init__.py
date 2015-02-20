@@ -36,10 +36,10 @@ HELP_HEADER = """
 def main():
     """ Entry point for running as standalone APP
     """
-    from session import ERP_Session
-    from core import ERP_Proxy
+    from session import Session
+    from core import Client
 
-    session = ERP_Session()
+    session = Session()
 
     header_databases = "\n"
     for index, url in session.index.iteritems():
@@ -52,7 +52,8 @@ def main():
     header = HELP_HEADER % {'databases': header_databases, 'aliases': header_aliases}
 
     _locals = {
-        'ERP_Proxy': ERP_Proxy,
+        'ERP_Proxy': Client,
+        'Clinet': Client,
         'session': session,
     }
     try:

@@ -7,7 +7,7 @@ import numbers
 
 from openerp_proxy.orm.record import ObjectRecords
 from openerp_proxy.orm.record import get_record_list
-from openerp_proxy.core import ERP_Proxy
+from openerp_proxy.core import Client
 
 
 class ObjectSugar(ObjectRecords):
@@ -97,7 +97,6 @@ class ObjectSugar(ObjectRecords):
             domain = [(k, '=', v) for k, v in kwargs.iteritems()]
             return self.search_records(domain, *args)
 
-
         # normal domain passed, then just forward all arguments and
         # keyword arguments to *search_records* method
         if isinstance(name, (list, tuple)):
@@ -112,8 +111,8 @@ class ObjectSugar(ObjectRecords):
         return get_record_list(self, ids=ids, context=context)
 
 
-class ERP_Proxy_Sugar(ERP_Proxy):
-    """ Provides some syntax sugar for ERP_Proxy class
+class ClientSugar(Client):
+    """ Provides some syntax sugar for Client class
 
         As one of it's features is ability to access objects as
         attributes via *object aliaces*. Each aliase is object name
@@ -127,28 +126,28 @@ class ERP_Proxy_Sugar(ERP_Proxy):
     """
 
     def __init__(self, *args, **kwargs):
-        super(ERP_Proxy_Sugar, self).__init__(*args, **kwargs)
+        super(ClientSugar, self).__init__(*args, **kwargs)
         self._object_aliases = None
 
     @property
     def object_aliases(self):
-        """ Property, that holds list of all object aliases for this ERP_Proxy instance
+        """ Property, that holds list of all object aliases for this Client instance
         """
         if self._object_aliases is None:
             self._object_aliases = {}
             for oname in self.registered_objects:
-                # TODO: think about other names of aobjects-as-attributes
+                # TODO: think about other names of objects-as-attributes
                 key = '_%s' % oname.replace('_', '__').replace('.', '_')
                 self._object_aliases[key] = oname
         return self._object_aliases
 
     def __dir__(self):
-        res = dir(super(ERP_Proxy_Sugar, self))
+        res = dir(super(ClientSugar, self))
         res += self.object_aliases.keys()
         return res
 
     def __getattr__(self, name):
         objname = self.object_aliases.get(name, None)
         if objname is None:
-            raise AttributeError("'ERP_Proxy' object has no atribute %s" % name)
+            raise AttributeError("'Client' object has no atribute %s" % name)
         return self.get_obj(objname)

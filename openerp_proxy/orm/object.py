@@ -10,8 +10,8 @@ ObjectType = ExtensibleByHashType._('Object', hashattr='name')
 def get_object(proxy, name):
     """ Create new Objct instance.
 
-        :param proxy: ERP_Proxy instance to bind this object to
-        :type proxy: ERP_Proxy
+        :param proxy: Client instance to bind this object to
+        :type proxy: Client
         :param name: name of object. Ex. 'sale.order'
         :type name: string
         :return: Created Object instance
@@ -27,7 +27,7 @@ class Object(object):
 
         Provides simple interface to remote osv.osv objects
 
-            erp = ERP_Proxy(...)
+            erp = Client(...)
             sale_obj = Object(erp, 'sale.order')
             sale_obj.search([('state','not in',['done','cancel'])])
     """
@@ -53,7 +53,7 @@ class Object(object):
 
     @property
     def proxy(self):
-        """ ERP_Proxy instance, this object is relatedto
+        """ Client instance, this object is relatedto
         """
         return self.service.proxy
 

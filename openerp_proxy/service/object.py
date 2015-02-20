@@ -31,6 +31,12 @@ class ObjectService(ServiceBase):
         """First arguments should be 'object' and 'method' and next
            will be passed to method of given object
         """
+        # avoid sending context when it is set to None
+        # because of it is problem of xmlrpc
+        if 'context' in kwargs and kwargs['context'] is None:
+            kwargs = kwargs.copy()
+            del kwargs['context']
+
         if self.use_execute_kw:
             result = self._service.execute_kw(self.proxy.dbname, self.proxy.uid, self.proxy._pwd, obj, method, args, kwargs)
         else:

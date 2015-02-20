@@ -5,7 +5,7 @@ import pprint
 from getpass import getpass
 
 # project imports
-from core import ERP_Proxy
+from core import Client
 
 
 __all__ = ('ERP_Session', 'Session', 'IPYSession')
@@ -25,7 +25,7 @@ class Session(object):
 
         And You will get all databases You worked with listed as (index, url) pairs.
         to connect to one of thouse databases just call session[index|url] and required
-        ERP_Proxy object will be returned.
+        Client object will be returned.
 
         :param data_file: path to session file
         :type data_file: string
@@ -118,7 +118,7 @@ class Session(object):
 
             To add new database aliase, use method *aliase*::
 
-                session.aliase('mdb', db)  # db is instance of ERP_Proxy
+                session.aliase('mdb', db)  # db is instance of Client
         """
         return self._db_aliases.copy()
 
@@ -128,9 +128,9 @@ class Session(object):
             :param name: new aliase
             :type name: string
             :param val: database to create aliase for
-            :type val: int|string|ERP_Proxy instance
+            :type val: int|string|Client instance
 
-            *val* could be index, url or ERP_Proxy object::
+            *val* could be index, url or Client object::
 
                 session.aliase('tdb', 1)
                 session.aliase('mdb', 'xml-rpc://me@my.example.com:8069/my_db')
@@ -148,7 +148,7 @@ class Session(object):
             self._db_aliases[name] = val
         elif val in self.index:
             self._db_aliases[name] = self.index[val]
-        elif isinstance(val, ERP_Proxy):
+        elif isinstance(val, Client):
             self._db_aliases[name] = val.get_url()
         else:
             raise ValueError("Bad value type")
@@ -194,15 +194,15 @@ class Session(object):
         self._index_url(url)
 
     def get_db(self, url_or_index, **kwargs):
-        """ Returns instance of ERP_Proxy object, that represents single
+        """ Returns instance of Client object, that represents single
             OpenERP database it connected to, specified by passed index (integer) or
             url (string) of database, previously saved in session.
 
             :param url_or_index: must be integer (if index) or string (if url). this parametr
                                  specifies database to get from session
             :type url_or_index: int|string
-            :param kwargs: can contain aditional arguments to be passed on init of ERP_Proxy
-            :return: ERP_Proxy instance
+            :param kwargs: can contain aditional arguments to be passed on init of Client
+            :return: Client instance
             :raises ValueError: if cannot find database by specified args
 
             Examples::
@@ -220,7 +220,7 @@ class Session(object):
         if not db:
             raise ValueError("Bad url %s. not found in history or databases" % url)
 
-        if isinstance(db, ERP_Proxy):
+        if isinstance(db, Client):
             return db
 
         ep_args = db.copy()  # DB here is instance of dict
@@ -231,11 +231,11 @@ class Session(object):
                 from simplecrypt import decrypt
                 import base64
                 crypter, password = base64.decodestring(ep_args.pop('password')).split(':')
-                ep_args['pwd'] = decrypt(ERP_Proxy.to_url(ep_args), base64.decodestring(password))
+                ep_args['pwd'] = decrypt(Client.to_url(ep_args), base64.decodestring(password))
             else:
                 ep_args['pwd'] = getpass('Password: ')
 
-        db = ERP_Proxy(**ep_args)
+        db = Client(**ep_args)
         self._add_db(url, db)
         return db
 
@@ -249,7 +249,7 @@ class Session(object):
         return self._databases.keys()
 
     def connect(self, dbname=None, host=None, user=None, pwd=None, port=8069, protocol='xml-rpc', verbose=False, no_save=False):
-        """ Wraper aroun ERP_Proxy constructor class to simplify connect from shell.
+        """ Wraper aroun Client constructor class to simplify connect from shell.
 
             :param dbname: name of database to connect to (will be asked interactvely if not provided)
             :type dbname: string
@@ -265,31 +265,31 @@ class Session(object):
             :type verbose: boolean
             :param no_save: if set to True database will not be saved to session
             :type no_save: boolean
-            :return: ERP_Proxy object
+            :return: Client object
         """
         host = host or raw_input('Server Host: ')
         dbname = dbname or raw_input('Database name: ')
         user = user or raw_input('ERP Login: ')
         pwd = pwd or getpass("Password: ")
 
-        url = ERP_Proxy.to_url(inst=None,
-                               user=user,
-                               host=host,
-                               dbname=dbname,
-                               port=port,
-                               protocol=protocol)
+        url = Client.to_url(inst=None,
+                            user=user,
+                            host=host,
+                            dbname=dbname,
+                            port=port,
+                            protocol=protocol)
 
         db = self._databases.get(url, False)
-        if isinstance(db, ERP_Proxy):
+        if isinstance(db, Client):
             return db
 
-        db = ERP_Proxy(dbname=dbname, host=host, user=user, pwd=pwd, port=port, protocol=protocol, verbose=verbose)
+        db = Client(dbname=dbname, host=host, user=user, pwd=pwd, port=port, protocol=protocol, verbose=verbose)
         self._add_db(url, db)
         db._no_save = no_save   # disalows saving database connection in session
         return db
 
     def _get_db_init_args(self, database):
-        if isinstance(database, ERP_Proxy):
+        if isinstance(database, Client):
             res = database.get_init_args()
             if self.option('store_passwords') and database._pwd:
                 from simplecrypt import encrypt
@@ -300,7 +300,7 @@ class Session(object):
         elif isinstance(database, dict):
             return database
         else:
-            raise ValueError("Bad database instance. It should be dict or ERP_Proxy object")
+            raise ValueError("Bad database instance. It should be dict or Client object")
 
     def save(self):
         """ Saves session on disc

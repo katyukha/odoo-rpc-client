@@ -88,7 +88,7 @@ class ServiceBase(object):
 
     @property
     def proxy(self):
-        """ Related ERP_Proxy instance
+        """ Related Client instance
         """
         return self._erp_proxy
 

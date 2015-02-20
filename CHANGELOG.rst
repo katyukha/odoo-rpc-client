@@ -1,3 +1,11 @@
+master:
+    - Renamed ``ERP_Proxy`` to ``Client`` and inherited objects renamed in such way
+      (for example sugar extension module)
+    - Added ``Client.server_version`` property
+    - Client parametrs (dbname, user, pwd) now are not required.
+      This is useful when working with ``db`` service (``client.services.db``)
+
+
 0.5:
     - Addef ``RecordList.prefetch`` method. Als *RecordList's* *fields* argument
       now works.

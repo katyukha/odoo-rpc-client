@@ -3,7 +3,6 @@ from openerp_proxy.utils import ustr
 from openerp_proxy.orm.object import Object
 from extend_me import ExtensibleType
 
-from collections import defaultdict
 
 __all__ = (
     'Record',
@@ -16,7 +15,9 @@ __all__ = (
 
 class ObjectCache(dict):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, root, obj, *args, **kwargs):
+        self._root_cache = root
+        self._object = obj
         self.context = kwargs.pop('context', None)
         super(ObjectCache, self).__init__(*args, **kwargs)
 
@@ -38,7 +39,27 @@ class ObjectCache(dict):
         return self[key]
 
 
-def empty_cache():
+class Cache(dict):
+    """ Cache to be used for Record's data
+    """
+    def __init__(self, proxy, *args, **kwargs):
+        self._proxy = proxy
+        super(Cache, self).__init__(*args, **kwargs)
+
+    @property
+    def poxy(self):
+        return self._proxy
+
+    def __missing__(self, key):
+        try:
+            obj = self._proxy.get_obj(key)
+        except ValueError:
+            raise KeyError("There is no object with such name: %s" % key)
+        self[key] = ObjectCache(self, obj)
+        return self[key]
+
+
+def empty_cache(proxy):
     """ Create instance of empty cache for Record
 
         Usualy cache will be dictionary structure like::
@@ -54,7 +75,7 @@ def empty_cache():
             }
 
     """
-    return defaultdict(ObjectCache)
+    return Cache(proxy)
 
 
 RecordMeta = ExtensibleType._('Record')
@@ -100,7 +121,7 @@ class Record(object):
         assert isinstance(obj, Object), "obj should be Object"
 
         self._object = obj
-        self._cache = empty_cache() if cache is None else cache
+        self._cache = empty_cache(obj.proxy) if cache is None else cache
         self._lcache = self._cache[obj.name]
         self._lcache.update_context(context)
 
@@ -135,7 +156,7 @@ class Record(object):
 
     @property
     def _proxy(self):
-        """ Returns instance of related ERP_Proxy object
+        """ Returns instance of related Client object
         """
         return self._object.proxy
 
@@ -345,7 +366,7 @@ class RecordList(object):
         """
         """
         self._object = obj
-        self._cache = empty_cache() if cache is None else cache
+        self._cache = empty_cache(obj.proxy) if cache is None else cache
 
         self._cache[obj.name].update_context(context)
 

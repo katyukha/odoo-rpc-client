@@ -135,7 +135,7 @@ So here is a way to create connection
 ::
 
     import openerp_proxy.core as oe_core
-    db = oe_core.ERP_Proxy(dbname='my_db',
+    db = oe_core.Client(dbname='my_db',
                            host='my_host.int',
                            user='my_db_user',
                            pwd='my_password here')
