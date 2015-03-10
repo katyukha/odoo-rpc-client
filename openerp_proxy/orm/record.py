@@ -3,6 +3,9 @@ from openerp_proxy.utils import ustr
 from openerp_proxy.orm.object import Object
 from extend_me import ExtensibleType
 
+import collections
+import abc
+
 
 __all__ = (
     'Record',
@@ -81,7 +84,7 @@ def empty_cache(proxy):
 RecordMeta = ExtensibleType._('Record')
 
 
-def get_record(obj, rid, cache=None, context=None):
+def get_record(obj, data, cache=None, context=None):
     """ Creates new Record instance
 
         Use this method to create new records, because of standard
@@ -96,8 +99,7 @@ def get_record(obj, rid, cache=None, context=None):
             :return: created Record instance
             :rtype: Record instance
     """
-    RecordClass = RecordMeta.get_class()
-    return RecordClass(obj, rid, cache=cache, context=context)
+    return RecordMeta.get_object(obj, data, cache=cache, context=context)
 
 
 class Record(object):
@@ -318,7 +320,7 @@ class Record(object):
         return res
 
 
-RecordListMeta = ExtensibleType._('RecordList')
+RecordListMeta = ExtensibleType._('RecordList', with_meta=abc.ABCMeta)
 
 
 def get_record_list(obj, ids=None, fields=None, cache=None, context=None):
@@ -335,13 +337,12 @@ def get_record_list(obj, ids=None, fields=None, cache=None, context=None):
         :param context: context to be passed automatocally to methods called from this list (not used yet)
         :type context: dict
     """
-    RecordListClass = RecordListMeta.get_class()
-    return RecordListClass(obj, ids, fields=fields, cache=cache, context=context)
+    return RecordListMeta.get_object(obj, ids, fields=fields, cache=cache, context=context)
 
 
 # TODO: add .copy() method to be able to create for exemple copy of list with
 # another context
-class RecordList(object):
+class RecordList(collections.MutableSequence):
     """Class to hold list of records with some extra functionality
 
         :param obj: instance of Object to make this list related to
@@ -426,10 +427,16 @@ class RecordList(object):
 
     # Container related methods
     def __getitem__(self, index):
-        return self.records[index]
+        return self._records[index]
+
+    def __setitem__(self, index, value):
+        self._records[index] = value
+
+    def __delitem__(self, index):
+        del self._records[index]
 
     def __iter__(self):
-        return iter(self.records)
+        return iter(self._records)
 
     def __len__(self):
         return self.length
@@ -438,8 +445,24 @@ class RecordList(object):
         if isinstance(item, (int, long)):
             return item in self.ids
         if isinstance(item, Record):
-            return item.id in self.ids
+            return item in self._records
         return False
+
+    def insert(self, index, item):
+        """ Insert record to list
+
+            :param item: Record instance to be inserted into list. if int or long passed, it considered to be ID of record
+            :type item: Record|int|long
+            :param int index: position where to place new element
+            :return: self
+            :rtype: RecordList
+        """
+        assert isinstance(item, (Record, int, long)), "Only Record or int or long instances could be added to list"
+        if isinstance(item, Record):
+            self._records.insert(index, item)
+        else:
+            self._records.insert(index, self._object.read_records(item))
+        return self
 
     # Overridden to make ability to call methods of object on list of IDs
     # present in this RecordList
@@ -463,18 +486,6 @@ class RecordList(object):
             record.refresh()
         return self
 
-    def append(self, item):
-        """ Append record to list
-
-            :param item: Record instance to be added to list
-            :type item: Record
-            :return: self
-            :rtype: RecordList
-        """
-        assert isinstance(item, Record), "Only Record instances could be added to list"
-        self._records.append(item)
-        return self
-
     def sort(self, *args, **kwargs):
         """ sort(cmp=None, key=None, reverse=False) -- inplace sort
             cmp(x, y) -> -1, 0, 1
@@ -483,6 +494,7 @@ class RecordList(object):
 
     def prefetch(self, *fields):
         """ Prefetches specified fields into cache
+            if no fields passed, then all 'simple_fields' will be prefetched
 
             By default field read performed only when that field is requested,
             thus when You need to read more then one field, few rpc requests
