@@ -21,7 +21,7 @@ class Session(object):
         required to be memorized.
         Just on session start call::
 
-            >>> print session
+            >>> print(session)
 
         And You will get all databases You worked with listed as (index, url) pairs.
         to connect to one of thouse databases just call session[index|url] and required
@@ -364,7 +364,7 @@ class IPYSession(Session):
             for url in self._databases.keys():
                 index = self._index_url(url)
                 aliases = (_(al) for al, aurl in self.aliases.items() if aurl == url)
-                yield url, index, u", ".join(aliases)
+                yield (url, index, u", ".join(aliases))
         ttable = u"<table style='display:inline-block'>%s</table>"
         trow = u"<tr>%s</tr>"
         tdata = u"<td>%s</td>"

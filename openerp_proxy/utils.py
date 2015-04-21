@@ -112,13 +112,13 @@ class AttrDict(dict):
         to get elements it contains using syntax like:
 
         >>> d = AttrDict(arg1=1, arg2='hello')
-        >>> print d.arg1
+        >>> print(d.arg1)
             1
-        >>> print d.arg2
+        >>> print(d.arg2)
             hello
-        >>> print d['arg2']
+        >>> print(d['arg2'])
             hello
-        >>> print d['arg1']
+        >>> print(d['arg1'])
             1
     """
     def __getattribute__(self, name):

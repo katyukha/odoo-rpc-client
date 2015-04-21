@@ -61,7 +61,7 @@ class TestPlugin(Plugin):
         name = 'Test'
 
     def test(self):
-        print self.proxy.get_url()
+        print(self.proxy.get_url())
 
 
 class PluginManager(object):

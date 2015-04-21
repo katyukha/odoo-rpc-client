@@ -3,6 +3,7 @@
 *.swp
 *.swm
 *.swn
+*.swl
 *.log
 /.ropeproject/
 /build/

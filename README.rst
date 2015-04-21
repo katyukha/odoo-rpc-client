@@ -1,13 +1,15 @@
 OpenERP / Odoo proxy
 ====================
 
-This project aims to ease access to openerp data via shell and used
-mostly for debug purposes. This project provides interface similar to
-OpenERP internal code to perform operations on **OpenERP** / **Odoo** object hiding
-XML-RPC behind
-
 Overview
 --------
+
+This project is just **RPC client** for Odoo.
+It aims to ease access to openerp data via shell and used
+mostly for data debuging purposes. This project provides interface similar to
+OpenERP internal code to perform operations on **OpenERP** / **Odoo** objects hiding
+**XML-RPC** or **JSON-RPC** behind.
+
 
 Features
 ~~~~~~~~

@@ -9,9 +9,9 @@
     >>> sale_ids = sale_obj.search([('state','not in',['done','cancel'])])
     >>> sale_data = sale_obj.read(sale_ids, ['name'])
     >>> for order in sale_data:
-    ...     print "%5s :    %s" % (order['id'],order['name'])
+    ...     print("%5s :    %s" % (order['id'],order['name']))
     >>> tmpl_ids = erp_db['product.template'].search([('name','ilike','template_name')])
-    >>> print erp_db['product.product'].search([('product_tmpl_id','in',tmpl_ids)])
+    >>> print(erp_db['product.product'].search([('product_tmpl_id','in',tmpl_ids)]))
 
     >>> db = Client('erp.host.com', 'dbname='db0', user='your_user')
     >>> so = db['sale.order']
@@ -94,7 +94,7 @@ class Client(Extensible):
 
        Example::
 
-           >>> db = Client('dbname', 'host', 'user', pwd = 'Password', verbose = False)
+           >>> db = Client('host', 'dbname', 'user', pwd = 'Password', verbose = False)
 
        Allows access to ERP objects via dictionary syntax::
 

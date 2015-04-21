@@ -53,7 +53,7 @@ def main():
 
     _locals = {
         'ERP_Proxy': Client,
-        'Clinet': Client,
+        'Client': Client,
         'session': session,
     }
     try:

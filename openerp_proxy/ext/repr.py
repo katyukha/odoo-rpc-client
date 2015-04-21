@@ -349,7 +349,8 @@ class HTMLRecord(Record):
 
         if not fields:
             fields = sorted((HField(col_name, name=col_data['string'])
-                             for col_name, col_data in self._columns_info.iteritems()),
+                             for col_name, col_data in self._columns_info.iteritems()
+                             if col_name in self._object.simple_fields),
                             key=lambda x: _(x))
             self.read()
         else:
