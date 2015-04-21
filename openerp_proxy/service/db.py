@@ -1,5 +1,4 @@
 from openerp_proxy.service.service import ServiceBase
-from openerp_proxy.core import Client
 
 
 class DBService(ServiceBase):
@@ -25,6 +24,7 @@ class DBService(ServiceBase):
             :return: Client instance logged to created database as admin user.
             :rtype: instance of *openerp_proxy.core.Client*
         """
+        from openerp_proxy.core import Client
         self.create(password, dbname, demo, lang, admin_password)
         client = Client(self.proxy.host, port=self.proxy.port,
                         protocol=self.proxy.protocol, dbname=dbname,
