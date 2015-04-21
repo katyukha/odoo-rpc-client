@@ -100,7 +100,7 @@ class HField(object):
         """
 
         if callable(self._field):
-            return self._field(record)
+            return self._field(record, *self._args, **self._kwargs)
 
         fields = self._field.split('.')
         r = record
