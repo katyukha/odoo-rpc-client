@@ -363,6 +363,11 @@ class RecordList(collections.MutableSequence):
 
     # Container related methods
     def __getitem__(self, index):
+        if isinstance(index, slice):
+            # Note no context passed, because it is stored in cache
+            return get_record_list(self.object,
+                                   ids=(r.id for r in self._records[index]),
+                                   cache=self._cache)
         return self._records[index]
 
     def __setitem__(self, index, value):

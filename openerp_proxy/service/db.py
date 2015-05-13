@@ -1,3 +1,6 @@
+import time
+from pkg_resources import parse_version
+
 from openerp_proxy.service.service import ServiceBase
 
 
@@ -25,7 +28,17 @@ class DBService(ServiceBase):
             :rtype: instance of *openerp_proxy.core.Client*
         """
         from openerp_proxy.core import Client
-        self.create(password, dbname, demo, lang, admin_password)
+
+        # requires server version >= 6.1
+        if self.server_version >= parse_version('6.1'):
+            self.create_database(password, dbname, demo, lang, admin_password)
+        else:
+            process_id = self.create(password, dbname, demo, lang, admin_password)
+
+            # wait while database will be created
+            while self.get_process(process_id)[0] < 1.0:
+                time.sleep(1)
+
         client = Client(self.proxy.host, port=self.proxy.port,
                         protocol=self.proxy.protocol, dbname=dbname,
                         user='admin', pwd=admin_password)
@@ -39,6 +52,7 @@ class DBService(ServiceBase):
                                   with *client.dbname is not None* name secified
             :raise: `ValueError` (unsupported value of *db* argument)
         """
+        from openerp_proxy.core import Client
         if isinstance(db, basestring):
             dbname = db
         elif isinstance(db, Client) and db.dbname is not None:
@@ -47,3 +61,10 @@ class DBService(ServiceBase):
             raise ValueError("Wrong value for db!")
 
         return self.drop(password, dbname)
+
+    def server_version(self):
+        """ Returns server version.
+
+            (Already parsed with pkg_resources.parse_version)
+        """
+        return parse_version(super(DBService, self).server_version())
