@@ -1,4 +1,5 @@
 master:
+    - Added ``HTMLTable.to_csv()`` method.
     - Renamed ``ERP_Proxy`` to ``Client`` and inherited objects renamed in such way
       (for example sugar extension module)
     - Added ``Client.server_version`` property

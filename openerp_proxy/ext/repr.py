@@ -7,13 +7,14 @@ used inside IPython notebook
 
 # TODO: rename to IPython or something like that
 
-# TODO: add ability to simply export data to csv
+import csv
+import tempfile
 
 from openerp_proxy.orm.record import RecordList
 from openerp_proxy.orm.record import Record
 from openerp_proxy.orm.object import Object
 from openerp_proxy.core import Client
-from IPython.display import HTML
+from IPython.display import HTML, FileLink
 
 from openerp_proxy.utils import ustr as _
 
@@ -112,7 +113,7 @@ class HField(object):
                                             # it is not last field then call
                                             # it without arguments
                     r = r()
-                elif callable(r) and not fields:  # last fild and if is callable
+                elif callable(r) and not fields:  # last field and if is callable
                     r = r(*self._args, **self._kwargs)
             except:  # FieldNotFoundException:
                 if not self._silent:   # reraise exception if not silent
@@ -236,11 +237,14 @@ class HTMLTable(HTML):
         """ HTML representation
         """
         theaders = u"".join((u"<th>%s</th>" % header for header in self.iheaders))
+        help = u"You may use <i>.to_csv()</i> method of thistable to export it to CSV format"
         table = (u"<div><table>"
                  u"<caption>{self.caption}</caption>"
                  u"<tr>{headers}</tr>"
-                 u"%s</table><div>").format(self=self,
-                                            headers=theaders)
+                 u"%s</table>"
+                 u"<div>{help}</div><div>").format(self=self,
+                                                   headers=theaders,
+                                                   help=help)
         trow = u"<tr>%s</tr>"
         throw = u'<tr style="background: %s">%s</tr>'
         data = u""
@@ -252,6 +256,29 @@ class HTMLTable(HTML):
             else:
                 data += trow % tdata
         return table % data
+
+    def to_csv(self):
+        """ Write table to CSV file and return FileLink object for it
+
+            :return: instance of FileLink
+            :rtype: FileLink
+        """
+        CSV_PATH = './tmp/csv/'
+        import os.path
+        import os
+
+        try:
+            os.makedirs(CSV_PATH)
+        except os.error:
+            pass
+
+        tmp_file = tempfile.NamedTemporaryFile(dir=CSV_PATH, suffix='.csv', delete=False)
+        with tmp_file as csv_file:
+            csv_writer = csv.writer(csv_file)
+            csv_writer.writerow(tuple((h.encode('utf-8') for h in self.iheaders)))
+            for record in self.irecords:
+                csv_writer.writerow(tuple((r.encode('utf-8') for r in record['row'])))
+        return FileLink(CSV_PATH + os.path.split(tmp_file.name)[-1])
 
 
 class RecordListData(RecordList):
