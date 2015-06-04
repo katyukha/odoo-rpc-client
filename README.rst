@@ -67,8 +67,6 @@ What You can do with this
 Near future plans
 ~~~~~~~~~~~~~~~~~
 
--  Better plugin system which will allow to extend API on database,
-   object, and record levels.  **DONE**
 -  Django-like search API implemented as extension
     - Something like ``F`` or ``Q`` expressions from Django
     - to make working constructions like:
@@ -90,7 +88,7 @@ If You want to install development version of *OpenERP Proxy* you can do it via:
     pip install -e git+https://github.com/katyukha/openerp-proxy.git#egg=openerp_proxy
 
 
-Also if You plan to use this project as shell client, it is recommended to install IPython
+Also if You plan to use this project as shell client, it is **recommended to install IPython**
 and If You  would like to have ability to play with Odoo / OpenERP data in IPython notebook,
 it is recommended to also install IPython's Notebook support. To install IPython and IPython Notebook
 just type::
@@ -155,6 +153,9 @@ So in first cell of notebook import session and extensions/plugins You want::
     from openerp_proxy.session import IPYSession as Session  # Use IPython-itegrated session class
     import openerp_proxy.ext.repr              # Enable representation extension. This provides HTML representation of objects
     from openerp_proxy.ext.repr import HField  # Used in .as_html_table method of RecordList
+
+    # also You may import all standard extensions in one line:
+    from openerp_proxy.ext.all import *
 
     session = Session()
 
@@ -310,12 +311,13 @@ Plugins
 -------
 
 In version 0.4 plugin system was completly refactored. At this version
-we start using *extend_me* library to build extensions and plugins.
+we start using [*extend_me*](https://pypi.python.org/pypi/extend_me)
+library to build extensions and plugins easily.
 
 Plugins are usual classes that provides functionality that should be available
 at ``db.plugins.*`` point, implementing logic not related to core system.
 
-To ilustrate what is plugins and what they can do we will create one.
+To ilustrate what is plugins and what they can do we will create a simplest one.
 So let's start
 
 1. create some directory to place plugins in:
@@ -328,7 +330,7 @@ So let's start
    
    ``vim attendance.py``
 
-3. write folowing code there
+3. write folowing code there (note that this example works and tested for Odoo version 6.0)
 
     ::
 
