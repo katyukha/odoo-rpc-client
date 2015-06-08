@@ -65,10 +65,8 @@ class Record(object):
 
         if isinstance(data, (int, long)):
             self._id = data
-            self._data = self._lcache[self._id]  # TODO: think about implementing data as property that gets it from cache
         elif isinstance(data, dict):
             self._id = data['id']
-            self._data = self._lcache[self._id]
             self._data.update(data)
         else:
             raise ValueError("data should be dictionary structure returned by Object.read or int representing ID of record")
@@ -81,10 +79,23 @@ class Record(object):
         return res
 
     @property
+    def id(self):
+        """ Record ID
+        """
+        return self._id
+
+    @property
+    def _data(self):
+        """ Data dictionary for this record.
+            (Just a proxy to cache)
+        """
+        return self._lcache[self._id]
+
+    @property
     def context(self):
         """ Returns context to be used for thist record
         """
-        return self._lcache.context   # self._context
+        return self._lcache.context
 
     @property
     def _service(self):
@@ -111,12 +122,6 @@ class Record(object):
         return self._data.copy()
 
     @property
-    def id(self):
-        """ Record ID
-        """
-        return self._id
-
-    @property
     def _name(self):
         """ Returns result of name_get for this record
         """
@@ -124,7 +129,7 @@ class Record(object):
             data = self._object.name_get(self._lcache.keys(), context=self.context)
             for _id, name in data:
                 self._lcache[_id]['__name_get_result'] = name
-        return self._data['__name_get_result']
+        return self._data.get('__name_get_result', 'ERROR')
 
     def __unicode__(self):
         return u"R(%s, %s)[%s]" % (self._object.name, self.id, ustr(self._name))
@@ -276,8 +281,6 @@ def get_record_list(obj, ids=None, fields=None, cache=None, context=None):
     return RecordListMeta.get_object(obj, ids, fields=fields, cache=cache, context=context)
 
 
-# TODO: add .copy() method to be able to create for exemple copy of list with
-# another context
 class RecordList(collections.MutableSequence):
     """Class to hold list of records with some extra functionality
 
@@ -427,11 +430,46 @@ class RecordList(collections.MutableSequence):
             record.refresh()
         return self
 
-    def sort(self, *args, **kwargs):
+    def sort(self, cmp=None, key=None, reverse=False):
         """ sort(cmp=None, key=None, reverse=False) -- inplace sort
             cmp(x, y) -> -1, 0, 1
         """
-        return self._records.sort(*args, **kwargs)
+        return self._records.sort(cmp=cmp, key=key, reverse=reverse)
+
+    def copy(self, context=None, new_cache=False):
+        """ Returns copy of this list, possibly with modified context
+            and new empty cache.
+
+            :param dict context: new context values to be used on new list
+            :param true new_cache: if set to True, then new cache
+                                   instance will be created for copied list
+            :return: copyt of this record list.
+            :rtype: RecordList instance
+        """
+        cache = empty_cache(self.object.proxy) if new_cache else self._cache
+        return get_record_list(self.object,
+                               ids=self.ids,
+                               cache=cache,
+                               context=context)
+
+    def existing(self, uniqify=True):
+        """ Filters this list with only existing items
+
+            :parm bool uniqify: if set to True, then all dublicates will be removed. Default: True
+            :return: new RecordList instance
+            :rtype: RecordList
+        """
+        existing_ids = self.exists()
+        new_ids = []
+        for id_ in self.ids:
+            if id_ not in existing_ids:
+                continue
+            if uniqify and id_ in new_ids:
+                continue
+            new_ids.append(id_)
+        return get_record_list(self.object,
+                               ids=new_ids,
+                               cache=self._cache)
 
     def prefetch(self, *fields):
         """ Prefetches specified fields into cache
