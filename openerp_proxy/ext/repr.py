@@ -136,7 +136,7 @@ class HField(object):
         return _(self._name) if self._name is not None else _(self._field)
 
 
-# TODO: also implement vertiacl table orientation, which could be usefult for
+# TODO: also implement vertical table orientation, which could be usefult for
 # comparing few records or reuse same code for displaying single record.
 class HTMLTable(HTML):
     """ HTML Table representation object for RecordList
@@ -158,13 +158,30 @@ class HTMLTable(HTML):
         :param highlight_row: function to check if row to be highlighteda (**deprecated**)
                               (old_style)
         :type highlight_row: callable(record) -> bool
-        :param caption: String to be used as table caption
-        :type caption: str
+        :param str caption: String to be used as table caption
     """
-    def __init__(self, recordlist, fields, **kwargs):
+    def __init__(self, recordlist, fields, caption=None, highlighters=None, **kwargs):
         self._recordlist = recordlist
-        self._caption = _(kwargs.get('caption', self._recordlist))
+        self._caption = u"HTMLTable"
+
         self._fields = []
+        self._highlighters = {}
+        if kwargs.get('highlight_row', False):
+            self._highlighters['#ffff99'] = kwargs['highlight_row']
+
+        self.update(fields=fields, caption=caption, highlighters=highlighters, **kwargs)
+
+    def update(self, fields=None, caption=None, highlighters=None, **kwargs):
+        """ This method is used to change HTMLTable initial data, thus, changing representation
+            Can be used for example, when some function returns partly configured HTMLTable instance,
+            but user want's to display more fields for example, or add some custom highlighters
+
+            arguments same as for constructor, except 'recordlist' arg, which is absent in this method
+
+            :return: self
+        """
+        self._caption = _(self._recordlist) if caption is None else _(caption)
+        fields = [] if fields is None else fields
         for field in fields:
             if isinstance(field, HField):
                 self._fields.append(field)
@@ -177,10 +194,10 @@ class HTMLTable(HTML):
             else:
                 raise ValueError('Unsupported field type: %s' % repr(field))
 
-        self._highlighters = {}
-        if kwargs.get('highlight_row', False):
-            self._highlighters['#ffff99'] = kwargs['highlight_row']
-        self._highlighters.update(kwargs.get('highlighters', {}))
+        if highlighters is not None:
+            self._highlighters.update(highlighters)
+
+        return self
 
     @property
     def caption(self):
@@ -237,14 +254,14 @@ class HTMLTable(HTML):
         """ HTML representation
         """
         theaders = u"".join((u"<th>%s</th>" % header for header in self.iheaders))
-        help = u"You may use <i>.to_csv()</i> method of thistable to export it to CSV format"
-        table = (u"<div><table>"
+        help = u"Note, that You may use <i>.to_csv()</i> method of this table to export it to CSV format"
+        table = (u"<div><div>{help}</div><table>"
                  u"<caption>{self.caption}</caption>"
                  u"<tr>{headers}</tr>"
                  u"%s</table>"
-                 u"<div>{help}</div><div>").format(self=self,
-                                                   headers=theaders,
-                                                   help=help)
+                 u"<div>").format(self=self,
+                                  headers=theaders,
+                                  help=help)
         trow = u"<tr>%s</tr>"
         throw = u'<tr style="background: %s">%s</tr>'
         data = u""
@@ -312,12 +329,22 @@ class RecordListData(RecordList):
         """ HTML Table representation object for RecordList
 
             :param fields: list of fields to display. each field should be string
-                           with dot splitted names of related object, or callable
-                           of one argument (record instance)
-            :type fields: list(string | callable)
-            :param highlight_row: function to check if row to be highlighted
-                                  also *openerp_proxy.utils.r_eval* may be used
+                        with dot splitted names of related object, or callable
+                        of one argument (record instance) or *HField* instance or
+                        tuple(field_path|callable, field_name)
+            :type fields: list(string | callable | HField instance | tuple(field, name))
+            :param dict highlighters: dictionary in format::
+
+                                        {color: callable(record)->bool}
+
+                                    where *color* any color suitable for HTML and
+                                    callable is function of *Record instance* which decides,
+                                    if record should be colored by this color
+            :param highlight_row: function to check if row to be highlighteda (**deprecated**)
+                                (old_style)
             :type highlight_row: callable(record) -> bool
+            :param str caption: String to be used as table caption
+            :return: HTMLTable instance
         """
         if not fields:
             fields = ('id', '_name')

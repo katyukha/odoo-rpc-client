@@ -1,4 +1,5 @@
 master:
+    - Added ``HTMLTable.update`` method.
     - Added ``RecordList.copy()`` and ``RecordList.existing()`` methods.
     - Added ``HTMLTable.to_csv()`` method.
     - Renamed ``ERP_Proxy`` to ``Client`` and inherited objects renamed in such way
