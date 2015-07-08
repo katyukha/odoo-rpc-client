@@ -1,4 +1,5 @@
 master:
+    - Changed signature of ``Session.connect()`` method
     - Added ``HTMLTable.update`` method.
     - Added ``RecordList.copy()`` and ``RecordList.existing()`` methods.
     - Added ``HTMLTable.to_csv()`` method.
@@ -10,7 +11,7 @@ master:
 
 
 0.5:
-    - Addef ``RecordList.prefetch`` method. Als *RecordList's* *fields* argument
+    - Added ``RecordList.prefetch`` method. Als *RecordList's* *fields* argument
       now works.
     - Changed ``Object`` class. Now it have ``extend_me.ExtensibleByHashType`` metaclass
       which allows it to be extended separatly for each model, and in general way.

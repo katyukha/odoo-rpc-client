@@ -3,6 +3,11 @@ __all__ = ('empty_cache')
 
 
 class ObjectCache(dict):
+    """ Cache for object / model data
+
+        Automatically generates empty data dicts for records requested.
+        Also contains object context
+    """
 
     def __init__(self, root, obj, *args, **kwargs):
         self._root_cache = root

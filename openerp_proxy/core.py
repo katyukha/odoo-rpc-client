@@ -213,6 +213,9 @@ class Client(Extensible):
             self instance and update them with passed keyword arguments,
             and call Proxy class constructor passing result as arguments.
 
+            Note, that if You pass any keyword arguments, You also should pass
+            'pwd' keyword argument with user password
+
             :return: Id of user logged in
             :rtype: int
             :raises ClientException: if wrong login or password

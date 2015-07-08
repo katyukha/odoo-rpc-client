@@ -248,13 +248,13 @@ class Session(object):
         """
         return self._databases.keys()
 
-    def connect(self, dbname=None, host=None, user=None, pwd=None, port=8069, protocol='xml-rpc', verbose=False, no_save=False):
+    def connect(self, host=None, dbname=None, user=None, pwd=None, port=8069, protocol='xml-rpc', verbose=False, no_save=False):
         """ Wraper aroun Client constructor class to simplify connect from shell.
 
-            :param dbname: name of database to connect to (will be asked interactvely if not provided)
-            :type dbname: string
             :param host: host name to connect to (will be asked interactvely if not provided)
             :type host: string
+            :param dbname: name of database to connect to (will be asked interactvely if not provided)
+            :type dbname: string
             :param user: user name to connect as (will be asked interactvely if not provided)
             :type user: string
             :param pwd: password for selected user (will be asked interactvely if not provided)
@@ -283,7 +283,7 @@ class Session(object):
         if isinstance(db, Client):
             return db
 
-        db = Client(dbname=dbname, host=host, user=user, pwd=pwd, port=port, protocol=protocol, verbose=verbose)
+        db = Client(host=host, dbname=dbname, user=user, pwd=pwd, port=port, protocol=protocol, verbose=verbose)
         self._add_db(url, db)
         db._no_save = no_save   # disalows saving database connection in session
         return db
