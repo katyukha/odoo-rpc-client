@@ -1,5 +1,10 @@
 master:
-    - Changed signature of ``Session.connect()`` method
+    - Improved ``openerp_proxy.ext.log_execute_console`` extension. Added timing.
+    - Added ``Client.clean_caches()`` method, which is used to clean cache of registered models
+    - RecordList prefetching logic moved to cache module and highly refactored
+      (Added support of prefetching of related fields)
+    - Added ``Client.login(dbname, user, password)`` method.
+    - Changed signature of ``Session.connect()`` method.
     - Added ``HTMLTable.update`` method.
     - Added ``RecordList.copy()`` and ``RecordList.existing()`` methods.
     - Added ``HTMLTable.to_csv()`` method.

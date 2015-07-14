@@ -11,33 +11,40 @@ OpenERP internal code to perform operations on **OpenERP** / **Odoo** objects hi
 **XML-RPC** or **JSON-RPC** behind.
 
 
+    - Are You still using pgAdmin for quering Odoo database?
+    - Try this package (expecialy via IPython Notebook), and You will forget about pgAdmin!
+
+
 Features
 ~~~~~~~~
 
 -  supports call to all public methods on any OpenERP/Odoo object including:
    *read*, *search*, *write*, *unlink* and others
--  Designed not for speed but to be useful like cli client to OpenERP/Odoo
-   (*Versiion 0.5 introduces orm optimizations*)
+-  Have *a lot of speed optimizations* (especialy for situation, where required processing of
+   large datasets)
 -  Desinged to take as more benefits of **IPython autocomplete** as posible
--  Also it works good enough in **IPython Notebook** providing **HTML
-   representation** for a lot of objects.
+-  Works nice in **IPython Notebook** providing **HTML
+   representation** for a most of objects.
 -  Ability to display set of records as **HTML Table**
-   including **row highlighting**
+   including conditional **row highlighting**.
+   (Useful in IPython Notebook for *data-analysis*)
+-  Ability to represent HTML table also as *CSV file*
 -  Provides session/history functionality, so if You used it to connect to
    some database before, new connection will be simpler (just enter password).
    Version 0.5 and higher have ability to store passwords. just use
    ``session.option('store_passwords', True); session.save()``
 -  Provides *browse\_record* like interface, allowing to browse related
-   models too. But use's methods *search\_records* and *browse\_records*
-   instead of *browse*. (From version 0.4 *browse* works too)
+   models too. Supports *browse* method. Adds method *search\_records* to simplify
+   search-and-read operations.
 -  *Extension support*. You can easily modify most of components of this app/lib
    creating Your own extensions. It is realy simple. See for examples in
    openerp_proxy/ext/ directory.
 -  *Plugin Support*. Plugins here meant utils, which could store some aditional
    logic, to simplify routine operations.
    Accessible from ``db.plugins.<plugin_name>`` attribute.
--  Support of **JSON-RPC** for *version 8* of OpenERP/Odoo (*experimental*)
+-  Support of **JSON-RPC** for *version 8* of OpenERP/Odoo (***experimental***)
 -  Support of using **named parametrs** in RPC method calls (server version 6.1 and higher).
+-  *Sugar extension* which simplifys code a lot.
 
 -  Missed feature? ask in `Project Issues <https://github.com/katyukha/openerp-proxy/issues>`_
 
@@ -50,6 +57,7 @@ For High level functionality Odoo server must be of version 6.1 or higher
 
 Examples
 ~~~~~~~~
+
 -  `Examples & HTML tests <http://nbviewer.ipython.org/github/katyukha/openerp-proxy/blob/master/examples/Examples%20&%20HTML%20tests.ipynb>`_
 
 

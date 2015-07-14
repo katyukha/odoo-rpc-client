@@ -12,7 +12,7 @@ HELP_HEADER = """
         >>> so_obj.write([so_id], {'note': 'Test'})
         >>> sm_obj = db['stock.move']
         >>>
-        >>> # check availability of stock move
+        >>> # check availability of stock move (call server-side method)
         >>> sm_obj.check_assign([move_id1, move_id2,...])
 
     Available objects in context:

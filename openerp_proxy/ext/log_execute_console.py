@@ -1,4 +1,15 @@
 from openerp_proxy.service.object import ObjectService
+from contextlib import contextmanager
+import time
+
+
+@contextmanager
+def timeit_context(name):
+    startTime = time.time()
+    yield
+    elapsedTime = time.time() - startTime
+    print('[{}] finished in {} ms'.format(name, int(elapsedTime * 1000)))
+
 
 LOG_SIMPLE = False
 
@@ -12,7 +23,8 @@ class ObjectServiceLog(ObjectService):
 
     def execute(self, obj, method, *args, **kwargs):
         if LOG_SIMPLE:
-            print("Execute [%s, %s]" % (obj, method))
+            msg = "Execute [%s, %s]" % (obj, method)
         else:
-            print("Execute [%s, %s] (%s, %s)" % (obj, method, args, kwargs))
-        return super(ObjectServiceLog, self).execute(obj, method, *args, **kwargs)
+            msg = "Execute [%s, %s] (%s, %s)" % (obj, method, args, kwargs)
+        with timeit_context(msg):
+            return super(ObjectServiceLog, self).execute(obj, method, *args, **kwargs)

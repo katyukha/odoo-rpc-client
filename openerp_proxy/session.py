@@ -193,6 +193,14 @@ class Session(object):
         self._databases[url] = db
         self._index_url(url)
 
+    def add_db(self, db):
+        """ Add db to session.
+
+            param db: database (client instance) to be added to session
+            type db: Client instance
+        """
+        self._add_db(db.get_url(), db)
+
     def get_db(self, url_or_index, **kwargs):
         """ Returns instance of Client object, that represents single
             OpenERP database it connected to, specified by passed index (integer) or
@@ -236,7 +244,7 @@ class Session(object):
                 ep_args['pwd'] = getpass('Password: ')
 
         db = Client(**ep_args)
-        self._add_db(url, db)
+        self.add_db(db)
         return db
 
     @property
@@ -248,29 +256,25 @@ class Session(object):
         """
         return self._databases.keys()
 
-    def connect(self, host=None, dbname=None, user=None, pwd=None, port=8069, protocol='xml-rpc', verbose=False, no_save=False):
+    def connect(self, host=None, dbname=None, user=None, pwd=None, port=8069, protocol='xml-rpc', interactive=True, no_save=False):
         """ Wraper aroun Client constructor class to simplify connect from shell.
 
-            :param host: host name to connect to (will be asked interactvely if not provided)
-            :type host: string
-            :param dbname: name of database to connect to (will be asked interactvely if not provided)
-            :type dbname: string
-            :param user: user name to connect as (will be asked interactvely if not provided)
-            :type user: string
-            :param pwd: password for selected user (will be asked interactvely if not provided)
-            :type pwd: string
-            :param port: port to connect to. (default: 8069)
-            :type port: int
-            :param verbose: to be verbose, or not to be. (default: False)
-            :type verbose: boolean
-            :param no_save: if set to True database will not be saved to session
-            :type no_save: boolean
+            :param str host: host name to connect to (will be asked interactvely if not provided)
+            :param str dbname: name of database to connect to (will be asked interactvely if not provided)
+            :param str user: user name to connect as (will be asked interactvely if not provided)
+            :param str pwd: password for selected user (will be asked interactvely if not provided)
+            :param int port: port to connect to. (default: 8069)
+            :param bool interactive: ask for connection parametrs if not provided. (default: True)
+            :param bool no_save: if set to True database will not be saved to session
             :return: Client object
         """
-        host = host or raw_input('Server Host: ')
-        dbname = dbname or raw_input('Database name: ')
-        user = user or raw_input('ERP Login: ')
-        pwd = pwd or getpass("Password: ")
+        if interactive:
+            # ask user for connection data if not provided, if interactive set
+            # to True
+            host = host or raw_input('Server Host: ')
+            dbname = dbname or raw_input('Database name: ')
+            user = user or raw_input('ERP Login: ')
+            pwd = pwd or getpass("Password: ")
 
         url = Client.to_url(inst=None,
                             user=user,
@@ -283,7 +287,7 @@ class Session(object):
         if isinstance(db, Client):
             return db
 
-        db = Client(host=host, dbname=dbname, user=user, pwd=pwd, port=port, protocol=protocol, verbose=verbose)
+        db = Client(host=host, dbname=dbname, user=user, pwd=pwd, port=port, protocol=protocol)
         self._add_db(url, db)
         db._no_save = no_save   # disalows saving database connection in session
         return db

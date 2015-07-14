@@ -151,3 +151,9 @@ class ClientSugar(Client):
         if objname is None:
             raise AttributeError("'Client' object has no atribute %s" % name)
         return self.get_obj(objname)
+
+    def clean_caches(self):
+        """ Clean client related caches
+        """
+        super(ClientSugar, self).clean_caches()
+        self._object_aliases = None

@@ -280,7 +280,7 @@ class HTMLTable(HTML):
             :return: instance of FileLink
             :rtype: FileLink
         """
-        CSV_PATH = './tmp/csv/'
+        CSV_PATH = './tmp/csv/' # TODO: use enviroment var or some sort of config
         import os.path
         import os
 

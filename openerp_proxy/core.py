@@ -80,11 +80,11 @@ class LoginException(ClientException):
 
 class Client(Extensible):
     """
-       A simple class to connect ot ERP via xml_rpc
+       A simple class to connect ot ERP via RPC (XML-RPC, JSON-RPC)
        Should be initialized with following arguments:
 
-       :param str dbname: name of database to connect to
        :param str host: server host name to connect to
+       :param str dbname: name of database to connect to
        :param str user: username to login as
        :param str pwd: password to log-in with
        :param int port: port number of server
@@ -95,6 +95,8 @@ class Client(Extensible):
        Example::
 
            >>> db = Client('host', 'dbname', 'user', pwd = 'Password', verbose = False)
+           >>> cl = Client('host')
+           >>> db2 = cl.login('dbname', 'user', 'password')
 
        Allows access to ERP objects via dictionary syntax::
 
@@ -205,6 +207,19 @@ class Client(Extensible):
         """
         return self.services['object'].get_registered_objects()
 
+    def login(self, dbname, user, password):
+        """ Login to database
+
+            Return new Client instance.
+            (Just an aliase on ``connect`` method)
+
+            :param str dbname: name of database to connect to
+            :param str user: username to login as
+            :param str password: password to log-in with
+            :return: new Client instance, with specifed credentials
+        """
+        return self.connect(dbname=dbname, user=user, pwd=password)
+
     def connect(self, **kwargs):
         """ Connects to the server
 
@@ -216,8 +231,8 @@ class Client(Extensible):
             Note, that if You pass any keyword arguments, You also should pass
             'pwd' keyword argument with user password
 
-            :return: Id of user logged in
-            :rtype: int
+            :return: Id of user logged in or new Client instance (if kwargs passed)
+            :rtype: int|Client
             :raises ClientException: if wrong login or password
         """
         if kwargs:
@@ -302,7 +317,7 @@ class Client(Extensible):
         """ Returns dictionary with init arguments which can be safely passed
             to class constructor
         """
-        return dict(user=self._username,
+        return dict(user=self.username,
                     host=self.host,
                     port=self.port,
                     dbname=self.dbname,
@@ -335,6 +350,11 @@ class Client(Extensible):
             At this moment mostly used internaly in session
         """
         return self.to_url(self)
+
+    def clean_caches(self):
+        """ Clean client related caches
+        """
+        self.services.object.clean_caches()
 
     def __str__(self):
         return "Client: %s" % self.get_url()

@@ -20,22 +20,21 @@ __all__ = (
 RecordMeta = ExtensibleType._('Record')
 
 
-def get_record(obj, data, cache=None, context=None):
+def get_record(obj, rid, cache=None, context=None):
     """ Creates new Record instance
 
         Use this method to create new records, because of standard
         object creation bypasses extension's magic.
 
-            :param obj: instance of object this record is related to
-            :param data: dictionary with initial data for a record
-                         or integer ID of database record to fetch data from
+            :param obj: instance of Object this record is related to
+            :param int rid: ID of database record to fetch data from
             :param cache: dictionary of structure {object.name: {object_id: data} }
             :type cache: defaultdict(lambda: defaultdict(dict))
             :param dict context: if specified, then cache's context will be updated
             :return: created Record instance
             :rtype: Record instance
     """
-    return RecordMeta.get_object(obj, data, cache=cache, context=context)
+    return RecordMeta.get_object(obj, rid, cache=cache, context=context)
 
 
 class Record(object):
@@ -43,33 +42,27 @@ class Record(object):
 
         Constructor
             :param obj: instance of object this record is related to
-            :param data: dictionary with initial data for a record
-                         or integer ID of database record to fetch data from
+            :param int rid: ID of database record to fetch data from
             :param cache: dictionary of structure {object.name: {object_id: data} }
             :type cache: defaultdict(lambda: defaultdict(dict))
             :param dict context: if specified, then cache's context will be updated
 
-        Note to create instance of cache call *empty_cache*
+        Note, to create instance of cache call *empty_cache*
     """
 
     __metaclass__ = RecordMeta
-    __slots__ = ['__dict__', '_object', '_cache', '_lcache', '_id', '_data']
+    __slots__ = ['__dict__', '_object', '_cache', '_lcache', '_id']
 
-    def __init__(self, obj, data, cache=None, context=None):
+    def __init__(self, obj, rid, cache=None, context=None):
         assert isinstance(obj, Object), "obj should be Object"
+        assert isinstance(rid, (int, long)), "rid must be int"
 
+        self._id = rid
         self._object = obj
         self._cache = empty_cache(obj.proxy) if cache is None else cache
         self._lcache = self._cache[obj.name]
-        self._lcache.update_context(context)
-
-        if isinstance(data, (int, long)):
-            self._id = data
-        elif isinstance(data, dict):
-            self._id = data['id']
-            self._data.update(data)
-        else:
-            raise ValueError("data should be dictionary structure returned by Object.read or int representing ID of record")
+        if context is not None:
+            self._lcache.update_context(context)
 
     def __dir__(self):
         # TODO: expose also object's methods
@@ -126,9 +119,10 @@ class Record(object):
         """ Returns result of name_get for this record
         """
         if self._data.get('__name_get_result', None) is None:
-            data = self._object.name_get(self._lcache.keys(), context=self.context)
+            lcache = self._lcache
+            data = self._object.name_get(lcache.keys(), context=self.context)
             for _id, name in data:
-                self._lcache[_id]['__name_get_result'] = name
+                lcache[_id]['__name_get_result'] = name
         return self._data.get('__name_get_result', 'ERROR')
 
     def __unicode__(self):
@@ -158,17 +152,6 @@ class Record(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def _cache_field_read(self, ftype, name, data):
-        """ Cache field had been read
-
-            :param str ftype: type of field had been read
-            :param str name: name of field had been read
-            :param dict data: result of object.read operation, representing data had been read
-
-            (See *_get_field* method code)
-        """
-        self._lcache[data['id']].update(data)
-
     def _get_field(self, ftype, name):
         """ Returns value for field 'name' of type 'type'
 
@@ -178,12 +161,10 @@ class Record(object):
             Should be overridden by extensions to provide better hadling for diferent field values
         """
         if name not in self._data:
-            # TODO: read all fields for self._fields and if name not in
-            # self._fields update them with name
-            keys = [key for key, val in self._lcache.viewitems() if name not in val]
-            read_data = self._object.read(keys, [name], context=self.context)
+            lcache = self._lcache
+            read_data = self._object.read(lcache.get_ids_to_read(name), [name], context=self.context)
             for data in read_data:
-                self._cache_field_read(ftype, name, data)
+                lcache.cache_field(data['id'], ftype, name, data[name])
 
         return self._data[name]
 
@@ -198,6 +179,8 @@ class Record(object):
             raise KeyError("No such field %s in object %s, %s" % (name, self._object.name, self.id))
 
         ftype = field and field['type']
+
+        # TODO: refactore to be able to pass field instead of only field type
         return self._get_field(ftype, name)
 
     # Allow to access data as attributes and call object's methods
@@ -222,7 +205,7 @@ class Record(object):
         return self
 
     def read(self, fields=None, context=None, multi=False):
-        """ Rereads data for this record
+        """ Rereads data for this record (or for al records in whole cache)
 
             :param list fields: list of fields to be read (optional)
             :param dict context: context to be passed to read (optional)
@@ -233,28 +216,19 @@ class Record(object):
             :return: dict with data had been read
             :rtype: dict
         """
-        # TODO: think about returning self instead
-        if multi:
-            args = [self._lcache.keys()]
-        else:
-            args = [[self.id]]
+        ctx = {} if self.context is None else self.context.copy()
+        args = [self._lcache.keys()] if multi else [[self.id]]
 
         kwargs = {}
 
         if fields is not None:
             args.append(fields)
 
-        ctx = {} if self.context is None else self.context.copy()
-
-        if context is not None:
-            ctx.update(context)
-
         if ctx:
             kwargs['context'] = ctx
 
-        data = self._object.read(*args, **kwargs)
         res = {}
-        for rdata in data:
+        for rdata in self._object.read(*args, **kwargs):
             self._lcache[rdata['id']].update(rdata)
             if rdata['id'] == self.id:
                 res = rdata
@@ -298,7 +272,7 @@ class RecordList(collections.MutableSequence):
     """
     __metaclass__ = RecordListMeta
 
-    __slots__ = ('_object', '_cache', '_records')
+    __slots__ = ('_object', '_cache', '_lcache', '_records')
 
     # TODO: expose object's methods via implementation of __dir__
 
@@ -306,13 +280,17 @@ class RecordList(collections.MutableSequence):
         """
         """
         self._object = obj
-        self._cache = empty_cache(obj.proxy) if cache is None else cache
+        self._cache = _cache = empty_cache(obj.proxy) if cache is None else cache
+        self._lcache = self._cache[obj.name]
 
-        self._cache[obj.name].update_context(context)
+        if context is not None:
+            self._lcache.update_context(context)
 
         ids = [] if ids is None else ids
 
-        self._records = [get_record(self.object, id_, cache=self._cache)
+        self._lcache.update_keys(ids)
+
+        self._records = [get_record(obj, id_, cache=_cache)
                          for id_ in ids]
 
         # if there some fields prefetching was requested, do it
@@ -329,7 +307,7 @@ class RecordList(collections.MutableSequence):
     def context(self):
         """ Returns context to be used for this list
         """
-        return self._cache[self._object.name].context
+        return self._lcache.context
 
     @property
     def ids(self):
@@ -483,35 +461,15 @@ class RecordList(collections.MutableSequence):
             :return: self, which allows chaining of operations
             :rtype: RecordList
         """
-        # TODO: add checks to check if fields are real fields in
-        # object.columns_info
         fields = fields if fields else self.object.simple_fields
 
-        lcache = self._cache[self.object.name]
-        col_info = self.object.columns_info
-        for data in self.read(fields):
-            lcache[data['id']].update(data)
-            for field, value in data.iteritems():
-                if not value:
-                    continue
-
-                # Fill related cache
-                fdata = col_info.get(field, None)
-                if fdata and fdata['type'] == 'many2one':
-                    rcache = self._cache[fdata['relation']]
-                    if isinstance(value, (int, long)):
-                        rcache[value]  # intrnal dict {'id': key} will be created by default (see ObjectCache)
-                    elif isinstance(value, (list, tuple)):
-                        rcache[value[0]]['__name_get_result'] = value[1]
-                elif fdata and fdata['type'] in ('many2many', 'one2many'):
-                    rcache = self._cache[fdata['relation']]
-                    rcache.update({cid: {'id': cid} for cid in set(value).difference(rcache.viewkeys())})
+        self._cache[self.object.name].prefetch_fields(fields)
 
         return self
 
     # remote method overrides
     def search(self, domain, *args, **kwargs):
-        """ Performs normal search, but adds ``('id', 'in', seld.ids)`` to search domain
+        """ Performs normal search, but adds ``('id', 'in', self.ids)`` to search domain
 
             :returns: list of IDs found
             :rtype: list of integers
@@ -547,7 +505,7 @@ class RecordRelations(Record):
     """
         Adds ability to browse related fields from record::
 
-            >>> o = erp_proxy['sale.order.line'].read_records(1)
+            >>> o = client['sale.order.line'].read_records(1)
             >>> o.order_id
             R(sale.order, 25)[SO025]
 
@@ -557,46 +515,15 @@ class RecordRelations(Record):
         super(RecordRelations, self).__init__(*args, **kwargs)
         self._related_objects = {}
 
-    def _cache_field_read(self, ftype, name, data):
-        """ Cache field that had been read
-
-            :param str ftype: type of field had been read
-            :param str name: name of field had been read
-            :param dict data: result of object.read operation, representing data had been read
-
-            (See *Record._get_field* method code)
-        """
-        super(RecordRelations, self)._cache_field_read(ftype, name, data)
-        if ftype == 'many2one':
-            cval = data[name]
-            if not cval:
-                return
-
-            rcache = self._cache[self._columns_info[name]['relation']]
-
-            if isinstance(cval, (int, long)):
-                rcache[cval]  # intrnal dict {'id': key} will be created by default (see ObjectCache)
-            elif isinstance(cval, (list, tuple)):
-                rcache[cval[0]]['__name_get_result'] = cval[1]
-
-        elif ftype in ('many2many', 'one2many'):
-            relation = self._columns_info[name]['relation']
-            rcache = self._cache[relation]
-            rcache.update({cid: {'id': cid} for cid in set(data[name]).difference(rcache.viewkeys())})
-
     def _get_many2one_rel_obj(self, name, rel_data, cached=True):
         """ Method used to fetch related object by name of field that points to it
         """
         if name not in self._related_objects or not cached:
-            relation = self._columns_info[name]['relation']
-
             if rel_data:
-                if isinstance(rel_data, (list, tuple)):
-                    rel_id = rel_data[0]  # Do not forged about relations in form [id, name]
-                else:
-                    rel_id = rel_data
+                # Do not forged about relations in form [id, name]
+                rel_id = rel_data[0] if isinstance(rel_data, (list, tuple)) else rel_data
 
-                rel_obj = self._service.get_obj(relation)
+                rel_obj = self._service.get_obj(self._columns_info[name]['relation'])
                 self._related_objects[name] = get_record(rel_obj, rel_id, cache=self._cache, context=self.context)
             else:
                 self._related_objects[name] = False
@@ -606,9 +533,8 @@ class RecordRelations(Record):
         """ Method used to fetch related objects by name of field that points to them
             using one2many relation
         """
-        relation = self._columns_info[name]['relation']
         if name not in self._related_objects or not cached:
-            rel_obj = self._service.get_obj(relation)
+            rel_obj = self._service.get_obj(self._columns_info[name]['relation'])
             self._related_objects[name] = get_record_list(rel_obj, rel_ids, cache=self._cache, context=self.context)
         return self._related_objects[name]
 
@@ -733,9 +659,6 @@ class ObjectRecords(Object):
                     order.write({'note': 'order data is %s'%order.data})
         """
         assert isinstance(ids, (int, long, list, tuple)), "ids must be instance of (int, long, list, tuple)"
-
-        #if fields is None:
-            #fields = self.simple_fields
 
         if isinstance(ids, (int, long)):
             record = get_record(self, ids, context=context)

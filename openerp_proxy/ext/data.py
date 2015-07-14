@@ -63,10 +63,7 @@ class RecordListData(RecordList):
             :return: RecordList which contains records that matches results
             :rtype: RecordList
         """
-        result_ids = []
-        for record in self.records:
-            if func(record):
-                result_ids.append(record.id)
+        result_ids = [record.id for record in self.records if func(record)]
         return get_record_list(self.object, ids=result_ids, cache=self._cache)
 
 
