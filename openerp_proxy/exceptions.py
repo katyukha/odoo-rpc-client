@@ -11,3 +11,11 @@ class ConnectorError(Error):
 class ObjectException(Error):
     """ Base class for exceptions related to Objects """
     pass
+
+
+class ClientException(Error):
+    pass
+
+class LoginException(ClientException):
+    pass
+

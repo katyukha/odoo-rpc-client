@@ -49,7 +49,9 @@
 
 # project imports
 from openerp_proxy.connection import get_connector
-from openerp_proxy.exceptions import Error
+from openerp_proxy.exceptions import (Error,
+                                      ClientException,
+                                      LoginException)
 from openerp_proxy.service import ServiceManager
 from openerp_proxy.plugin import PluginManager
 
@@ -67,15 +69,9 @@ from extend_me import Extensible
 __all__ = ('ERPProxyException', 'Client', 'ERP_Proxy')
 
 
-class ClientException(Error):
-    pass
-
 # Backward compatability
 ERPProxyException = ClientException
 
-
-class LoginException(ClientException):
-    pass
 
 
 class Client(Extensible):
@@ -247,7 +243,7 @@ class Client(Extensible):
         uid = self.services['common'].login(self.dbname, self.username, self._pwd)
 
         if not uid:
-            raise ClientException("Bad login or password")
+            raise LoginException("Bad login or password")
 
         return uid
 
