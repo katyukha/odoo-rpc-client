@@ -1,4 +1,5 @@
 master:
+    - Added basic implementation of graph plugin.
     - Improved ``openerp_proxy.ext.log_execute_console`` extension. Added timing.
     - Added ``Client.clean_caches()`` method, which is used to clean cache of registered models
     - RecordList prefetching logic moved to cache module and highly refactored

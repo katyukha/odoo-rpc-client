@@ -14,6 +14,8 @@ from openerp_proxy.orm.record import RecordList
 from openerp_proxy.orm.record import Record
 from openerp_proxy.orm.object import Object
 from openerp_proxy.core import Client
+from openerp_proxy.utils import AttrDict
+
 from IPython.display import HTML, FileLink
 
 from openerp_proxy.utils import ustr as _
@@ -460,7 +462,7 @@ class HTMLRecord(Record):
         return html % (table + help_text)
 
 
-class ColInfo(dict):
+class ColInfo(AttrDict):
     """ Columns info capable for IPython's HTML representation
     """
 

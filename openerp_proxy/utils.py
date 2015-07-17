@@ -121,15 +121,13 @@ class AttrDict(dict):
         >>> print(d['arg1'])
             1
     """
-    def __getattribute__(self, name):
+    def __getattr__(self, name):
         res = None
         try:
-            res = super(AttrDict, self).__getattribute__(name)
-        except AttributeError:
-            try:
-                res = super(AttrDict, self).__getitem__(name)
-            except KeyError:
-                raise AttributeError(name)
+            res = super(AttrDict, self).__getitem__(name)
+        except KeyError:
+            raise AttributeError(name)
         return res
 
-
+    def __dir__(self):
+        return dir(super(AttrDict, self)) + self.keys()

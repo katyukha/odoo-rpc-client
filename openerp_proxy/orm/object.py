@@ -1,5 +1,7 @@
 from extend_me import ExtensibleByHashType
 
+from openerp_proxy.utils import AttrDict
+
 
 __all__ = ('Object', 'get_object')
 
@@ -88,10 +90,13 @@ class Object(object):
         return "Object ('%s')" % self.name
     __repr__ = __str__
 
+    def __eq__(self, other):
+        return self.name == other.name and self.proxy == other.proxy
+
     def _get_columns_info(self):
         """ Calculates columns info
         """
-        return self.fields_get()
+        return AttrDict(self.fields_get())
 
     @property
     def columns_info(self):
