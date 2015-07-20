@@ -13,3 +13,8 @@
 /docs/build/
 /venv/
 .ropeproject
+.coverage
+/coverage/
+.ipynb_checkpoints/
+/examples/tmp
+

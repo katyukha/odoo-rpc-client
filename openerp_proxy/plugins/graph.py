@@ -258,17 +258,9 @@ class ModelGraph(Extensible):
 
 
 class Graph(Plugin):
-    """ Utility plugin to simplify module management
+    """ Plugin that allow to build graphs.
 
-        Allows to acces module objects like::
-
-            db.plugins.module_utils.m_stock
-
-        which is equivalent to::
-
-            db.get_obj('ir.module.module').search_records([('name','=','stock')])[0]
-
-        Also autocomplete in IPython supported for this syntax
+        At this point it is in experimental stage
     """
 
     class Meta:

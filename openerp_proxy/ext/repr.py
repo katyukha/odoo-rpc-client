@@ -66,6 +66,11 @@ class HField(object):
                          HField('picking_id.move_lines.as_html_table',
                                 args=('id', '_name', HField('location_id._name', 'Location')))
 
+                    or better way::
+
+                         HField('picking_id.move_lines.as_html_table').\
+                             with_args('id', '_name', HField('location_id._name', 'Location'))
+
         :type args: list|tuple
         :param dict kwargs: same as *args* but for keyword arguments
     """
@@ -77,6 +82,25 @@ class HField(object):
         self._default = default
         self._args = tuple() if args is None else args
         self._kwargs = dict() if kwargs is None else kwargs
+
+    def with_args(self, *args, **kwargs):
+        """ If field is string pointing to function (or method),
+            all arguments and keyword arguments passed to this method,
+            will be passed to field (function).
+
+            For example::
+
+                HField('picking_id.move_lines.as_html_table').with_args(
+                    'id', '_name', HField('location_id._name', 'Location'))
+
+            This arguments ('id', '_name', HField('location_id._name', 'Location'))
+            will be passed to ``picking_id.move_lines.as_html_table`` method
+
+            :return: self
+        """
+        self._args = args
+        self._kwargs = kwargs
+        return self
 
     @classmethod
     def _get_field(cls, obj, name):
