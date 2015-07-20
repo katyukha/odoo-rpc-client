@@ -61,7 +61,7 @@ class TestPlugin(Plugin):
         name = 'Test'
 
     def test(self):
-        print(self.proxy.get_url())
+        return self.proxy.get_url()
 
 
 class PluginManager(object):
@@ -99,6 +99,9 @@ class PluginManager(object):
             return self[name]
         except KeyError:
             raise AttributeError(name)
+
+    def __contains__(self, name):
+        return name in self.registered_plugins
 
     def __dir__(self):
         res = dir(super(PluginManager, self))

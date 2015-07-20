@@ -56,3 +56,23 @@ class TestConnection(BaseTestCase):
         # test that uid and user properties are accessible
         self.assertIsNotNone(cl.uid)
         self.assertIsNotNone(cl.user)
+
+    def test_32_login_wrong(self):
+        client = self.client
+
+        with self.assertRaises(LoginException):
+            wrong_password = self.env.password + "-wrong"
+            cl = client.login(self.env.dbname, self.env.user, wrong_password)
+            cl.uid   # Note, that login return's new instance of client, and we
+                     # need to acces uid, property to make it try to login via RPC.
+
+    def test_34_reconnect(self):
+        client = self.client
+        cl = client.login(self.env.dbname, self.env.user, self.env.password)
+        old_uid = cl.uid
+
+        new_uid = cl.reconnect()
+        self.assertEqual(old_uid, new_uid)
+        self.assertEqual(old_uid, cl.uid)
+
+
