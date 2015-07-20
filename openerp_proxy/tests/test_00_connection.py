@@ -22,7 +22,7 @@ class TestConnection(BaseTestCase):
         with self.assertRaises(LoginException):
             client.user
 
-    def test_10_create_db(self):
+    def test_01_create_db(self):
         client = self.client
         if self.env.dbname in client.services.db.list_db():
             return self.skipTest("Database already created")
@@ -35,7 +35,7 @@ class TestConnection(BaseTestCase):
         self.assertIsNotNone(cl.uid)
         self.assertIsNotNone(cl.user)
 
-    def test_20_connect(self):
+    def test_02_connect(self):
         client = self.client
         cl = client.connect(dbname=self.env.dbname, user=self.env.user, pwd=self.env.password)
 
@@ -46,7 +46,7 @@ class TestConnection(BaseTestCase):
         self.assertIsNotNone(cl.uid)
         self.assertIsNotNone(cl.user)
 
-    def test_30_login(self):
+    def test_03_login(self):
         client = self.client
         cl = client.login(self.env.dbname, self.env.user, self.env.password)
 
@@ -57,7 +57,7 @@ class TestConnection(BaseTestCase):
         self.assertIsNotNone(cl.uid)
         self.assertIsNotNone(cl.user)
 
-    def test_32_login_wrong(self):
+    def test_04_login_wrong(self):
         client = self.client
 
         with self.assertRaises(LoginException):
@@ -66,7 +66,7 @@ class TestConnection(BaseTestCase):
             cl.uid   # Note, that login return's new instance of client, and we
                      # need to acces uid, property to make it try to login via RPC.
 
-    def test_34_reconnect(self):
+    def test_05_reconnect(self):
         client = self.client
         cl = client.login(self.env.dbname, self.env.user, self.env.password)
         old_uid = cl.uid
