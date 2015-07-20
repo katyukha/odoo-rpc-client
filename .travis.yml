@@ -19,7 +19,7 @@ before_script:
   - sleep 5
 
 script:
-  - coverage run --source openerp_proxy -m unittest discover -v
+  - coverage run --source openerp_proxy -m unittest -v openerp_proxy.tests.all
 
 after_success:
   - coveralls

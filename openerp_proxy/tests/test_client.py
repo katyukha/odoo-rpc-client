@@ -6,7 +6,7 @@ from openerp_proxy.plugin import Plugin
 from openerp_proxy.exceptions import LoginException
 
 
-class TestClient(BaseTestCase):
+class Test_10_Client(BaseTestCase):
 
     def setUp(self):
         super(self.__class__, self).setUp()
