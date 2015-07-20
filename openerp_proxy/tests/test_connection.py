@@ -3,7 +3,7 @@ from openerp_proxy.core import Client
 from openerp_proxy.exceptions import LoginException
 
 
-class TestConnection(BaseTestCase):
+class Test_00_Connection(BaseTestCase):
 
     def setUp(self):
         super(self.__class__, self).setUp()
