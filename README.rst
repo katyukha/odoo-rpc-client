@@ -1,6 +1,16 @@
 OpenERP / Odoo proxy
 ====================
 
+Build Status
+------------
+
+.. image:: https://travis-ci.org/katyukha/openerp-proxy.svg?branch=master
+    :target: https://travis-ci.org/katyukha/openerp-proxy
+
+.. image:: https://coveralls.io/repos/katyukha/openerp-proxy/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/katyukha/openerp-proxy?branch=master
+
+
 Overview
 --------
 
