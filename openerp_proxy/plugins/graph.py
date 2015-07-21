@@ -7,7 +7,7 @@ from openerp_proxy.orm.object import Object
 try:
     import pydot
 except ImportError:
-    print "PyDot not installed!!!"
+    print("PyDot not installed!!!")
 
 
 class Model(Extensible):

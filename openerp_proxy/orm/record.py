@@ -4,8 +4,10 @@ from openerp_proxy.orm.object import Object
 from openerp_proxy.orm.cache import empty_cache
 from extend_me import ExtensibleType
 
+import six
 import collections
 import abc
+import numbers
 
 
 __all__ = (
@@ -37,7 +39,7 @@ def get_record(obj, rid, cache=None, context=None):
     return RecordMeta.get_object(obj, rid, cache=cache, context=context)
 
 
-class Record(object):
+class Record(six.with_metaclass(RecordMeta, object)):
     """ Base class for all Records
 
         Constructor
@@ -50,12 +52,11 @@ class Record(object):
         Note, to create instance of cache call *empty_cache*
     """
 
-    __metaclass__ = RecordMeta
     __slots__ = ['__dict__', '_object', '_cache', '_lcache', '_id']
 
     def __init__(self, obj, rid, cache=None, context=None):
         assert isinstance(obj, Object), "obj should be Object"
-        assert isinstance(rid, (int, long)), "rid must be int"
+        assert isinstance(rid, numbers.Integral), "rid must be int"
 
         self._id = rid
         self._object = obj
@@ -144,7 +145,7 @@ class Record(object):
         if isinstance(other, Record):
             return other.id == self._id
 
-        if isinstance(other, (int, long)):
+        if isinstance(other, numbers.Integral):
             return self._id == other
 
         return False
@@ -255,7 +256,7 @@ def get_record_list(obj, ids=None, fields=None, cache=None, context=None):
     return RecordListMeta.get_object(obj, ids, fields=fields, cache=cache, context=context)
 
 
-class RecordList(collections.MutableSequence):
+class RecordList(six.with_metaclass(RecordListMeta), collections.MutableSequence):
     """Class to hold list of records with some extra functionality
 
         :param obj: instance of Object to make this list related to
@@ -270,8 +271,6 @@ class RecordList(collections.MutableSequence):
         :type context: dict
 
     """
-    __metaclass__ = RecordListMeta
-
     __slots__ = ('_object', '_cache', '_lcache', '_records')
 
     # TODO: expose object's methods via implementation of __dir__
@@ -364,7 +363,7 @@ class RecordList(collections.MutableSequence):
         return self.length
 
     def __contains__(self, item):
-        if isinstance(item, (int, long)):
+        if isinstance(item, numbers.Integral):
             return item in self.ids
         if isinstance(item, Record):
             return item in self._records
@@ -373,13 +372,13 @@ class RecordList(collections.MutableSequence):
     def insert(self, index, item):
         """ Insert record to list
 
-            :param item: Record instance to be inserted into list. if int or long passed, it considered to be ID of record
-            :type item: Record|int|long
+            :param item: Record instance to be inserted into list. if int passed, it considered to be ID of record
+            :type item: Record|int
             :param int index: position where to place new element
             :return: self
             :rtype: RecordList
         """
-        assert isinstance(item, (Record, int, long)), "Only Record or int or long instances could be added to list"
+        assert isinstance(item, (Record, numbers.Integral)), "Only Record or int instances could be added to list"
         if isinstance(item, Record):
             self._records.insert(index, item)
         else:
@@ -658,9 +657,9 @@ class ObjectRecords(Object):
             >>> for order in data:
                     order.write({'note': 'order data is %s'%order.data})
         """
-        assert isinstance(ids, (int, long, list, tuple)), "ids must be instance of (int, long, list, tuple)"
+        assert isinstance(ids, (numbers.Integral, list, tuple)), "ids must be instance of (int, list, tuple)"
 
-        if isinstance(ids, (int, long)):
+        if isinstance(ids, numbers.Integral):
             record = get_record(self, ids, context=context)
             if fields is not None:
                 record.read(fields)  # read specified fields

@@ -48,12 +48,12 @@
 
 
 # project imports
-from openerp_proxy.connection import get_connector
-from openerp_proxy.exceptions import (Error,
-                                      ClientException,
-                                      LoginException)
-from openerp_proxy.service import ServiceManager
-from openerp_proxy.plugin import PluginManager
+from .connection import get_connector
+from .exceptions import (Error,
+                         ClientException,
+                         LoginException)
+from .service import ServiceManager
+from .plugin import PluginManager
 
 
 # Activate orm internal logic
@@ -61,7 +61,7 @@ from openerp_proxy.plugin import PluginManager
 # thay woudld like to use. Or simply create two entry points (one with all
 # enabled by default and another with only basic stuff which may be useful for
 # libraries that would like to get speed instead of better usability
-import openerp_proxy.orm
+from . import orm
 
 from extend_me import Extensible
 

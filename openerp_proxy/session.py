@@ -1,3 +1,5 @@
+import numbers
+import six
 import json
 import os.path
 import sys
@@ -5,7 +7,7 @@ import pprint
 from getpass import getpass
 
 # project imports
-from core import Client
+from .core import Client
 
 
 __all__ = ('ERP_Session', 'Session', 'IPYSession')
@@ -219,7 +221,7 @@ class Session(object):
                 session.get_db('xml-rpc://katyukha@erp.jbm.int:8069/jbm0')  # using url
                 session.get_db('my_db')   # using aliase
         """
-        if isinstance(url_or_index, (int, long)):
+        if isinstance(url_or_index, numbers.Integral):
             url = self.index[url_or_index]
         else:
             url = self._db_aliases.get(url_or_index, url_or_index)
@@ -238,7 +240,7 @@ class Session(object):
             if self.option('store_passwords') and 'password' in ep_args:
                 from simplecrypt import decrypt
                 import base64
-                crypter, password = base64.decodestring(ep_args.pop('password')).split(':')
+                crypter, password = base64.decodestring(ep_args.pop('password').encode('utf8')).split(b':')
                 ep_args['pwd'] = decrypt(Client.to_url(ep_args), base64.decodestring(password))
             else:
                 ep_args['pwd'] = getpass('Password: ')
@@ -298,7 +300,7 @@ class Session(object):
             if self.option('store_passwords') and database._pwd:
                 from simplecrypt import encrypt
                 import base64
-                password = base64.encodestring('simplecrypt:' + base64.encodestring(encrypt(database.get_url(), database._pwd)))
+                password = base64.encodestring(b'simplecrypt:' + base64.encodestring(encrypt(database.get_url(), database._pwd)))
                 res.update({'password': password})
             return res
         elif isinstance(database, dict):
@@ -310,7 +312,7 @@ class Session(object):
         """ Saves session on disc
         """
         databases = {}
-        for url, database in self._databases.iteritems():
+        for url, database in self._databases.items():
             if not getattr(database, '_no_save', False):
                 init_args = self._get_db_init_args(database)
                 databases[url] = init_args
@@ -323,6 +325,7 @@ class Session(object):
             'options': self._options,
         }
 
+        return
         with open(self.data_file, 'wt') as json_data:
             json.dump(data, json_data, indent=4)
 
@@ -332,7 +335,7 @@ class Session(object):
         try:
             res = self.get_db(url_or_index)
         except ValueError as e:
-            raise KeyError(e.message)
+            raise KeyError(str(e))
         return res
 
     # Overriden to be able to access database like
@@ -341,7 +344,7 @@ class Session(object):
         try:
             res = self.get_db(name)
         except ValueError as e:
-            raise AttributeError(e.message)
+            raise AttributeError(str(e))
         return res
 
     def __str__(self):

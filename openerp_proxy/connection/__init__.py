@@ -1,3 +1,3 @@
-import xmlrpc
-import jsonrpc
-from connection import *
+import openerp_proxy.connection.xmlrpc
+import openerp_proxy.connection.jsonrpc
+from .connection import *

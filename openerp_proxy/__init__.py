@@ -36,17 +36,17 @@ HELP_HEADER = """
 def main():
     """ Entry point for running as standalone APP
     """
-    from session import Session
-    from core import Client
+    from .session import Session
+    from .core import Client
 
     session = Session()
 
     header_databases = "\n"
-    for index, url in session.index.iteritems():
+    for index, url in session.index.items():
         header_databases += "        - [%3s] %s\n" % (index, url)
 
     header_aliases = "\n"
-    for aliase, url in session.aliases.iteritems():
+    for aliase, url in session.aliases.items():
         header_aliases += "        - %7s: %s\n" % (aliase, url)
 
     header = HELP_HEADER % {'databases': header_databases, 'aliases': header_aliases}

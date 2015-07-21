@@ -1,4 +1,5 @@
 #import openerp_proxy.orm.record
+import six
 import collections
 __all__ = ('empty_cache')
 
@@ -32,7 +33,7 @@ class ObjectCache(dict):
             # and difference calls)
             self.update({cid: {'id': cid} for cid in keys})
         else:
-            self.update({cid: {'id': cid} for cid in set(keys).difference(self.viewkeys())})
+            self.update({cid: {'id': cid} for cid in set(keys).difference(six.viewkeys(self))})
         return self
 
     def update_context(self, new_context):
@@ -51,7 +52,7 @@ class ObjectCache(dict):
     def get_ids_to_read(self, field):
         """ Return list of ids, that have no specified field in cache
         """
-        return [key for key, val in self.viewitems() if field not in val]
+        return [key for key, val in six.viewitems(self) if field not in val]
 
     def cache_field(self, rid, ftype, field_name, value):
         """ This method impelment additional caching functionality,
@@ -66,7 +67,7 @@ class ObjectCache(dict):
         if value and ftype == 'many2one':
             rcache = self._root_cache[self._object.columns_info[field_name]['relation']]
 
-            if isinstance(value, (int, long)):
+            if isinstance(value, numbers.Integral):
                 rcache[value]  # internal dict {'id': key} will be created by default (see ObjectCache)
             elif isinstance(value, (list, tuple)):
                 rcache[value[0]]['__name_get_result'] = value[1]

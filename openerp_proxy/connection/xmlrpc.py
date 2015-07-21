@@ -1,8 +1,13 @@
 # python imports
-import xmlrpclib
+import sys
+
+if sys.version_info < (3, 0, 0):
+    import xmlrpclib
+else:
+    import xmlrpc.client as xmlrpclib
 
 # project imports
-from openerp_proxy.connection.connection import ConnectorBase
+from .connection import ConnectorBase
 from openerp_proxy.utils import ustr
 import openerp_proxy.exceptions as exceptions
 

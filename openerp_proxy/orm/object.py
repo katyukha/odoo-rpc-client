@@ -1,3 +1,4 @@
+import six
 from extend_me import ExtensibleByHashType
 
 from openerp_proxy.utils import AttrDict
@@ -24,7 +25,7 @@ def get_object(proxy, name):
 
 
 # TODO: think about connecting it to service instead of Proxy
-class Object(object):
+class Object(six.with_metaclass(ObjectType)):
     """ Base class for all Objects
 
         Provides simple interface to remote osv.osv objects
@@ -33,7 +34,6 @@ class Object(object):
             sale_obj = Object(erp, 'sale.order')
             sale_obj.search([('state','not in',['done','cancel'])])
     """
-    __metaclass__ = ObjectType
 
     def __init__(self, service, object_name):
         self._service = service

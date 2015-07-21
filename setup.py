@@ -37,6 +37,7 @@ setup(name='openerp_proxy',
       },
       install_requires=[
           'six',
-          'extend_me>=1.1.2',
+          'extend_me>=1.1.3',
+          'requests',
       ],
 )

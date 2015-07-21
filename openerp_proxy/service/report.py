@@ -1,3 +1,4 @@
+import numbers
 from openerp_proxy.service.service import ServiceBase
 from extend_me import ExtensibleType
 
@@ -104,7 +105,7 @@ class ReportService(ServiceBase):
     def _prepare_report_data(self, model, ids, report_type):
         """ Performs preparation of data
         """
-        ids = [ids] if isinstance(ids, (int, long)) else ids
+        ids = [ids] if isinstance(ids, numbers.Integral) else ids
         return {
             'model': model,
             'id': ids[0],
@@ -125,7 +126,7 @@ class ReportService(ServiceBase):
             :rtype: int
         """
         context = {} if context is None else context
-        ids = [ids] if isinstance(ids, (int, long)) else ids
+        ids = [ids] if isinstance(ids, numbers.Integral) else ids
         data = self._prepare_report_data(model, ids, report_type)
         return self._service.report(self.proxy.dbname,
                                     self.proxy.uid,
@@ -185,7 +186,7 @@ class ReportService(ServiceBase):
             :rtype: dict|ReportResult
         """
         context = {} if context is None else context
-        ids = [ids] if isinstance(ids, (int, long)) else ids
+        ids = [ids] if isinstance(ids, numbers.Integral) else ids
         data = self._prepare_report_data(model, ids, report_type)
 
         if wrap_result:

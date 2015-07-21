@@ -1,9 +1,11 @@
 # Python imports
-
+import six
 import extend_me
 
+PluginMeta = extend_me.ExtensibleByHashType._('Plugin', hashattr='name')
 
-class Plugin(object):
+
+class Plugin(six.with_metaclass(PluginMeta)):
     """ Base class for all plugins, extensible by name
 
         (uses metaclass extend_me.ExtensibleByHashType)
@@ -31,7 +33,6 @@ class Plugin(object):
 
         This plugin will automaticaly register itself in system, when module which contains it will be imported.
     """
-    __metaclass__ = extend_me.ExtensibleByHashType._('Plugin', hashattr='name')
 
     def __init__(self, erp_proxy):
         self._erp_proxy = erp_proxy
@@ -64,7 +65,7 @@ class TestPlugin(Plugin):
         return self.proxy.get_url()
 
 
-class PluginManager(object):
+class PluginManager(extend_me.Extensible):
     """ Class that holds information about all plugins
 
         :param erp_proxy: instance of Client to bind plugins to
@@ -88,7 +89,7 @@ class PluginManager(object):
             try:
                 pluginCls = type(Plugin).get_class(name)
             except ValueError as e:
-                raise KeyError(e.message)
+                raise KeyError(str(e))
 
             plugin = pluginCls(self.__erp_proxy)
             self.__plugins[name] = plugin
