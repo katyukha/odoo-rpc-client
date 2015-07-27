@@ -16,7 +16,7 @@ install:
   - "wget http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/${ODOO_PACKAGE}_${ODOO_VERSION}.latest_all.deb"
   - "sudo dpkg -i ${ODOO_PACKAGE}_${ODOO_VERSION}.latest_all.deb || true"
   - "sudo apt-get update && sudo apt-get install -f -y"
-  - "pip install coveralls"
+  - "pip install coveralls ipython[all]"
   - "python setup.py develop"
 
 before_script:
