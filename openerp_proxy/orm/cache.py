@@ -112,7 +112,7 @@ class ObjectCache(dict):
         to_prefetch, related = self.parse_prefetch_fields(fields)
 
         col_info = self._object.columns_info
-        for data in self._object.read(self.keys(), to_prefetch):
+        for data in self._object.read(list(self), to_prefetch):
             for field, value in data.iteritems():
 
                 # Fill related cache

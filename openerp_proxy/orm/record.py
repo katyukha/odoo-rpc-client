@@ -121,7 +121,7 @@ class Record(six.with_metaclass(RecordMeta, object)):
         """
         if self._data.get('__name_get_result', None) is None:
             lcache = self._lcache
-            data = self._object.name_get(lcache.keys(), context=self.context)
+            data = self._object.name_get(list(lcache), context=self.context)
             for _id, name in data:
                 lcache[_id]['__name_get_result'] = name
         return self._data.get('__name_get_result', 'ERROR')
@@ -218,7 +218,7 @@ class Record(six.with_metaclass(RecordMeta, object)):
             :rtype: dict
         """
         ctx = {} if self.context is None else self.context.copy()
-        args = [self._lcache.keys()] if multi else [[self.id]]
+        args = [list(self._lcache)] if multi else [[self.id]]
 
         kwargs = {}
 
