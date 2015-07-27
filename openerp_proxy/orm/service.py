@@ -24,7 +24,7 @@ class Service(ObjectService):
             return self.__objects[object_name]
 
         if object_name not in self.get_registered_objects():
-            raise ValueError("There is no object named '%s' in ERP" % object_name)
+            raise ValueError("There is no object named '%s'" % object_name)
 
         obj = get_object(self, object_name)
         self.__objects[object_name] = obj

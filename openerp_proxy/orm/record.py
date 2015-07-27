@@ -67,7 +67,7 @@ class Record(six.with_metaclass(RecordMeta, object)):
 
     def __dir__(self):
         # TODO: expose also object's methods
-        res = dir(super(Record, self))
+        res = dir(super(self.__class__, self))
         res.extend(self._columns_info.keys())
         res.extend(['read', 'search', 'write', 'unlink'])
         return res

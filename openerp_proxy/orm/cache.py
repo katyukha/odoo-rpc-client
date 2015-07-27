@@ -1,5 +1,6 @@
 #import openerp_proxy.orm.record
 import six
+import numbers
 import collections
 __all__ = ('empty_cache')
 

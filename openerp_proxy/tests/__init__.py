@@ -20,3 +20,9 @@ class BaseTestCase(unittest.TestCase):
             'super_password': os.environ.get('ODOO_TEST_SUPER_PASSWORD', 'admin'),
         })
 
+        # allow to specify extensions with environment var
+        with_extensions = os.environ.get('TEST_WITH_EXTENSIONS', False)
+        if with_extensions:
+            for ext in with_extensions.split(','):
+                __import__(ext)
+

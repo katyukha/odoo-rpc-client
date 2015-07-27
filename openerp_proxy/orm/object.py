@@ -62,7 +62,7 @@ class Object(six.with_metaclass(ObjectType)):
     # Overriden to add some standard method to be available in introspection
     # Useful for IPython auto completition
     def __dir__(self):
-        res = dir(super(Object, self))
+        res = dir(super(self.__class__, self))
         res.extend(['read', 'search', 'write', 'unlink', 'create'])
         return res
 
