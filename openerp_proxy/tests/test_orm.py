@@ -152,6 +152,9 @@ class Test_21_Record(BaseTestCase):
         self.assertEqual(rec1, rec2.id)
         self.assertEqual(rec1.id, rec2)
 
+        self.assertNotEqual(rec1, None)
+        self.assertNotEqual(rec1, 2)
+
     def test_getitem(self):
         self.assertEqual(self.record['id'], self.record.id)
         with self.assertRaises(KeyError):
@@ -166,6 +169,9 @@ class Test_21_Record(BaseTestCase):
     def test_record_to_int(self):
         self.assertIs(int(self.record), 1)
 
+    def test_record_hash(self):
+        self.assertEqual(hash(self.record), hash((self.record._object.name, self.record.id)))
+
     def test_record_relational_fields(self):
         res = self.record.child_ids  # read data from res.partner:child_ids field
 
@@ -178,3 +184,52 @@ class Test_21_Record(BaseTestCase):
         self.assertIsInstance(res[0].parent_id, Record)
         self.assertIsNot(res[0].parent_id, self.record)
         self.assertEqual(res[0].parent_id, self.record)
+
+        # test that empty many2one field is avaluated as False
+        self.assertIs(self.record.user_id, False)
+
+        # test that empty x2many field is evaluated as empty RecordList
+        self.assertIsInstance(self.record.user_ids, RecordList)
+        self.assertEqual(self.record.user_ids.length, 0)
+
+
+class Test_22_RecordList(BaseTestCase):
+
+    def setUp(self):
+        super(self.__class__, self).setUp()
+        self.client = Client(self.env.host,
+                             dbname=self.env.dbname,
+                             user=self.env.user,
+                             pwd=self.env.password,
+                             protocol=self.env.protocol,
+                             port=self.env.port)
+        self.object = self.client.get_obj('res.partner')
+        self.obj_ids = self.object.search([], limit=10)
+        self.recordlist = self.object.read_records(self.obj_ids)
+
+    def test_ids(self):
+        self.assertSequenceEqual(self.recordlist.ids, self.obj_ids)
+
+    def test_length(self):
+        self.assertEqual(self.recordlist.length, len(self.obj_ids))
+        self.assertEqual(len(self.recordlist), len(self.obj_ids))
+
+    def test_getitem(self):
+        id1 = self.obj_ids[0]
+        id2 = self.obj_ids[-1]
+
+        id_slice = self.obj_ids[2:15:2]
+
+        self.assertIsInstance(self.recordlist[0], Record)
+        self.assertEqual(self.recordlist[0].id, id1)
+
+        self.assertIsInstance(self.recordlist[-1], Record)
+        self.assertEqual(self.recordlist[-1].id, id2)
+
+        res = self.recordlist[2:15:2]
+        self.assertIsInstance(res, RecordList)
+        self.assertEqual(res.length, len(id_slice))
+        self.assertSequenceEqual(res.ids, id_slice)
+
+        with self.assertRaises(IndexError):
+            self.recordlist[100]

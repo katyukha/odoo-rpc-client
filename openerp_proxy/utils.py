@@ -1,3 +1,4 @@
+import six
 import sys
 import functools
 
@@ -57,12 +58,11 @@ def get_encodings(hint_encoding='utf-8'):
 
 
 def exception_to_unicode(e):
-    if (sys.version_info[:2] < (2, 6)) and hasattr(e, 'message'):
-        return ustr(e.message)
     if hasattr(e, 'args'):
         return "\n".join((ustr(a) for a in e.args))
+
     try:
-        return unicode(e)
+        return six.text_type(e)
     except Exception:
         return u"Unknown message"
 
@@ -88,18 +88,18 @@ def ustr(value, hint_encoding='utf-8', errors='strict'):
     if isinstance(value, Exception):
         return exception_to_unicode(value)
 
-    if isinstance(value, unicode):
+    if isinstance(value, six.text_type):
         return value
 
-    if not isinstance(value, basestring):
+    if not isinstance(value, six.string_types):
         try:
-            return unicode(value)
+            return six.text_type(value)
         except Exception:
             raise UnicodeError('unable to convert %r' % (value,))
 
     for ln in get_encodings(hint_encoding):
         try:
-            return unicode(value, ln, errors=errors)
+            return six.text_type(value, ln, errors=errors)
         except Exception:
             pass
     raise UnicodeError('unable to convert %r' % (value,))

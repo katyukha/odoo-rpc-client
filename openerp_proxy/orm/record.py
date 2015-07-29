@@ -346,12 +346,15 @@ class RecordList(six.with_metaclass(RecordListMeta), collections.MutableSequence
         if isinstance(index, slice):
             # Note no context passed, because it is stored in cache
             return get_record_list(self.object,
-                                   ids=(r.id for r in self._records[index]),
+                                   ids=[r.id for r in self._records[index]],
                                    cache=self._cache)
         return self._records[index]
 
     def __setitem__(self, index, value):
-        self._records[index] = value
+        if isinstance(value, Record):
+            self._records[index] = value
+        else:
+            raise ValueError("In 'RecordList[index] = value' operation, value must be instance of Record")
 
     def __delitem__(self, index):
         del self._records[index]

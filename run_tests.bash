@@ -7,7 +7,7 @@ SCRIPTPATH=`dirname "$SCRIPT"`
 (cd $SCRIPTPATH && \
     virtualenv venv_test && \
     source ./venv_test/bin/activate && \
-    pip install --upgrade pip setuptools coverage mock && \
+    pip install --upgrade pip setuptools coverage mock pudb && \
     python setup.py develop && \
     rm -f .coverage && \
     coverage run --source openerp_proxy -m unittest -v openerp_proxy.tests.all && \
