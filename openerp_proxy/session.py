@@ -325,7 +325,6 @@ class Session(object):
             'options': self._options,
         }
 
-        return
         with open(self.data_file, 'wt') as json_data:
             json.dump(data, json_data, indent=4)
 

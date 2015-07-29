@@ -1,8 +1,6 @@
 # python imports
 import json
 import random
-
-#import urllib2
 import requests
 
 # project imports

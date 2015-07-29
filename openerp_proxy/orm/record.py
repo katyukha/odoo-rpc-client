@@ -657,8 +657,6 @@ class ObjectRecords(Object):
             >>> for order in data:
                     order.write({'note': 'order data is %s'%order.data})
         """
-        assert isinstance(ids, (numbers.Integral, list, tuple)), "ids must be instance of (int, list, tuple)"
-
         if isinstance(ids, numbers.Integral):
             record = get_record(self, ids, context=context)
             if fields is not None:
@@ -667,7 +665,7 @@ class ObjectRecords(Object):
         if isinstance(ids, (list, tuple)):
             return get_record_list(self, ids, fields=fields, context=context)
 
-        raise ValueError("Wrong type for ids args")
+        raise ValueError("Wrong type for ids argument: %s" % type(ids))
 
     def browse(self, *args, **kwargs):
         """ Aliase to *read_records* method. In most cases same as serverside *browse*

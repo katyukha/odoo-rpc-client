@@ -1,10 +1,5 @@
 # python imports
-import sys
-
-if sys.version_info < (3, 0, 0):
-    import xmlrpclib
-else:
-    import xmlrpc.client as xmlrpclib
+from six.moves import xmlrpc_client as xmlrpclib
 
 # project imports
 from .connection import ConnectorBase
