@@ -233,3 +233,35 @@ class Test_22_RecordList(BaseTestCase):
 
         with self.assertRaises(IndexError):
             self.recordlist[100]
+
+    def test_contains(self):
+        rid = self.obj_ids[0]
+        rec = self.object.read_records(rid)
+
+        brid = self.object.search([('id', 'not in', self.obj_ids)], limit=1)[0]
+        brec = self.object.read_records(brid)
+
+        self.assertIn(rid, self.recordlist)
+        self.assertIn(rec, self.recordlist)
+
+        self.assertNotIn(brid, self.recordlist)
+        self.assertNotIn(brec, self.recordlist)
+
+        self.assertNotIn(None, self.recordlist)
+
+    def test_prefetch(self):
+        # check that cache is only filled with ids
+        self.assertEqual(len(self.recordlist._lcache), self.recordlist.length)
+        for record in self.recordlist:
+            self.assertEqual(len(record._data), 1)
+            self.assertEqual(record._data.keys(), ['id'])
+
+        # prefetch
+        self.recordlist.prefetch('name')
+
+        self.assertEqual(len(self.recordlist._lcache), self.recordlist.length)
+        for record in self.recordlist:
+            self.assertEqual(len(record._data), 2)
+            self.assertEqual(record._data.keys(), ['id', 'name'])
+
+        # TODO: test prefetch related

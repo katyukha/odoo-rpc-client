@@ -413,8 +413,11 @@ class RecordList(six.with_metaclass(RecordListMeta), collections.MutableSequence
     def sort(self, cmp=None, key=None, reverse=False):
         """ sort(cmp=None, key=None, reverse=False) -- inplace sort
             cmp(x, y) -> -1, 0, 1
+
+            :return: self
         """
-        return self._records.sort(cmp=cmp, key=key, reverse=reverse)
+        self._records.sort(cmp=cmp, key=key, reverse=reverse)
+        return self
 
     def copy(self, context=None, new_cache=False):
         """ Returns copy of this list, possibly with modified context
