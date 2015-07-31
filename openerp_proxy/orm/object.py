@@ -25,6 +25,7 @@ def get_object(proxy, name):
 
 
 # TODO: think about connecting it to service instead of Proxy
+@six.python_2_unicode_compatible
 class Object(six.with_metaclass(ObjectType)):
     """ Base class for all Objects
 
@@ -87,8 +88,10 @@ class Object(six.with_metaclass(ObjectType)):
         return getattr(self, name)
 
     def __str__(self):
-        return "Object ('%s')" % self.name
-    __repr__ = __str__
+        return u"Object ('%s')" % self.name
+
+    def __repr__(self):
+        return str(self)
 
     def __eq__(self, other):
         return self.name == other.name and self.proxy == other.proxy

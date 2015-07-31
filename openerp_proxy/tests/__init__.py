@@ -1,3 +1,4 @@
+import six
 import unittest
 from openerp_proxy.utils import AttrDict
 
@@ -25,4 +26,8 @@ class BaseTestCase(unittest.TestCase):
         if with_extensions:
             for ext in with_extensions.split(','):
                 __import__(ext)
+
+    if six.PY3:
+        def assertItemsEqual(self, *args, **kwargs):
+            return self.assertCountEqual(*args, **kwargs)
 

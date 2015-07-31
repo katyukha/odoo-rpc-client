@@ -113,7 +113,7 @@ class ObjectCache(dict):
 
         col_info = self._object.columns_info
         for data in self._object.read(list(self), to_prefetch):
-            for field, value in data.iteritems():
+            for field, value in data.items():
 
                 # Fill related cache
                 ftype = col_info.get(field, {}).get('type', None)
@@ -121,7 +121,7 @@ class ObjectCache(dict):
 
         if related:
             # TODO: think how to avoid infinite recursion and double reads
-            for obj_name, rfields in related.viewitems():
+            for obj_name, rfields in related.items():
                 self._root_cache[obj_name].prefetch_fields(rfields)
 
 

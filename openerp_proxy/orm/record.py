@@ -39,6 +39,7 @@ def get_record(obj, rid, cache=None, context=None):
     return RecordMeta.get_object(obj, rid, cache=cache, context=context)
 
 
+@six.python_2_unicode_compatible
 class Record(six.with_metaclass(RecordMeta, object)):
     """ Base class for all Records
 
@@ -124,13 +125,10 @@ class Record(six.with_metaclass(RecordMeta, object)):
             data = self._object.name_get(list(lcache), context=self.context)
             for _id, name in data:
                 lcache[_id]['__name_get_result'] = name
-        return self._data.get('__name_get_result', 'ERROR')
-
-    def __unicode__(self):
-        return u"R(%s, %s)[%s]" % (self._object.name, self.id, ustr(self._name))
+        return self._data.get('__name_get_result', u'ERROR')
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return u"R(%s, %s)[%s]" % (self._object.name, self.id, ustr(self._name))
 
     def __repr__(self):
         return str(self)
@@ -256,6 +254,7 @@ def get_record_list(obj, ids=None, fields=None, cache=None, context=None):
     return RecordListMeta.get_object(obj, ids, fields=fields, cache=cache, context=context)
 
 
+@six.python_2_unicode_compatible
 class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence)):
     """Class to hold list of records with some extra functionality
 
@@ -397,8 +396,10 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence)
         return res
 
     def __str__(self):
-        return "RecordList(%s): length=%s" % (self.object.name, self.length)
-    __repr__ = __str__
+        return u"RecordList(%s): length=%s" % (self.object.name, self.length)
+
+    def __repr__(self):
+        return str(self)
 
     def refresh(self):
         """ Cleanup data caches. next try to get data will cause rereading of it
@@ -410,13 +411,15 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence)
             record.refresh()
         return self
 
-    def sort(self, cmp=None, key=None, reverse=False):
+    def sort(self, *args, **kwargs):
         """ sort(cmp=None, key=None, reverse=False) -- inplace sort
             cmp(x, y) -> -1, 0, 1
 
+            Note, that 'cmp' argument, not available for python 3
+
             :return: self
         """
-        self._records.sort(cmp=cmp, key=key, reverse=reverse)
+        self._records.sort(*args, **kwargs)
         return self
 
     def copy(self, context=None, new_cache=False):
