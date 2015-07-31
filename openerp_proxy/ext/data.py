@@ -105,7 +105,7 @@ class ObjectData(ObjectRecords):
         result = {}
         sub_domain = group_rules.pop('__sub_domain', [])
         for key, value in group_rules.iteritems():
-            if isinstance(value, (list, tuple)):  # If value is domain
+            if isinstance(value, collections.Iterable):  # If value is domain
                 domain = sub_domain + value
                 result[key] = self.search_records(domain, count=count)
             elif isinstance(value, dict):  # if value is subgroup of domains

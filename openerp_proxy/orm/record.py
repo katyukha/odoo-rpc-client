@@ -256,7 +256,7 @@ def get_record_list(obj, ids=None, fields=None, cache=None, context=None):
     return RecordListMeta.get_object(obj, ids, fields=fields, cache=cache, context=context)
 
 
-class RecordList(six.with_metaclass(RecordListMeta), collections.MutableSequence):
+class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence)):
     """Class to hold list of records with some extra functionality
 
         :param obj: instance of Object to make this list related to
@@ -526,7 +526,7 @@ class RecordRelations(Record):
         if name not in self._related_objects or not cached:
             if rel_data:
                 # Do not forged about relations in form [id, name]
-                rel_id = rel_data[0] if isinstance(rel_data, (list, tuple)) else rel_data
+                rel_id = rel_data[0] if isinstance(rel_data, collections.Iterable) else rel_data
 
                 rel_obj = self._service.get_obj(self._columns_info[name]['relation'])
                 self._related_objects[name] = get_record(rel_obj, rel_id, cache=self._cache, context=self.context)
@@ -668,7 +668,7 @@ class ObjectRecords(Object):
             if fields is not None:
                 record.read(fields)  # read specified fields
             return record
-        if isinstance(ids, (list, tuple)):
+        if isinstance(ids, collections.Iterable):
             return get_record_list(self, ids, fields=fields, context=context)
 
         raise ValueError("Wrong type for ids argument: %s" % type(ids))

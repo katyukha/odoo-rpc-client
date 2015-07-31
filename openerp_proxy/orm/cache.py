@@ -70,7 +70,7 @@ class ObjectCache(dict):
 
             if isinstance(value, numbers.Integral):
                 rcache[value]  # internal dict {'id': key} will be created by default (see ObjectCache)
-            elif isinstance(value, (list, tuple)):
+            elif isinstance(value, collections.Iterable):
                 rcache[value[0]]['__name_get_result'] = value[1]
         elif value and ftype in ('many2many', 'one2many'):
             rcache = self._root_cache[self._object.columns_info[field_name]['relation']]

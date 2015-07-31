@@ -9,8 +9,9 @@ try:
 except ImportError:
     import mock
 
-
 import numbers
+import collections
+
 
 class Test_20_Object(BaseTestCase):
 
@@ -214,6 +215,10 @@ class Test_22_RecordList(BaseTestCase):
         self.assertEqual(self.recordlist.length, len(self.obj_ids))
         self.assertEqual(len(self.recordlist), len(self.obj_ids))
 
+    def test_recods(self):
+        self.assertIsInstance(self.recordlist.records, list)
+        self.assertIsInstance(self.recordlist.records[0], Record)
+
     def test_getitem(self):
         id1 = self.obj_ids[0]
         id2 = self.obj_ids[-1]
@@ -234,6 +239,33 @@ class Test_22_RecordList(BaseTestCase):
         with self.assertRaises(IndexError):
             self.recordlist[100]
 
+    def test_delitem(self):
+        r = self.recordlist[5]
+        self.assertEqual(len(self.recordlist), 10)
+
+        del self.recordlist[5]
+
+        self.assertEqual(len(self.recordlist), 9)
+        self.assertNotIn(r, self.recordlist)
+
+    def test_setitem(self):
+        rec = self.object.search_records([('id', 'not in', self.recordlist.ids)], limit=1)[0]
+
+        old_rec = self.recordlist[8]
+
+        self.assertEqual(len(self.recordlist), 10)
+        self.assertNotIn(rec, self.recordlist)
+        self.assertIn(old_rec, self.recordlist)
+
+        self.recordlist[8] = rec
+
+        self.assertEqual(len(self.recordlist), 10)
+        self.assertIn(rec, self.recordlist)
+        self.assertNotIn(old_rec, self.recordlist)
+
+        with self.assertRaises(ValueError):
+            self.recordlist[5] = 25
+
     def test_contains(self):
         rid = self.obj_ids[0]
         rec = self.object.read_records(rid)
@@ -249,19 +281,132 @@ class Test_22_RecordList(BaseTestCase):
 
         self.assertNotIn(None, self.recordlist)
 
-    def test_prefetch(self):
-        # check that cache is only filled with ids
-        self.assertEqual(len(self.recordlist._lcache), self.recordlist.length)
-        for record in self.recordlist:
-            self.assertEqual(len(record._data), 1)
-            self.assertEqual(record._data.keys(), ['id'])
+    def test_insert_record(self):
+        rec = self.object.search_records([('id', 'not in', self.recordlist.ids)], limit=1)[0]
 
-        # prefetch
+        self.assertEqual(len(self.recordlist), 10)
+        self.assertNotIn(rec, self.recordlist)
+
+        self.recordlist.insert(1, rec)
+
+        self.assertEqual(len(self.recordlist), 11)
+        self.assertIn(rec, self.recordlist)
+        self.assertEqual(self.recordlist[1], rec)
+
+    def test_insert_by_id(self):
+        rec = self.object.search_records([('id', 'not in', self.recordlist.ids)], limit=1)[0]
+
+        self.assertEqual(len(self.recordlist), 10)
+        self.assertNotIn(rec, self.recordlist)
+
+        self.recordlist.insert(1, rec.id)
+
+        self.assertEqual(len(self.recordlist), 11)
+        self.assertIn(rec, self.recordlist)
+        self.assertEqual(self.recordlist[1], rec)
+
+    def test_insert_bad_value(self):
+        rec = self.object.search_records([('id', 'not in', self.recordlist.ids)], limit=1)[0]
+
+        self.assertEqual(len(self.recordlist), 10)
+        self.assertNotIn(rec, self.recordlist)
+
+        with self.assertRaises(AssertionError):
+            self.recordlist.insert(1, "some strange type")
+
+    def test_prefetch(self):
+        cache = self.recordlist._cache
+        lcache = self.recordlist._lcache
+
+        # check that cache is only filled with ids
+        self.assertEqual(len(lcache), self.recordlist.length)
+        for record in self.recordlist:
+            # Note that record._data is a property, which means
+            # record._lcache[record.id]. _data property is dictionary.
+            self.assertEqual(len(record._data), 1)
+            self.assertItemsEqual(list(record._data), ['id'])
+
+        # prefetch normal field
         self.recordlist.prefetch('name')
 
         self.assertEqual(len(self.recordlist._lcache), self.recordlist.length)
         for record in self.recordlist:
             self.assertEqual(len(record._data), 2)
-            self.assertEqual(record._data.keys(), ['id', 'name'])
+            self.assertItemsEqual(list(record._data), ['id', 'name'])
 
-        # TODO: test prefetch related
+        # check that cache contains only res.partner object cache
+        self.assertEqual(len(cache), 1)
+        self.assertIn('res.partner', cache)
+        self.assertNotIn('res.country', cache)
+
+        # prefetch related field name of caountry and country code
+        self.recordlist.prefetch('country_id.name', 'country_id.code')
+
+        # test that cache now contains two objects ('res.partner',
+        # 'res.country')
+        self.assertEqual(len(cache), 2)
+        self.assertIn('res.partner', cache)
+        self.assertIn('res.country', cache)
+
+        c_cache = cache['res.country']
+        country_checked = False  # if in some cases selected partners have no related countries, raise error
+        for record in self.recordlist:
+            # test that country_id field was added to partner's cache
+            self.assertEqual(len(record._data), 3)
+            self.assertItemsEqual(list(record._data), ['id', 'name', 'country_id'])
+
+            # if current partner have related country_id
+            #
+            # Note, here check 'country_id' via '_data' property to avoid lazy
+            # loading of data.
+            country_id = record._data['country_id']
+
+            # if data is in form [id, <name_get result>]
+            if isinstance(country_id, collections.Iterable):
+                country_id = country_id[0]
+                country_is_list = True
+
+            if country_id:
+                country_checked = True
+
+                # test, that there are some data for this country_id in country
+                # cache
+                self.assertIn(country_id, c_cache)
+
+                # Note that, in case, of related many2one fields, Odoo may
+                # return list, with Id and resutlt of name_get method.
+                # thus, we program will imediatly cache this value
+                if country_is_list:
+                    self.assertEqual(len(c_cache[country_id]), 4)
+                    self.assertItemsEqual(list(c_cache[country_id]), ['id', 'name', 'code', '__name_get_result'])
+                else:
+                    self.assertEqual(len(c_cache[country_id]), 4)
+                    self.assertItemsEqual(list(c_cache[country_id]), ['id', 'name', 'code', '__name_get_result'])
+
+        self.assertTrue(country_checked, "Country must be checked. may be there are wrong data in test database")
+
+    def test_sorting(self):
+        def to_names(rlist):
+            return [r.name for r in rlist]
+
+        names = to_names(self.recordlist)
+
+        self.assertSequenceEqual(sorted(names), to_names(sorted(self.recordlist, key=lambda x: x.name)))
+        self.assertSequenceEqual(sorted(names, reverse=True), to_names(sorted(self.recordlist, key=lambda x: x.name, reverse=True)))
+        self.assertSequenceEqual(list(reversed(names)), to_names(reversed(self.recordlist)))
+
+        # test recordlist sort methods
+        rlist = self.recordlist.copy()
+        rnames = names[:]  # copy list
+        rlist.sort(key=lambda x: x.name)   # inplace sort
+        rnames.sort()  # inplace sort
+        self.assertSequenceEqual(rnames, to_names(rlist))
+
+        # test recordlist reverse method
+        rlist = self.recordlist.copy()
+        rnames = names[:]  # copy list
+        rlist.reverse()    # inplace reverse
+        rnames.reverse()   # inplace reverse
+        self.assertSequenceEqual(rnames, to_names(rlist))
+
+

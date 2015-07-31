@@ -82,7 +82,7 @@ def get_service_class(name):
     return ServiceType.get_class(name, default=True)
 
 
-class ServiceBase(six.with_metaclass(ServiceType)):
+class ServiceBase(six.with_metaclass(ServiceType, object)):
     """ Base class for all Services
     """
 
