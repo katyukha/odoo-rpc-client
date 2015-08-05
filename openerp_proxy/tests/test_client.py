@@ -57,6 +57,12 @@ class Test_10_Client(BaseTestCase):
         with self.assertRaises(ValueError):
             Client.to_url('strange thing')
 
+    def test_55_str(self):
+        self.assertEqual(str(self.client), u"Client: %s" % self.client.get_url())
+
+    def test_55_repr(self):
+        self.assertEqual(repr(self.client), str(self.client))
+
     def test_60_plugins(self):
         self.assertIn('Test', self.client.plugins.registered_plugins)
         self.assertIn('Test', self.client.plugins)

@@ -391,8 +391,8 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence)
     # present in this RecordList
     def __getattr__(self, name):
         method = getattr(self.object, name)
-        res = wpartial(method, self.ids, context=self.context)
-        #setattr(self, name, res)  # commented because of __slots__
+        kwargs = {} if self.context is None else {'context': self.context}
+        res = wpartial(method, self.ids, **kwargs)
         return res
 
     def __str__(self):
@@ -482,7 +482,11 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence)
             :returns: list of IDs found
             :rtype: list of integers
         """
-        kwargs['context'] = self._new_context(kwargs.get('context', None))
+        ctx = self._new_context(kwargs.get('context', None))
+
+        if ctx is not None:
+            kwargs['context'] = ctx
+
         return self.object.search([('id', 'in', self.ids)] + domain, *args, **kwargs)
 
     def search_records(self, domain, *args, **kwargs):
@@ -491,7 +495,11 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence)
             :returns: RecordList of records found
             :rtype: RecordList instance
         """
-        kwargs['context'] = self._new_context(kwargs.get('context', None))
+        ctx = self._new_context(kwargs.get('context', None))
+
+        if ctx is not None:
+            kwargs['context'] = ctx
+
         return self.object.search_records([('id', 'in', self.ids)] + domain, *args, **kwargs)
 
     def read(self, fields=None, context=None):
@@ -501,7 +509,10 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence)
         kwargs = {}
         args = []
 
-        kwargs['context'] = self._new_context(kwargs.get('context', None))
+        ctx = self._new_context(kwargs.get('context', None))
+
+        if ctx is not None:
+            kwargs['context'] = ctx
 
         if fields is not None:
             args.append(fields)

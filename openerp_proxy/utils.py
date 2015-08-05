@@ -25,10 +25,7 @@ def wpartial(func, *args, **kwargs):
     """
     partial = functools.partial(func, *args, **kwargs)
 
-    @functools.wraps(func)
-    def wrapper(*a, **kw):
-        return partial(*a, **kw)
-    return wrapper
+    return functools.wraps(func)(partial)
 
 
 # Copied from OpenERP source ustr function

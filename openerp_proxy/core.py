@@ -46,6 +46,7 @@
     ... 'assigned'
 """
 
+import six
 
 # project imports
 from .connection import get_connector
@@ -73,7 +74,7 @@ __all__ = ('ERPProxyException', 'Client', 'ERP_Proxy')
 ERPProxyException = ClientException
 
 
-
+six.python_2_unicode_compatible
 class Client(Extensible):
     """
        A simple class to connect ot ERP via RPC (XML-RPC, JSON-RPC)
@@ -353,7 +354,9 @@ class Client(Extensible):
         self.services.object.clean_caches()
 
     def __str__(self):
-        return "Client: %s" % self.get_url()
-    __repr__ = __str__
+        return u"Client: %s" % self.get_url()
+
+    def __repr__(self):
+        return str(self)
 
 ERP_Proxy = Client

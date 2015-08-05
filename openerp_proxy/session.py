@@ -1,5 +1,4 @@
 import numbers
-import six
 import json
 import os.path
 import sys
@@ -11,6 +10,13 @@ from .core import Client
 
 
 __all__ = ('ERP_Session', 'Session', 'IPYSession')
+
+
+# Python 2/3 workaround in raw_input
+try:
+    xinput = raw_input
+except NameError:
+    xinput = input
 
 
 # TODO: completly refactor
@@ -273,9 +279,9 @@ class Session(object):
         if interactive:
             # ask user for connection data if not provided, if interactive set
             # to True
-            host = host or raw_input('Server Host: ')
-            dbname = dbname or raw_input('Database name: ')
-            user = user or raw_input('ERP Login: ')
+            host = host or xinput('Server Host: ')
+            dbname = dbname or xinput('Database name: ')
+            user = user or xinput('ERP Login: ')
             pwd = pwd or getpass("Password: ")
 
         url = Client.to_url(inst=None,
@@ -300,7 +306,7 @@ class Session(object):
             if self.option('store_passwords') and database._pwd:
                 from simplecrypt import encrypt
                 import base64
-                password = base64.encodestring(b'simplecrypt:' + base64.encodestring(encrypt(database.get_url(), database._pwd)))
+                password = base64.encodestring(b'simplecrypt:' + base64.encodestring(encrypt(database.get_url(), database._pwd))).decode('utf-8')
                 res.update({'password': password})
             return res
         elif isinstance(database, dict):
@@ -325,8 +331,10 @@ class Session(object):
             'options': self._options,
         }
 
-        with open(self.data_file, 'wt') as json_data:
-            json.dump(data, json_data, indent=4)
+        json_data = json.dumps(data, indent=4)
+
+        with open(self.data_file, 'wt') as json_file:
+            json_file.write(json_data)
 
     # Overridden to be able to access database like
     # session[url_or_index]

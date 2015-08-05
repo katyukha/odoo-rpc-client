@@ -82,6 +82,15 @@ class Test_20_Object(BaseTestCase):
         self.assertIsInstance(res, numbers.Integral)
         self.assertEqual(res, 1)
 
+        # test search_records with read_fields argument
+        res = self.object.search_records([], read_fields=['name', 'country_id'], limit=10)
+        self.assertIsInstance(res, RecordList)
+        self.assertEqual(res.length, 10)
+        self.assertEqual(len(res._lcache), res.length)
+        for record in res:
+            self.assertEqual(len(record._data), 3)
+            self.assertItemsEqual(list(record._data), ['id', 'name', 'country_id'])
+
     def test_read_records(self):
         # read one record
         res = self.object.read_records(1)
@@ -98,6 +107,11 @@ class Test_20_Object(BaseTestCase):
         with self.assertRaises(ValueError):
             self.object.read_records(None)
 
+        # Test read with specified fields
+        record = self.object.read_records(1, ['name', 'country_id'])
+        self.assertEqual(len(record._data), 3)
+        self.assertItemsEqual(list(record._data), ['id', 'name', 'country_id'])
+
     def test_browse(self):
         with mock.patch.object(self.object, 'read_records') as fake_read_records:
             self.object.browse(1)
@@ -110,6 +124,18 @@ class Test_20_Object(BaseTestCase):
         with mock.patch.object(self.object, 'read_records') as fake_read_records:
             self.object.browse(None)
             fake_read_records.assert_called_with(None)
+
+    def test_object_equal(self):
+        self.assertEqual(self.object, self.client['res.partner'])
+        self.assertIs(self.object, self.client['res.partner'])
+        self.assertNotEqual(self.object, self.client['res.users'])
+        self.assertIsNot(self.object, self.client['res.users'])
+
+    def test_str(self):
+        self.assertEqual(str(self.object), u"Object ('res.partner')")
+
+    def test_repr(self):
+        self.assertEqual(repr(self.object), str(self.object))
 
 
 class Test_21_Record(BaseTestCase):
@@ -133,6 +159,30 @@ class Test_21_Record(BaseTestCase):
 
         # test if normal mehtods avalilable in dir(object)
         #self.assertIn('refresh', dir(self.record))
+
+    def test_proxy_property(self):
+        self.assertIs(self.record._proxy, self.client)
+        self.assertIs(self.record._object.proxy, self.client)
+        self.assertIs(self.object.proxy, self.client)
+
+    def test_as_dict(self):
+        rdict = self.record.as_dict
+
+        self.assertIsInstance(rdict, dict)
+        self.assertIsNot(rdict, self.record._data)
+        self.assertItemsEqual(rdict, self.record._data)
+
+        # test that changes to rdict will not calue changes to record's data
+        rdict['new_key'] = 'new value'
+
+        self.assertIn('new_key', rdict)
+        self.assertNotIn('new_key', self.record._data)
+
+    def test_str(self):
+        self.assertEqual(str(self.record), u"R(res.partner, 1)[%s]" % (self.record.name_get()[0][1]))
+
+    def test_repr(self):
+        self.assertEqual(str(self.record), repr(self.record))
 
     def test_name_get(self):
         self.assertEqual(self.record._name, self.record.name_get()[0][1])
@@ -219,6 +269,12 @@ class Test_22_RecordList(BaseTestCase):
         self.assertIsInstance(self.recordlist.records, list)
         self.assertIsInstance(self.recordlist.records[0], Record)
 
+    def test_str(self):
+        self.assertEqual(str(self.recordlist), u"RecordList(res.partner): length=10")
+
+    def test_repr(self):
+        self.assertEqual(repr(self.recordlist), str(self.recordlist))
+
     def test_getitem(self):
         id1 = self.obj_ids[0]
         id2 = self.obj_ids[-1]
@@ -238,6 +294,14 @@ class Test_22_RecordList(BaseTestCase):
 
         with self.assertRaises(IndexError):
             self.recordlist[100]
+
+    def test_getattr(self):
+        with mock.patch.object(self.object, 'some_server_method') as fake_method:
+            # bug override in mock object (python 2.7)
+            if not getattr(fake_method, '__name__', False):
+                fake_method.__name__ = fake_method.name
+            self.recordlist.some_server_method('arg1', 'arg2')
+            fake_method.assert_called_with(self.recordlist.ids, 'arg1', 'arg2')
 
     def test_delitem(self):
         r = self.recordlist[5]
@@ -409,4 +473,22 @@ class Test_22_RecordList(BaseTestCase):
         rnames.reverse()   # inplace reverse
         self.assertSequenceEqual(rnames, to_names(rlist))
 
+    def test_search(self):
+        # TODO: test for context
+        with mock.patch.object(self.object, 'search') as fake_method:
+            self.recordlist.search([('id', '!=', 1)], limit=5)
+            fake_method.assert_called_with([('id', 'in', self.recordlist.ids), ('id', '!=', 1)], limit=5)
 
+    def test_search_records(self):
+        # TODO: test for context
+        with mock.patch.object(self.object, 'search_records') as fake_method:
+            self.recordlist.search_records([('id', '!=', 1)], limit=4)
+            fake_method.assert_called_with([('id', 'in', self.recordlist.ids), ('id', '!=', 1)], limit=4)
+
+    def test_read(self):
+        # TODO: test for context
+        #       or remove this test and method, because getattr pass context
+        #       too
+        with mock.patch.object(self.object, 'read') as fake_method:
+            self.recordlist.read(['name'])
+            fake_method.assert_called_with(self.recordlist.ids, ['name'])
