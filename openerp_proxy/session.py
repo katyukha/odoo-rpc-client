@@ -7,16 +7,12 @@ from getpass import getpass
 
 # project imports
 from .core import Client
+from .utils import (json_read,
+                    json_write,
+                    xinput)
 
 
 __all__ = ('ERP_Session', 'Session', 'IPYSession')
-
-
-# Python 2/3 workaround in raw_input
-try:
-    xinput = raw_input
-except NameError:
-    xinput = input
 
 
 # TODO: completly refactor
@@ -43,6 +39,7 @@ class Session(object):
         """
         """
         self.data_file = os.path.expanduser(data_file)
+
         self._databases = {}  # key: url; value: instance of DB or dict with init args
         self._db_aliases = {}  # key: aliase name; value: url
         self._options = {}
@@ -51,41 +48,39 @@ class Session(object):
         self._db_index_rev = {}  # key: url; value: index
         self._db_index_counter = 0
 
-        self._start_up_imports = []   # list of modules/packages to be imported at startup
-
-        self._extra_paths = set()
-
         if os.path.exists(self.data_file):
-            with open(self.data_file, 'rt') as json_data:
-                data = json.load(json_data)
+            data = json_read(self.data_file)
 
-                self._databases = data.get('databases', {})
-                self._db_aliases = data.get('aliases', {})
-                self._options = data.get('options', {})
+            self._databases = data.get('databases', {})
+            self._db_aliases = data.get('aliases', {})
+            self._options = data.get('options', {})
 
-                self._init_paths(data)
-                self._init_start_up_imports(data)
+            for path in self.extra_paths:
+                self.add_path(path)
 
-    def _init_start_up_imports(self, data):
-        """ Loads list of modules/packages names to be imported at start-up,
-            saved in previous session
+            for module in self.start_up_imports:
+                try:
+                    __import__(module)
+                except ImportError:
+                    # TODO: implement some logging
+                    pass
 
-            :param data: dictionary with data read from saved session file
+    @property
+    def extra_paths(self):
+        """ List of extra pyhton paths, used by this session
         """
-        self._start_up_imports += data.get('start_up_imports', [])
-        self._start_up_imports = list(set(self._start_up_imports))
-        for i in self._start_up_imports:
-            try:
-                __import__(i)
-            except ImportError:
-                # TODO: implement some logging
-                pass
+        return self.option('extra_paths', default=[])
 
-    def _init_paths(self, data):
-        """ This method initializes aditional python paths saved in session
+    @property
+    def start_up_imports(self):
+        """ List of start-up imports
+
+            If You want some module to be automaticaly imported on
+            when session starts, that just add it to this list::
+
+                session.start_up_imports.append('openerp_proxy.ext.sugar')
         """
-        for path in data.get('extra_paths', []):
-            self.add_path(path)
+        return self.option('start_up_imports', default=[])
 
     def add_path(self, path):
         """ Adds extra path to python import path.
@@ -96,11 +91,14 @@ class Session(object):
 
             Note: this way path will be saved in session
         """
+        # TODO: rewrite extrapaths logic with custom importers. It will be more
+        # pythonic
         if path not in sys.path:
             sys.path.append(path)
-        self._extra_paths.add(path)
+        if path not in self.extra_paths:
+            self.extra_paths.append(path)
 
-    def option(self, opt, val=None):
+    def option(self, opt, val=None, default=None):
         """ Get or set option.
             if *val* is passed, *val* will be set as value for option, else just option value
             will be returned
@@ -118,7 +116,9 @@ class Session(object):
         """
         if val is not None:
             self._options[opt] = val
-        return self._options.get(opt, None)
+        elif opt not in self._options and default is not None:
+            self._options[opt] = default
+        return self._options.get(opt, default)
 
     @property
     def aliases(self):
@@ -152,14 +152,17 @@ class Session(object):
 
             :return: unchanged val
         """
-        if val in self._databases:
-            self._db_aliases[name] = val
-        elif val in self.index:
-            self._db_aliases[name] = self.index[val]
-        elif isinstance(val, Client):
-            self._db_aliases[name] = val.get_url()
+        if isinstance(val, Client):
+            url = val.get_url()
+        elif isinstance(val, numbers.Integral) and val in self.index:
+            url = self.index[val]
         else:
-            raise ValueError("Bad value type")
+            url = val
+
+        if url in self._databases:
+            self._db_aliases[name] = url
+        else:
+            raise ValueError("Bad value type: %s" % val)
 
         return val
 
@@ -171,17 +174,6 @@ class Session(object):
             for url in self._databases.keys():
                 self._index_url(url)
         return dict(self._db_index)
-
-    @property
-    def start_up_imports(self):
-        """ List of start-up imports
-
-            If You want some module to be automaticaly imported on
-            when session starts, that just add it to this list::
-
-                session.start_up_imports.append('openerp_proxy.ext.sugar')
-        """
-        return self._start_up_imports
 
     def _index_url(self, url):
         """ Returns index of specified URL, or adds it to
@@ -195,19 +187,15 @@ class Session(object):
         self._db_index_rev[url] = self._db_index_counter
         return self._db_index_counter
 
-    def _add_db(self, url, db):
-        """ Add database to history
-        """
-        self._databases[url] = db
-        self._index_url(url)
-
     def add_db(self, db):
         """ Add db to session.
 
             param db: database (client instance) to be added to session
             type db: Client instance
         """
-        self._add_db(db.get_url(), db)
+        url = db.get_url()
+        self._databases[url] = db
+        self._index_url(url)
 
     def get_db(self, url_or_index, **kwargs):
         """ Returns instance of Client object, that represents single
@@ -281,7 +269,7 @@ class Session(object):
             # to True
             host = host or xinput('Server Host: ')
             dbname = dbname or xinput('Database name: ')
-            user = user or xinput('ERP Login: ')
+            user = user or xinput('Login: ')
             pwd = pwd or getpass("Password: ")
 
         url = Client.to_url(inst=None,
@@ -296,8 +284,8 @@ class Session(object):
             return db
 
         db = Client(host=host, dbname=dbname, user=user, pwd=pwd, port=port, protocol=protocol)
-        self._add_db(url, db)
-        db._no_save = no_save   # disalows saving database connection in session
+        self.add_db(db)
+        db._no_save = no_save   # if set to True, disalows saving database connection in session
         return db
 
     def _get_db_init_args(self, database):
@@ -325,16 +313,11 @@ class Session(object):
 
         data = {
             'databases': databases,
-            'extra_paths': list(self._extra_paths),
             'aliases': self._db_aliases,
-            'start_up_imports': self._start_up_imports,
             'options': self._options,
         }
 
-        json_data = json.dumps(data, indent=4)
-
-        with open(self.data_file, 'wt') as json_file:
-            json_file.write(json_data)
+        json_write(self.data_file, data, indent=4)
 
     # Overridden to be able to access database like
     # session[url_or_index]
@@ -358,7 +341,7 @@ class Session(object):
         return pprint.pformat(self.index)
 
     def __dir__(self):
-        res = dir(super(ERP_Session, self))
+        res = dir(super(Session, self))
         res += self.aliases.keys()
         return res
 

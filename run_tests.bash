@@ -9,7 +9,7 @@ function test_it {
     (cd $SCRIPTPATH && \
                 virtualenv venv_test -p python${py_version} && \
                 source ./venv_test/bin/activate && \
-                pip install --upgrade pip setuptools coverage mock pudb ipython && \
+                pip install --upgrade pip setuptools coverage mock pudb ipython simple-crypt && \
                 python setup.py develop && \
                 rm -f .coverage && \
                 coverage run --source openerp_proxy -m unittest -v openerp_proxy.tests.all && \

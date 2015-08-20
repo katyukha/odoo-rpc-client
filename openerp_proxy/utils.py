@@ -1,8 +1,15 @@
 import six
 import sys
+import json
 import functools
 
 __all__ = ('ustr', 'AttrDict', 'wpartial')
+
+# Python 2/3 workaround in raw_input
+try:
+    xinput = raw_input
+except NameError:
+    xinput = input
 
 
 def r_eval(code):
@@ -16,6 +23,27 @@ def r_eval(code):
             'rec': record,
             'record': record})
     return r_eval_internal
+
+
+def json_read(file_path):
+    """ Read specified json file
+    """
+    with open(file_path, 'rt') as json_data:
+        data = json.load(json_data)
+    return data
+
+
+def json_write(file_path, *args, **kwargs):
+    """ Write data to specified json file
+
+        Note, this function uses dumps function to convert data to json first,
+        and write only if conversion is successfule. This allows to avoid loss of data
+        when rewriting file.
+    """
+    json_data = json.dumps(*args, **kwargs)
+
+    with open(file_path, 'wt') as json_file:
+        json_file.write(json_data)
 
 
 def wpartial(func, *args, **kwargs):

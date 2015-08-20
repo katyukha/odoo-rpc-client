@@ -74,7 +74,7 @@ __all__ = ('ERPProxyException', 'Client', 'ERP_Proxy')
 ERPProxyException = ClientException
 
 
-six.python_2_unicode_compatible
+@six.python_2_unicode_compatible
 class Client(Extensible):
     """
        A simple class to connect ot ERP via RPC (XML-RPC, JSON-RPC)
@@ -358,5 +358,11 @@ class Client(Extensible):
 
     def __repr__(self):
         return str(self)
+
+    def __eq__(self, other):
+        if isinstance(other, Client):
+            return self.get_url() == other.get_url()
+        else:
+            return False
 
 ERP_Proxy = Client
