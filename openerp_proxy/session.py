@@ -1,5 +1,4 @@
 import numbers
-import json
 import os.path
 import sys
 import pprint
@@ -264,7 +263,7 @@ class Session(object):
             :param bool no_save: if set to True database will not be saved to session
             :return: Client object
         """
-        if interactive:
+        if interactive:  # pragma: no cover
             # ask user for connection data if not provided, if interactive set
             # to True
             host = host or xinput('Server Host: ')

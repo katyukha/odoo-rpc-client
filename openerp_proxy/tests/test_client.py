@@ -73,6 +73,7 @@ class Test_10_Client(BaseTestCase):
 
         # check plugin's method result
         self.assertEqual(self.client.get_url(), self.client.plugins.Test.test())
+        self.assertEqual(repr(self.client.plugins.Test), 'openerp_proxy.plugin.Plugin:Test')
 
     def test_62_plugins_wrong_name(self):
         self.assertNotIn('Test_Bad', self.client.plugins.registered_plugins)

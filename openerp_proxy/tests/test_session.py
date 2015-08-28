@@ -1,9 +1,6 @@
 from . import BaseTestCase
 from openerp_proxy.core import Client
 from openerp_proxy.session import Session
-from openerp_proxy.orm.record import Record
-from openerp_proxy.orm.record import RecordList
-from openerp_proxy.exceptions import ConnectorError
 
 try:
     import unittest.mock as mock
@@ -13,11 +10,9 @@ except ImportError:
 import sys
 import os
 import os.path
-import numbers
-import collections
 
 
-class Test_30_Session(BaseTestCase):
+class Test_90_Session(BaseTestCase):
 
     def setUp(self):
         super(self.__class__, self).setUp()
@@ -105,6 +100,13 @@ class Test_30_Session(BaseTestCase):
         self.assertIsNot(session[1], cl)
         self.assertEqual(session[cl.get_url()], cl)
         self.assertEqual(session[1], cl)
+        del session
+
+        # test situation when session just started and saved, without changes
+        # this code is aimed mostly to increase test coverage. In this case in
+        # ._databases all values will be dict when saveing
+        session = Session(self._session_file_path)
+        session.save()
 
     def test_20_connect_save_connect_no_save(self):
         session = Session(self._session_file_path)
@@ -182,6 +184,7 @@ class Test_30_Session(BaseTestCase):
 
         self.assertIs(session.cl1, session.cl2)
         self.assertIs(session.cl1, session.cl3)
+        self.assertIn('cl1', dir(session))
 
         # save the session
         session.save()
@@ -199,3 +202,8 @@ class Test_30_Session(BaseTestCase):
 
         self.assertIs(session.cl1, session.cl2)
         self.assertIs(session.cl1, session.cl3)
+
+        with self.assertRaises(AttributeError):
+            session.unexistent_aliase
+
+        self.assertIn('cl1', dir(session))
