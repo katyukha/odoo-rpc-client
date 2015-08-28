@@ -236,7 +236,7 @@ class Session(object):
                 crypter, password = base64.decodestring(ep_args.pop('password').encode('utf8')).split(b':')
                 ep_args['pwd'] = decrypt(Client.to_url(ep_args), base64.decodestring(password))
             else:
-                ep_args['pwd'] = getpass('Password: ')
+                ep_args['pwd'] = getpass('Password: ')  # pragma: no cover
 
         db = Client(**ep_args)
         self.add_db(db)

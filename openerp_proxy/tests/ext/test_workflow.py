@@ -59,7 +59,7 @@ class Test_32_ExtWorkFlow(BaseTestCase):
         # get first avalable transition with signal
         trans = [t for t in act.out_transitions if t.signal]
         if not trans:
-            raise unittest.SkipError("There is no avalable transitions in first sale order to test workflow")
+            raise unittest.SkipTest("There is no avalable transitions in first sale order to test workflow")
         trans = trans[0]
 
         # send signal

@@ -429,7 +429,7 @@ class HTMLRecord(Record):
 
         if not fields:
             fields = sorted((HField(col_name, name=col_data['string'])
-                             for col_name, col_data in self._columns_info.iteritems()
+                             for col_name, col_data in self._columns_info.items()
                              if col_name in self._object.simple_fields),
                             key=lambda x: _(x))
             self.read()
@@ -528,7 +528,7 @@ class ColInfo(AttrDict):
         """
         fields = self.default_fields if fields is None else fields
         info_struct = [{'name': key,
-                        'info': val} for key, val in self.iteritems()]
+                        'info': val} for key, val in self.items()]
         info_struct.sort(key=lambda x: x['name'])
         return HTMLTable(info_struct, fields, caption=u'Fields for %s' % _(self._object.name))
 

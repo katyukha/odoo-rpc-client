@@ -578,7 +578,7 @@ class RecordRelations(Record):
         rel_objects = self._related_objects
         self._related_objects = {}
 
-        for rel in rel_objects.itervalues():
+        for rel in rel_objects.values():
             if isinstance(rel, (Record, RecordList)):
                 rel.refresh()  # both, Record and RecordList objects have 'refresh* method
         return self
