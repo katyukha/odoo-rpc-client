@@ -1,4 +1,5 @@
 master:
+    - Experimental Python 3 support
     - Added ``HField.with_args`` method.
     - Added basic implementation of graph plugin.
     - Improved ``openerp_proxy.ext.log_execute_console`` extension. Added timing.

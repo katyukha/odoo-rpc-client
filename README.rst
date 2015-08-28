@@ -28,6 +28,7 @@ OpenERP internal code to perform operations on **OpenERP** / **Odoo** objects hi
 Features
 ~~~~~~~~
 
+-  Experimental *Python 3* support
 -  supports call to all public methods on any OpenERP/Odoo object including:
    *read*, *search*, *write*, *unlink* and others
 -  Have *a lot of speed optimizations* (especialy for situation, where required processing of
@@ -59,10 +60,10 @@ Features
 -  Missed feature? ask in `Project Issues <https://github.com/katyukha/openerp-proxy/issues>`_
 
 
-Constraints
-~~~~~~~~~~~
+Requirements
+~~~~~~~~~~~~
 
-For High level functionality Odoo server must be of version 6.1 or higher
+Odoo version >= 6.1 for high level functionality
 
 
 Examples
@@ -76,8 +77,8 @@ What You can do with this
 
 -  Quickly read and analyze some data that is not visible in interface
    without access to DB
--  Use this project as library for code that need to access OpenERP data
--  Use in scripts that migrates OpenERP data (after, for example, adding
+-  Use this project as library for code that need to access Odoo data
+-  Use in scripts that migrates Odoo data (after, for example, adding
    new functionality or changing old). (Migration using only SQL is bad
    idea because of functional fields with *store=True* which must be
    recalculated).
@@ -152,11 +153,11 @@ So here is a way to create connection
 
 ::
 
-    import openerp_proxy.core as oe_core
-    db = oe_core.Client(dbname='my_db',
-                           host='my_host.int',
-                           user='my_db_user',
-                           pwd='my_password here')
+    from openerp_proxy.core import Client
+    db = Client(host='my_host.int',
+                dbname='my_db',
+                user='my_db_user',
+                pwd='my_password here')
 
 And next all there same, no more differences betwen shell and lib usage.
 
@@ -169,8 +170,6 @@ object and *openerp_proxy.ext.repr* extension.
 So in first cell of notebook import session and extensions/plugins You want::
 
     from openerp_proxy.session import IPYSession as Session  # Use IPython-itegrated session class
-    import openerp_proxy.ext.repr              # Enable representation extension. This provides HTML representation of objects
-    from openerp_proxy.ext.repr import HField  # Used in .as_html_table method of RecordList
 
     # also You may import all standard extensions in one line:
     from openerp_proxy.ext.all import *
@@ -186,9 +185,10 @@ To solve this, it is recommended to uses *store_passwords* option::
     session.option('store_passwords', True)
     session.save()
 
-In this way, only when You connect first time, You need to explicitly pass password to *connect* of *get_db* methods.
+Next use it likt shell (or like lib), but *do not forget to save session, after new connection*
 
-(*do not forget to save session, after new connection*)
+*Note*: in old version of IPython getpass was not work correctly,
+so maybe You will need to pass password directly to *session.connect* method.
 
 
 General usage
@@ -348,7 +348,7 @@ So let's start
    
    ``vim attendance.py``
 
-3. write folowing code there (note that this example works and tested for Odoo version 6.0)
+3. write folowing code there (note that this example works and tested for Odoo version 6.0 only)
 
     ::
 

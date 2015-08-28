@@ -50,28 +50,17 @@ import six
 
 # project imports
 from .connection import get_connector
-from .exceptions import (Error,
-                         ClientException,
-                         LoginException)
+from .exceptions import LoginException
 from .service import ServiceManager
 from .plugin import PluginManager
 
-
-# Activate orm internal logic
-# TODO: think about not enabling it by default, allowing users to choose what
-# thay woudld like to use. Or simply create two entry points (one with all
-# enabled by default and another with only basic stuff which may be useful for
-# libraries that would like to get speed instead of better usability
+# Enable ORM features
 from . import orm
 
 from extend_me import Extensible
 
 
-__all__ = ('ERPProxyException', 'Client', 'ERP_Proxy')
-
-
-# Backward compatability
-ERPProxyException = ClientException
+__all__ = ('Client')
 
 
 @six.python_2_unicode_compatible
@@ -364,5 +353,3 @@ class Client(Extensible):
             return self.get_url() == other.get_url()
         else:
             return False
-
-ERP_Proxy = Client

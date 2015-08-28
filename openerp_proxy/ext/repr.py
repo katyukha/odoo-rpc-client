@@ -7,6 +7,7 @@ used inside IPython notebook
 
 # TODO: rename to IPython or something like that
 
+import six
 import csv
 import tempfile
 
@@ -211,7 +212,7 @@ class HTMLTable(HTML):
         for field in fields:
             if isinstance(field, HField):
                 self._fields.append(field)
-            elif isinstance(field, basestring):
+            elif isinstance(field, six.string_types):
                 self._fields.append(HField(field))
             elif callable(field):
                 self._fields.append(HField(field))
@@ -435,7 +436,7 @@ class HTMLRecord(Record):
             self.read()
         else:
             # TODO: implement in better way this prefetching
-            read_fields = (f.split('.')[0] for f in fields if isinstance(f, basestring) and f.split('.')[0] in self._columns_info)
+            read_fields = (f.split('.')[0] for f in fields if isinstance(f, six.string_types) and f.split('.')[0] in self._columns_info)
             prefetch_fields = [f for f in read_fields if f not in self._data]
             self.read(prefetch_fields)
 
@@ -443,7 +444,7 @@ class HTMLRecord(Record):
         for field in fields:
             if isinstance(field, HField):
                 parsed_fields.append(field)
-            elif isinstance(field, basestring):
+            elif isinstance(field, six.string_types):
                 parsed_fields.append(HField(field))
             else:
                 raise TypeError("Bad type of field %s" % repr(field))

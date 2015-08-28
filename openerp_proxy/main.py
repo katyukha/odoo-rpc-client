@@ -52,7 +52,6 @@ def main():
     header = HELP_HEADER % {'databases': header_databases, 'aliases': header_aliases}
 
     _locals = {
-        'ERP_Proxy': Client,
         'Client': Client,
         'session': session,
     }

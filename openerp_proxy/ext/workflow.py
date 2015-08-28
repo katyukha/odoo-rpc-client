@@ -6,6 +6,7 @@ Also it provides simple methods to easily send workflow signals
 to records from Object and Record interfaces.
 """
 import numbers
+import six
 from openerp_proxy.orm.record import Record
 from openerp_proxy.orm.record import ObjectRecords
 from openerp_proxy.exceptions import ObjectException
@@ -43,7 +44,7 @@ class ObjectWorkflow(ObjectRecords):
         """ Triggers specified signal for object's workflow
         """
         assert isinstance(obj_id, numbers.Integral), "obj_id must be integer"
-        assert isinstance(signal, basestring), "signal must be string"
+        assert isinstance(signal, six.string_types), "signal must be string"
         return self.service.execute_wkf(self.name, signal, obj_id)
 
 

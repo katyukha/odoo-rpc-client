@@ -5,6 +5,7 @@ from openerp_proxy.orm.record import ObjectRecords
 from openerp_proxy.orm.record import RecordList, get_record_list
 import collections
 import functools
+import six
 
 
 __all__ = ('ObjectData', 'RecordListData')
@@ -46,7 +47,7 @@ class RecordListData(RecordList):
                                      cache=self._cache)
         res = collections.defaultdict(cls_init)
         for record in self.records:
-            if isinstance(grouper, basestring):
+            if isinstance(grouper, six.string_types):
                 key = record[grouper]
             elif callable(grouper):
                 key = grouper(record)

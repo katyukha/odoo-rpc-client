@@ -4,7 +4,6 @@ Provides some syntax sugar to ease acces to objects, records, etc
 """
 
 import numbers
-import collections
 
 from openerp_proxy.orm.record import ObjectRecords
 from openerp_proxy.orm.record import get_record_list
