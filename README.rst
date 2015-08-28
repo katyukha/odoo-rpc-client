@@ -28,7 +28,7 @@ OpenERP internal code to perform operations on **OpenERP** / **Odoo** objects hi
 Features
 ~~~~~~~~
 
--  Experimental *Python 3* support
+-  Experimental *Python 3.3+* support
 -  supports call to all public methods on any OpenERP/Odoo object including:
    *read*, *search*, *write*, *unlink* and others
 -  Have *a lot of speed optimizations* (especialy for situation, where required processing of

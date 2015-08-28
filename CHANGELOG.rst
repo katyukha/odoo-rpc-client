@@ -1,5 +1,11 @@
 master:
-    - Experimental Python 3 support
+    - *Backward incompatible*: Changed session file format.
+      *Start up imports* and *extra_paths* moved to *options* section of file.
+    - *Backward incompatible*: Changed signature of ``Session.connect()`` method.
+    - *Backward incompatible*: Renamed ``ERP_Proxy`` to ``Client`` and inherited objects renamed in such way
+      (for example sugar extension module)
+
+    - Experimental *Python 3.3+* support
     - Added ``HField.with_args`` method.
     - Added basic implementation of graph plugin.
     - Improved ``openerp_proxy.ext.log_execute_console`` extension. Added timing.
@@ -7,12 +13,9 @@ master:
     - RecordList prefetching logic moved to cache module and highly refactored
       (Added support of prefetching of related fields)
     - Added ``Client.login(dbname, user, password)`` method.
-    - Changed signature of ``Session.connect()`` method.
     - Added ``HTMLTable.update`` method.
     - Added ``RecordList.copy()`` and ``RecordList.existing()`` methods.
     - Added ``HTMLTable.to_csv()`` method.
-    - Renamed ``ERP_Proxy`` to ``Client`` and inherited objects renamed in such way
-      (for example sugar extension module)
     - Added ``Client.server_version`` property
     - Client parametrs (dbname, user, pwd) now are not required.
       This is useful when working with ``db`` service (``client.services.db``)
