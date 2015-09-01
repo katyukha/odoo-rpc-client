@@ -1,7 +1,6 @@
 """ Just imports of all extensions
 """
 
-import openerp_proxy.ext.data
 import openerp_proxy.ext.field_datetime
 import openerp_proxy.ext.sugar
 import openerp_proxy.ext.workflow

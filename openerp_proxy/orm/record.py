@@ -5,9 +5,10 @@ from openerp_proxy.orm.cache import empty_cache
 from extend_me import ExtensibleType
 
 import six
-import collections
 import abc
 import numbers
+import functools
+import collections
 
 
 __all__ = (
@@ -421,6 +422,59 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence)
         """
         self._records.sort(*args, **kwargs)
         return self
+
+    def group_by(self, grouper):
+        """ Groups all records in list by specifed grouper.
+
+            :param grouper: field name or callable to group results by.
+                            if callable is passed, it should receive only
+                            one argument - record instance, and result of
+                            calling grouper will be used as key to group records by.
+            :type grouper: string|callable(record)
+
+            for example we have list of sale orders and want to group it by state::
+
+                # so_list - variable that contains list of sale orders selected
+                # by some criterias. so to group it by state we will do:
+                group = so_list.group_by('state')
+                for state, rlist in group.iteritems():  # Iterate over resulting dictionary
+                    print state, rlist.length           # Print state and amount of items with such state
+
+            or imagine that we would like to groupe records by last letter of sale order number::
+
+                # so_list - variable that contains list of sale orders selected
+                # by some criterias. so to group it by last letter of sale
+                # order name  we will do:
+                group = so_list.group_by(lambda so: so.name[-1])
+                for letter, rlist in group.iteritems():  # Iterate over resulting dictionary
+                    print letter, rlist.length           # Print state and amount of items with such state
+        """
+        cls_init = functools.partial(get_record_list,
+                                     self.object,
+                                     ids=[],
+                                     cache=self._cache)
+        res = collections.defaultdict(cls_init)
+        for record in self.records:
+            if isinstance(grouper, six.string_types):
+                key = record[grouper]
+            elif callable(grouper):
+                key = grouper(record)
+
+            res[key].append(record)
+        return res
+
+    def filter(self, func):
+        """ Filters items using *func*.
+
+            :param func: callable to check if record should be included in result.
+                         also *openerp_proxy.utils.r_eval* may be used
+            :type func: callable(record)->bool
+            :return: RecordList which contains records that matches results
+            :rtype: RecordList
+        """
+        return get_record_list(self.object,
+                               ids=[r.id for r in self.records if func(r)],
+                               cache=self._cache)
 
     def copy(self, context=None, new_cache=False):
         """ Returns copy of this list, possibly with modified context

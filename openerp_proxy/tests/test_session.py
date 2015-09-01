@@ -177,6 +177,9 @@ class Test_90_Session(BaseTestCase):
         res = session.aliase('cl3', cl.get_url())  # use url
         self.assertEqual(res, cl.get_url())
 
+        with self.assertRaises(ValueError):
+            session.aliase('cl4', 'bad url')
+
         self.assertIn('cl1', session.aliases)
         self.assertIs(session.get_db('cl1'), cl)
         self.assertIs(session['cl1'], cl)
@@ -194,6 +197,7 @@ class Test_90_Session(BaseTestCase):
         session = Session(self._session_file_path)
 
         # and test again
+        self.assertTrue(bool(session.index))
         self.assertEqual(len(session.aliases), 3)
         self.assertIn('cl1', session.aliases)
         self.assertEqual(session.get_db('cl1'), cl)

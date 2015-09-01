@@ -12,19 +12,6 @@ except NameError:
     xinput = input
 
 
-def r_eval(code):
-    """ Helper function to be used in filters or so
-        At this moment this function mostly suitable for extensions like
-        'openerp_proxy.ext.data' or 'openerp_proxy.ext.repr'
-    """
-    def r_eval_internal(record):
-        return eval(code, {
-            'r': record,
-            'rec': record,
-            'record': record})
-    return r_eval_internal
-
-
 def json_read(file_path):
     """ Read specified json file
     """
@@ -131,8 +118,6 @@ def ustr(value, hint_encoding='utf-8', errors='strict'):
 
 
 class AttrDict(dict):
-    # TODO: think about reimplementing it via self.__dict__ = self
-    #       (http://stackoverflow.com/questions/4984647/accessing-dict-keys-like-an-attribute-in-python)
     """ Simple class to make dictionary able to use attribute get operation
         to get elements it contains using syntax like:
 

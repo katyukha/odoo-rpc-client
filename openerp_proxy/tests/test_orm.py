@@ -243,6 +243,35 @@ class Test_21_Record(BaseTestCase):
         self.assertIsInstance(self.record.user_ids, RecordList)
         self.assertEqual(self.record.user_ids.length, 0)
 
+    def test_record_refresh(self):
+        # read all data for record
+        self.record.read()
+
+        # read company_id field
+        self.record.company_id.name
+
+        # check that data had been loaded
+        self.assertTrue(len(self.record._data.keys()) > 5)
+
+        # test before refresh
+        self.assertEqual(len(self.record._cache.keys()), 2)
+        self.assertIn('res.partner', self.record._cache)
+        self.assertIn('res.company', self.record._cache)
+        self.assertIn(len(list(self.record._cache['res.company'].values())[0]), [2, 3])
+        self.assertIn('name', list(self.record._cache['res.company'].values())[0])
+
+        # refresh record
+        self.record.refresh()
+
+        # test after refresh
+        self.assertEqual(len(self.record._data.keys()), 1)
+        self.assertItemsEqual(list(self.record._data), ['id'])
+        self.assertEqual(len(self.record._cache.keys()), 2)
+        self.assertIn('res.partner', self.record._cache)
+        self.assertIn('res.company', self.record._cache)
+        self.assertEqual(len(list(self.record._cache['res.company'].values())[0]), 1)
+        self.assertNotIn('name', list(self.record._cache['res.company'].values())[0])
+
 
 class Test_22_RecordList(BaseTestCase):
 
@@ -492,3 +521,17 @@ class Test_22_RecordList(BaseTestCase):
         with mock.patch.object(self.object, 'read') as fake_method:
             self.recordlist.read(['name'])
             fake_method.assert_called_with(self.recordlist.ids, ['name'])
+
+    def test_filter(self):
+        res = self.recordlist.filter(lambda x: x.id % 2 == 0)
+        expected_ids = [r.id for r in self.recordlist if r.id % 2 == 0]
+        self.assertIsInstance(res, RecordList)
+        self.assertEqual(res.ids, expected_ids)
+
+    def test_group_by(self):
+        res = self.recordlist.group_by(lambda x: x.id % 2 == 0)
+        self.assertIsInstance(res, collections.defaultdict)
+        self.assertItemsEqual(res.keys(), [True, False])
+        # TODO: write better test
+
+        res = self.recordlist.group_by('country_id')

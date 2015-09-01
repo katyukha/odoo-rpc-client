@@ -57,7 +57,7 @@ class Session(object):
             for path in self.extra_paths:
                 self.add_path(path)
 
-            for module in self.start_up_imports:
+            for module in self.start_up_imports:  # pragma: no cover
                 try:
                     __import__(module)
                 except ImportError:

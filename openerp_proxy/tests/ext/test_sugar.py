@@ -13,7 +13,7 @@ from openerp_proxy.orm.record import (Record,
 from openerp_proxy.orm.object import Object
 
 
-@unittest.skipUnless(os.environ.get('TEST_WITH_EXTENSIONS', False), 'requires tests enabled')
+@unittest.skipUnless(os.environ.get('TEST_WITH_EXTENSIONS', False), 'requires extensions enabled')
 class Test_31_ExtSugar(BaseTestCase):
     def setUp(self):
         super(Test_31_ExtSugar, self).setUp()
