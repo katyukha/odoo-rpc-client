@@ -13,7 +13,7 @@ class Service(ObjectService):
         self.__objects = {}   # cached objects
 
     def get_obj(self, object_name):
-        """ Returns wraper around OpenERP object 'object_name' which is instance of Object
+        """ Returns wraper around Odoo object 'object_name' which is instance of Object
 
             :param object_name: name of an object to get wraper for
             :type object_name: string

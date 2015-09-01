@@ -43,7 +43,7 @@ def wpartial(func, *args, **kwargs):
     return functools.wraps(func)(partial)
 
 
-# Copied from OpenERP source ustr function
+# Copied from Odoo source ustr function
 def get_encodings(hint_encoding='utf-8'):
     fallbacks = {
         'latin1': 'latin9',

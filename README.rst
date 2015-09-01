@@ -17,7 +17,7 @@ Overview
 This project is just **RPC client** for Odoo.
 It aims to ease access to openerp data via shell and used
 mostly for data debuging purposes. This project provides interface similar to
-OpenERP internal code to perform operations on **OpenERP** / **Odoo** objects hiding
+Odoo internal code to perform operations on **OpenERP** / **Odoo** objects hiding
 **XML-RPC** or **JSON-RPC** behind.
 
 
@@ -29,7 +29,7 @@ Features
 ~~~~~~~~
 
 -  Experimental *Python 3.3+* support
--  supports call to all public methods on any OpenERP/Odoo object including:
+-  supports call to all public methods on any OpenERP / Odoo object including:
    *read*, *search*, *write*, *unlink* and others
 -  Have *a lot of speed optimizations* (especialy for situation, where required processing of
    large datasets)
@@ -53,7 +53,7 @@ Features
 -  *Plugin Support*. Plugins here meant utils, which could store some aditional
    logic, to simplify routine operations.
    Accessible from ``db.plugins.<plugin_name>`` attribute.
--  Support of **JSON-RPC** for *version 8* of OpenERP/Odoo (***experimental***)
+-  Support of **JSON-RPC** for *version 8* of Odoo (***experimental***)
 -  Support of using **named parametrs** in RPC method calls (server version 6.1 and higher).
 -  *Sugar extension* which simplifys code a lot.
 
@@ -108,7 +108,7 @@ If You want to install development version of *OpenERP Proxy* you can do it via:
 
 
 Also if You plan to use this project as shell client, it is **recommended to install IPython**
-and If You  would like to have ability to play with Odoo / OpenERP data in IPython notebook,
+and If You  would like to have ability to play with Odoo data in IPython notebook,
 it is recommended to also install IPython's Notebook support. To install IPython and IPython Notebook
 just type::
 
@@ -128,14 +128,14 @@ And You will get the openerp_proxy shell. If *IPython* is installed then IPython
 will be used, else usual python shell will be used. There is in context exists
 *session* variable that represents current session to work with
 
-Next You have to get connection to some OpenERP/Odoo database.
+Next You have to get connection to some Odoo database.
 
 ::
 
     >>> db = session.connect()
 
 This will ask You for host, port, database, etc to connect to. Now You
-have connection to OpenERP database which allows You to use database
+have connection to Odoo database which allows You to use database
 objects.
 
 
@@ -169,10 +169,12 @@ To better suit for HTML capable notebook You would like to use IPython's version
 object and *openerp_proxy.ext.repr* extension.
 So in first cell of notebook import session and extensions/plugins You want::
 
-    from openerp_proxy.session import IPYSession as Session  # Use IPython-itegrated session class
-
     # also You may import all standard extensions in one line:
     from openerp_proxy.ext.all import *
+
+    # note that extensions were imported before session,
+    # because some of them modify Session class
+    from openerp_proxy.session import Session
 
     session = Session()
 
@@ -207,9 +209,9 @@ database:
 
 So we have 5 orders in done state. So let's read them.
 
-Default way to read data from OpenERP is to search for required records
+Default way to read data from Odoo is to search for required records
 with *search* method which return's list of IDs of records, then read
-data using *read* method. Both methods mostly same as OpenERP internal
+data using *read* method. Both methods mostly same as Odoo internal
 ones:
 
 ::

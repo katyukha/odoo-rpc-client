@@ -11,10 +11,9 @@ from .utils import (json_read,
                     xinput)
 
 
-__all__ = ('ERP_Session', 'Session', 'IPYSession')
+__all__ = ('Session',)
 
 
-# TODO: completly refactor
 class Session(object):
 
     """ Simple session manager which allows to manage databases easier
@@ -198,7 +197,7 @@ class Session(object):
 
     def get_db(self, url_or_index, **kwargs):
         """ Returns instance of Client object, that represents single
-            OpenERP database it connected to, specified by passed index (integer) or
+            Odoo database it connected to, specified by passed index (integer) or
             url (string) of database, previously saved in session.
 
             :param url_or_index: must be integer (if index) or string (if url). this parametr
@@ -343,42 +342,3 @@ class Session(object):
         res = dir(super(Session, self))
         res += self.aliases.keys()
         return res
-
-
-# For Backward compatability
-ERP_Session = Session
-
-
-# TODO: move to repr / ipython extension
-class IPYSession(Session):
-    def _repr_html_(self):
-        """ Provides HTML representation of session (Used for IPython)
-        """
-        from openerp_proxy.utils import ustr as _
-
-        def _get_data():
-            for url in self._databases.keys():
-                index = self._index_url(url)
-                aliases = (_(al) for al, aurl in self.aliases.items() if aurl == url)
-                yield (url, index, u", ".join(aliases))
-        ttable = u"<table style='display:inline-block'>%s</table>"
-        trow = u"<tr>%s</tr>"
-        tdata = u"<td>%s</td>"
-        caption = u"<caption>Previous connections</caption>"
-        hrow = u"<tr><th>DB URL</th><th>DB Index</th><th>DB Aliases</th></tr>"
-        help_text = (u"<div style='display:inline-block;vertical-align:top;margin-left:10px;'>"
-                     u"To get connection just call<br/> <ul>"
-                     u"<li>session.<b>aliase</b></li>"
-                     u"<li>session[<b>index</b>]</li>"
-                     u"<li>session[<b>aliase</b>]</li> "
-                     u"<li>session[<b>url</b>]</li>"
-                     u"<li>session.get_db(<b>url</b>|<b>index</b>|<b>aliase</b>)</li>"
-                     u"</ul></div>")
-
-        data = u""
-        for row in _get_data():
-            data += trow % (u''.join((tdata % i for i in row)))
-
-        table = ttable % (caption + hrow + data)
-
-        return u"<div>%s %s</div>" % (table, help_text)

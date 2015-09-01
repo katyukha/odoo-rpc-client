@@ -1,9 +1,13 @@
 master:
     - *Backward incompatible*: Changed session file format.
       *Start up imports* and *extra_paths* moved to *options* section of file.
+    - *Backward incompatible*: ``IPYSession`` moved to ``openerp_proxy.ext.repr`` extensions.
+      Now when using IPython notebook, this extension have to be imported first,
+      to enable HTML representation of session object
     - *Backward incompatible*: Changed signature of ``Session.connect()`` method.
     - *Backward incompatible*: Renamed ``ERP_Proxy`` to ``Client`` and inherited objects renamed in such way
       (for example sugar extension module)
+    - *Backward incompatible*: removed ``ERP_Proxy` and ``ERP_Session`` compatability aliases
 
     - Experimental *Python 3.3+* support
     - Added ``HField.with_args`` method.

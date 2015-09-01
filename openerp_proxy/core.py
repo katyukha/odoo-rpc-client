@@ -1,5 +1,5 @@
 # -*- coding: utf8 -*-
-""" This module provides some classes to simplify acces to OpenERP server via xmlrpc.
+""" This module provides some classes to simplify acces to Odoo server via xmlrpc.
     Some of these classes are may be not safe enough and should be used with carefully
 
     Example ussage of this module:
@@ -66,7 +66,7 @@ __all__ = ('Client')
 @six.python_2_unicode_compatible
 class Client(Extensible):
     """
-       A simple class to connect ot ERP via RPC (XML-RPC, JSON-RPC)
+       A simple class to connect to Odoo instance via RPC (XML-RPC, JSON-RPC)
        Should be initialized with following arguments:
 
        :param str host: server host name to connect to
@@ -84,7 +84,7 @@ class Client(Extensible):
            >>> cl = Client('host')
            >>> db2 = cl.login('dbname', 'user', 'password')
 
-       Allows access to ERP objects via dictionary syntax::
+       Allows access to Odoo objects / models via dictionary syntax::
 
            >>> db['sale.order']
                Object ('sale.order')
@@ -189,7 +189,7 @@ class Client(Extensible):
 
     @property
     def registered_objects(self):
-        """ Stores list of registered in ERP database objects
+        """ Stores list of registered in Odoo database objects
         """
         return self.services['object'].get_registered_objects()
 
@@ -280,7 +280,7 @@ class Client(Extensible):
         return result_wkf
 
     def get_obj(self, object_name):
-        """ Returns wraper around openERP object 'object_name' which is instance of Object
+        """ Returns wraper around Odoo object 'object_name' which is instance of Object
 
             :param object_name: name of an object to get wraper for
             :return: instance of Object which wraps choosen object

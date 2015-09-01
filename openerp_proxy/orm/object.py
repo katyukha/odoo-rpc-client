@@ -69,7 +69,7 @@ class Object(six.with_metaclass(ObjectType)):
 
     def __getattr__(self, name):
         def method_wrapper(object_name, method_name):
-            """ Wraper around ERP objects's methods.
+            """ Wraper around Odoo objects's methods.
 
                 for internal use.
                 It is used in Object class.
