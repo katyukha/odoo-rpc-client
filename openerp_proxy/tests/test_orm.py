@@ -542,7 +542,7 @@ class Test_22_RecordList(BaseTestCase):
         all_obj_ids = self.object.search([], limit=False)
 
         # generate 10 unexisting ids
-        unexistent_ids = range(max(all_obj_ids) + 1, max(all_obj_ids) + 40, 4)
+        unexistent_ids = list(range(max(all_obj_ids) + 1, max(all_obj_ids) + 40, 4))
         self.assertEqual(len(unexistent_ids), 10)
 
         # test simple existense
