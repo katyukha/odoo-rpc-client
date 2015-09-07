@@ -9,6 +9,9 @@ master:
       (for example sugar extension module)
     - *Backward incompatible*: removed ``ERP_Proxy` and ``ERP_Session`` compatability aliases
 
+    - Changed ``store_passwords`` option meaning. now if set it will store passwords bese64 encoded,
+      instead of using simple-crypt module. This change makes it faster to decode password,
+      because last-versions of simple-crypt become too slow. and usualy no encryption needed here.
     - Experimental *Python 3.3+* support
     - Added ``HField.with_args`` method.
     - Added basic implementation of graph plugin.

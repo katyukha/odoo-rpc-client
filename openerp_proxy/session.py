@@ -230,10 +230,13 @@ class Session(object):
 
         if 'pwd' not in ep_args:
             if self.option('store_passwords') and 'password' in ep_args:
-                from simplecrypt import decrypt
                 import base64
-                crypter, password = base64.decodestring(ep_args.pop('password').encode('utf8')).split(b':')
-                ep_args['pwd'] = decrypt(Client.to_url(ep_args), base64.decodestring(password))
+                crypter, password = base64.b64decode(ep_args.pop('password').encode('utf8')).split(b':')
+                if crypter == 'simplecrypt':
+                    import simplecrypt
+                    ep_args['pwd'] = simplecrypt.decrypt(Client.to_url(ep_args), base64.b64decode(password))
+                elif crypter == 'plain':
+                    ep_args['pwd'] = password.decode('utf-8')
             else:
                 ep_args['pwd'] = getpass('Password: ')  # pragma: no cover
 
@@ -290,9 +293,8 @@ class Session(object):
         if isinstance(database, Client):
             res = database.get_init_args()
             if self.option('store_passwords') and database._pwd:
-                from simplecrypt import encrypt
                 import base64
-                password = base64.encodestring(b'simplecrypt:' + base64.encodestring(encrypt(database.get_url(), database._pwd))).decode('utf-8')
+                password = base64.b64encode(b'plain:' + database._pwd.encode('utf-8')).decode('utf-8')
                 res.update({'password': password})
             return res
         elif isinstance(database, dict):
