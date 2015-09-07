@@ -55,10 +55,21 @@ Features
 -  Missed feature? ask in `Project Issues <https://github.com/katyukha/openerp-proxy/issues>`_
 
 
-Requirements
-~~~~~~~~~~~~
+Supported Python versions
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Odoo version >= 6.1 for high level functionality
+Support Python 2.7, 3.3, 3.4
+
+
+Supported Odoo server versions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tested with Odoo 7.0 and 8.0
+
+Also shoud work with Odoo 6.1 and 9.0
+
+Also it should work with Odoo version 6.0, except the things related to passing named parametrs
+to server methods, such as using context in ``openerp_proxy.orm`` package
 
 
 Examples
