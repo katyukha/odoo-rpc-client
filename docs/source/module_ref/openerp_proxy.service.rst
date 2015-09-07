@@ -8,6 +8,14 @@
     :undoc-members:
     :show-inheritance:
 
+:mod:`db` Module
+--------------------
+
+.. automodule:: openerp_proxy.service.db
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`object` Module
 --------------------
 

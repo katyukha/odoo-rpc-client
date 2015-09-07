@@ -8,14 +8,6 @@
     :undoc-members:
     :show-inheritance:
 
-:mod:`data` Module
-------------------
-
-.. automodule:: openerp_proxy.ext.data
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`sugar` Module
 -------------------
 

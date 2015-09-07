@@ -28,32 +28,27 @@ Odoo internal code to perform operations on **OpenERP** / **Odoo** objects hidin
 Features
 ~~~~~~~~
 
--  Experimental *Python 3.3+* support
--  supports call to all public methods on any OpenERP / Odoo object including:
+-  *Python 3.3+* support
+-  You can call any public method on any OpenERP / Odoo object including:
    *read*, *search*, *write*, *unlink* and others
--  Have *a lot of speed optimizations* (especialy for situation, where required processing of
-   large datasets)
+-  Have *a lot of speed optimizations* (caching, read only fields accessed,
+   read data for all records in current set, by one RPC call, etc)
 -  Desinged to take as more benefits of **IPython autocomplete** as posible
 -  Works nice in **IPython Notebook** providing **HTML
    representation** for a most of objects.
--  Ability to display set of records as **HTML Table**
-   including conditional **row highlighting**.
-   (Useful in IPython Notebook for *data-analysis*)
--  Ability to represent HTML table also as *CSV file*
--  Provides session/history functionality, so if You used it to connect to
-   some database before, new connection will be simpler (just enter password).
-   Version 0.5 and higher have ability to store passwords. just use
-   ``session.option('store_passwords', True); session.save()``
+-  Ability to export HTML table recordlist representation to *CSV file*
+-  Ability to save connections to different databases in session.
+   (By default password is not saved, and will be asked, but if You need to save it, just do this:
+   ``session.option('store_passwords', True); session.save()``)
 -  Provides *browse\_record* like interface, allowing to browse related
-   models too. Supports *browse* method. Adds method *search\_records* to simplify
+   models too. Supports *browse* method. Also adds method *search\_records* to simplify
    search-and-read operations.
 -  *Extension support*. You can easily modify most of components of this app/lib
-   creating Your own extensions. It is realy simple. See for examples in
+   creating Your own extensions and plugins. It is realy simple. See for examples in
    openerp_proxy/ext/ directory.
--  *Plugin Support*. Plugins here meant utils, which could store some aditional
-   logic, to simplify routine operations.
-   Accessible from ``db.plugins.<plugin_name>`` attribute.
--  Support of **JSON-RPC** for *version 8* of Odoo (***experimental***)
+-  *Plugin Support*. Plugins are same as extensions, but aimed to implement additional logic.
+   For example look at *openerp_proxy/plugins* and *openerp_proxy/plugin.py* 
+-  Support of **JSON-RPC** for *version 8+* of Odoo
 -  Support of using **named parametrs** in RPC method calls (server version 6.1 and higher).
 -  *Sugar extension* which simplifys code a lot.
 
@@ -70,26 +65,6 @@ Examples
 ~~~~~~~~
 
 -  `Examples & HTML tests <http://nbviewer.ipython.org/github/katyukha/openerp-proxy/blob/master/examples/Examples%20&%20HTML%20tests.ipynb>`_
-
-
-What You can do with this
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
--  Quickly read and analyze some data that is not visible in interface
-   without access to DB
--  Use this project as library for code that need to access Odoo data
--  Use in scripts that migrates Odoo data (after, for example, adding
-   new functionality or changing old). (Migration using only SQL is bad
-   idea because of functional fields with *store=True* which must be
-   recalculated).
-
-Near future plans
-~~~~~~~~~~~~~~~~~
-
--  Django-like search API implemented as extension
-    - Something like ``F`` or ``Q`` expressions from Django
-    - to make working constructions like:
-      ``object.filter((F('price') > 100.0) & (F('price') != F('Price2')))``
 
 
 Install

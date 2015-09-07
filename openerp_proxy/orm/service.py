@@ -1,6 +1,8 @@
 from openerp_proxy.service.object import ObjectService
 from openerp_proxy.orm.object import get_object
 
+__all__ = ('Service',)
+
 
 class Service(ObjectService):
     """ Service class to simplify interaction with 'object' service.

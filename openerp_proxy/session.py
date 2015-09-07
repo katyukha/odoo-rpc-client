@@ -3,6 +3,7 @@ import os.path
 import sys
 import pprint
 from getpass import getpass
+from extend_me import Extensible
 
 # project imports
 from .core import Client
@@ -14,7 +15,7 @@ from .utils import (json_read,
 __all__ = ('Session',)
 
 
-class Session(object):
+class Session(Extensible):
 
     """ Simple session manager which allows to manage databases easier
         This class stores information about databases You used in home

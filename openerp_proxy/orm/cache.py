@@ -2,7 +2,8 @@
 import six
 import numbers
 import collections
-__all__ = ('empty_cache')
+
+__all__ = ('empty_cache',)
 
 
 class ObjectCache(dict):

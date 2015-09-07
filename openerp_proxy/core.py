@@ -60,7 +60,7 @@ from . import orm
 from extend_me import Extensible
 
 
-__all__ = ('Client')
+__all__ = ('Client',)
 
 
 @six.python_2_unicode_compatible
