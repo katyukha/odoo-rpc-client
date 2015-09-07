@@ -1,17 +1,23 @@
 language: python
 python:
   - "2.7"
+  - "3.3"
+  - "3.4"
+#  - "3.5"
 
 env:
   - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='xml-rpc'
   - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='json-rpc'
   - ODOO_VERSION="7.0" ODOO_PACKAGE="openerp" ODOO_TEST_PROTOCOL='xml-rpc'
+  - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='xml-rpc' TEST_WITH_EXTENSIONS='openerp_proxy.ext.all'
+  - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='json-rpc' TEST_WITH_EXTENSIONS='openerp_proxy.ext.all'
+  - ODOO_VERSION="7.0" ODOO_PACKAGE="openerp" ODOO_TEST_PROTOCOL='xml-rpc' TEST_WITH_EXTENSIONS='openerp_proxy.ext.all'
 
 install:
   - "wget http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/${ODOO_PACKAGE}_${ODOO_VERSION}.latest_all.deb"
   - "sudo dpkg -i ${ODOO_PACKAGE}_${ODOO_VERSION}.latest_all.deb || true"
   - "sudo apt-get update && sudo apt-get install -f -y"
-  - "pip install coveralls"
+  - "pip install coveralls mock simple-crypt ipython[notebook]"
   - "python setup.py develop"
 
 before_script:

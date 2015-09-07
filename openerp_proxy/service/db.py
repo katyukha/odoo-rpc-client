@@ -30,7 +30,7 @@ class DBService(ServiceBase):
         from openerp_proxy.core import Client
 
         # requires server version >= 6.1
-        if self.server_version >= parse_version('6.1'):
+        if self.server_version() >= parse_version('6.1'):
             self.create_database(password, dbname, demo, lang, admin_password)
         else:  # for other server versions
             process_id = self.create(password, dbname, demo, lang, admin_password)
@@ -67,4 +67,4 @@ class DBService(ServiceBase):
 
             (Already parsed with pkg_resources.parse_version)
         """
-        return parse_version(super(DBService, self).server_version())
+        return parse_version(self._service.server_version())

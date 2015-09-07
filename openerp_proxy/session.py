@@ -1,18 +1,21 @@
-import json
+import numbers
 import os.path
 import sys
 import pprint
 from getpass import getpass
+from extend_me import Extensible
 
 # project imports
-from core import Client
+from .core import Client
+from .utils import (json_read,
+                    json_write,
+                    xinput)
 
 
-__all__ = ('ERP_Session', 'Session', 'IPYSession')
+__all__ = ('Session',)
 
 
-# TODO: completly refactor
-class Session(object):
+class Session(Extensible):
 
     """ Simple session manager which allows to manage databases easier
         This class stores information about databases You used in home
@@ -35,6 +38,7 @@ class Session(object):
         """
         """
         self.data_file = os.path.expanduser(data_file)
+
         self._databases = {}  # key: url; value: instance of DB or dict with init args
         self._db_aliases = {}  # key: aliase name; value: url
         self._options = {}
@@ -43,41 +47,39 @@ class Session(object):
         self._db_index_rev = {}  # key: url; value: index
         self._db_index_counter = 0
 
-        self._start_up_imports = []   # list of modules/packages to be imported at startup
-
-        self._extra_paths = set()
-
         if os.path.exists(self.data_file):
-            with open(self.data_file, 'rt') as json_data:
-                data = json.load(json_data)
+            data = json_read(self.data_file)
 
-                self._databases = data.get('databases', {})
-                self._db_aliases = data.get('aliases', {})
-                self._options = data.get('options', {})
+            self._databases = data.get('databases', {})
+            self._db_aliases = data.get('aliases', {})
+            self._options = data.get('options', {})
 
-                self._init_paths(data)
-                self._init_start_up_imports(data)
+            for path in self.extra_paths:
+                self.add_path(path)
 
-    def _init_start_up_imports(self, data):
-        """ Loads list of modules/packages names to be imported at start-up,
-            saved in previous session
+            for module in self.start_up_imports:  # pragma: no cover
+                try:
+                    __import__(module)
+                except ImportError:
+                    # TODO: implement some logging
+                    pass
 
-            :param data: dictionary with data read from saved session file
+    @property
+    def extra_paths(self):
+        """ List of extra pyhton paths, used by this session
         """
-        self._start_up_imports += data.get('start_up_imports', [])
-        self._start_up_imports = list(set(self._start_up_imports))
-        for i in self._start_up_imports:
-            try:
-                __import__(i)
-            except ImportError:
-                # TODO: implement some logging
-                pass
+        return self.option('extra_paths', default=[])
 
-    def _init_paths(self, data):
-        """ This method initializes aditional python paths saved in session
+    @property
+    def start_up_imports(self):
+        """ List of start-up imports
+
+            If You want some module to be automaticaly imported on
+            when session starts, that just add it to this list::
+
+                session.start_up_imports.append('openerp_proxy.ext.sugar')
         """
-        for path in data.get('extra_paths', []):
-            self.add_path(path)
+        return self.option('start_up_imports', default=[])
 
     def add_path(self, path):
         """ Adds extra path to python import path.
@@ -88,11 +90,14 @@ class Session(object):
 
             Note: this way path will be saved in session
         """
+        # TODO: rewrite extrapaths logic with custom importers. It will be more
+        # pythonic
         if path not in sys.path:
             sys.path.append(path)
-        self._extra_paths.add(path)
+        if path not in self.extra_paths:
+            self.extra_paths.append(path)
 
-    def option(self, opt, val=None):
+    def option(self, opt, val=None, default=None):
         """ Get or set option.
             if *val* is passed, *val* will be set as value for option, else just option value
             will be returned
@@ -110,7 +115,9 @@ class Session(object):
         """
         if val is not None:
             self._options[opt] = val
-        return self._options.get(opt, None)
+        elif opt not in self._options and default is not None:
+            self._options[opt] = default
+        return self._options.get(opt, default)
 
     @property
     def aliases(self):
@@ -144,14 +151,17 @@ class Session(object):
 
             :return: unchanged val
         """
-        if val in self._databases:
-            self._db_aliases[name] = val
-        elif val in self.index:
-            self._db_aliases[name] = self.index[val]
-        elif isinstance(val, Client):
-            self._db_aliases[name] = val.get_url()
+        if isinstance(val, Client):
+            url = val.get_url()
+        elif isinstance(val, numbers.Integral) and val in self.index:
+            url = self.index[val]
         else:
-            raise ValueError("Bad value type")
+            url = val
+
+        if url in self._databases:
+            self._db_aliases[name] = url
+        else:
+            raise ValueError("Bad value type: %s" % val)
 
         return val
 
@@ -163,17 +173,6 @@ class Session(object):
             for url in self._databases.keys():
                 self._index_url(url)
         return dict(self._db_index)
-
-    @property
-    def start_up_imports(self):
-        """ List of start-up imports
-
-            If You want some module to be automaticaly imported on
-            when session starts, that just add it to this list::
-
-                session.start_up_imports.append('openerp_proxy.ext.sugar')
-        """
-        return self._start_up_imports
 
     def _index_url(self, url):
         """ Returns index of specified URL, or adds it to
@@ -187,23 +186,19 @@ class Session(object):
         self._db_index_rev[url] = self._db_index_counter
         return self._db_index_counter
 
-    def _add_db(self, url, db):
-        """ Add database to history
-        """
-        self._databases[url] = db
-        self._index_url(url)
-
     def add_db(self, db):
         """ Add db to session.
 
             param db: database (client instance) to be added to session
             type db: Client instance
         """
-        self._add_db(db.get_url(), db)
+        url = db.get_url()
+        self._databases[url] = db
+        self._index_url(url)
 
     def get_db(self, url_or_index, **kwargs):
         """ Returns instance of Client object, that represents single
-            OpenERP database it connected to, specified by passed index (integer) or
+            Odoo database it connected to, specified by passed index (integer) or
             url (string) of database, previously saved in session.
 
             :param url_or_index: must be integer (if index) or string (if url). this parametr
@@ -219,7 +214,7 @@ class Session(object):
                 session.get_db('xml-rpc://katyukha@erp.jbm.int:8069/jbm0')  # using url
                 session.get_db('my_db')   # using aliase
         """
-        if isinstance(url_or_index, (int, long)):
+        if isinstance(url_or_index, numbers.Integral):
             url = self.index[url_or_index]
         else:
             url = self._db_aliases.get(url_or_index, url_or_index)
@@ -236,12 +231,15 @@ class Session(object):
 
         if 'pwd' not in ep_args:
             if self.option('store_passwords') and 'password' in ep_args:
-                from simplecrypt import decrypt
                 import base64
-                crypter, password = base64.decodestring(ep_args.pop('password')).split(':')
-                ep_args['pwd'] = decrypt(Client.to_url(ep_args), base64.decodestring(password))
+                crypter, password = base64.b64decode(ep_args.pop('password').encode('utf8')).split(b':')
+                if crypter == 'simplecrypt':
+                    import simplecrypt
+                    ep_args['pwd'] = simplecrypt.decrypt(Client.to_url(ep_args), base64.b64decode(password))
+                elif crypter == 'plain':
+                    ep_args['pwd'] = password.decode('utf-8')
             else:
-                ep_args['pwd'] = getpass('Password: ')
+                ep_args['pwd'] = getpass('Password: ')  # pragma: no cover
 
         db = Client(**ep_args)
         self.add_db(db)
@@ -268,12 +266,12 @@ class Session(object):
             :param bool no_save: if set to True database will not be saved to session
             :return: Client object
         """
-        if interactive:
+        if interactive:  # pragma: no cover
             # ask user for connection data if not provided, if interactive set
             # to True
-            host = host or raw_input('Server Host: ')
-            dbname = dbname or raw_input('Database name: ')
-            user = user or raw_input('ERP Login: ')
+            host = host or xinput('Server Host: ')
+            dbname = dbname or xinput('Database name: ')
+            user = user or xinput('Login: ')
             pwd = pwd or getpass("Password: ")
 
         url = Client.to_url(inst=None,
@@ -288,17 +286,16 @@ class Session(object):
             return db
 
         db = Client(host=host, dbname=dbname, user=user, pwd=pwd, port=port, protocol=protocol)
-        self._add_db(url, db)
-        db._no_save = no_save   # disalows saving database connection in session
+        self.add_db(db)
+        db._no_save = no_save   # if set to True, disalows saving database connection in session
         return db
 
     def _get_db_init_args(self, database):
         if isinstance(database, Client):
             res = database.get_init_args()
             if self.option('store_passwords') and database._pwd:
-                from simplecrypt import encrypt
                 import base64
-                password = base64.encodestring('simplecrypt:' + base64.encodestring(encrypt(database.get_url(), database._pwd)))
+                password = base64.b64encode(b'plain:' + database._pwd.encode('utf-8')).decode('utf-8')
                 res.update({'password': password})
             return res
         elif isinstance(database, dict):
@@ -310,21 +307,18 @@ class Session(object):
         """ Saves session on disc
         """
         databases = {}
-        for url, database in self._databases.iteritems():
+        for url, database in self._databases.items():
             if not getattr(database, '_no_save', False):
                 init_args = self._get_db_init_args(database)
                 databases[url] = init_args
 
         data = {
             'databases': databases,
-            'extra_paths': list(self._extra_paths),
             'aliases': self._db_aliases,
-            'start_up_imports': self._start_up_imports,
             'options': self._options,
         }
 
-        with open(self.data_file, 'wt') as json_data:
-            json.dump(data, json_data, indent=4)
+        json_write(self.data_file, data, indent=4)
 
     # Overridden to be able to access database like
     # session[url_or_index]
@@ -332,7 +326,7 @@ class Session(object):
         try:
             res = self.get_db(url_or_index)
         except ValueError as e:
-            raise KeyError(e.message)
+            raise KeyError(str(e))
         return res
 
     # Overriden to be able to access database like
@@ -341,52 +335,13 @@ class Session(object):
         try:
             res = self.get_db(name)
         except ValueError as e:
-            raise AttributeError(e.message)
+            raise AttributeError(str(e))
         return res
 
     def __str__(self):
         return pprint.pformat(self.index)
 
     def __dir__(self):
-        res = dir(super(ERP_Session, self))
+        res = dir(super(Session, self))
         res += self.aliases.keys()
         return res
-
-
-# For Backward compatability
-ERP_Session = Session
-
-
-# TODO: move to repr / ipython extension
-class IPYSession(Session):
-    def _repr_html_(self):
-        """ Provides HTML representation of session (Used for IPython)
-        """
-        from openerp_proxy.utils import ustr as _
-
-        def _get_data():
-            for url in self._databases.keys():
-                index = self._index_url(url)
-                aliases = (_(al) for al, aurl in self.aliases.items() if aurl == url)
-                yield (url, index, u", ".join(aliases))
-        ttable = u"<table style='display:inline-block'>%s</table>"
-        trow = u"<tr>%s</tr>"
-        tdata = u"<td>%s</td>"
-        caption = u"<caption>Previous connections</caption>"
-        hrow = u"<tr><th>DB URL</th><th>DB Index</th><th>DB Aliases</th></tr>"
-        help_text = (u"<div style='display:inline-block;vertical-align:top;margin-left:10px;'>"
-                     u"To get connection just call<br/> <ul>"
-                     u"<li>session.<b>aliase</b></li>"
-                     u"<li>session[<b>index</b>]</li>"
-                     u"<li>session[<b>aliase</b>]</li> "
-                     u"<li>session[<b>url</b>]</li>"
-                     u"<li>session.get_db(<b>url</b>|<b>index</b>|<b>aliase</b>)</li>"
-                     u"</ul></div>")
-
-        data = u""
-        for row in _get_data():
-            data += trow % (u''.join((tdata % i for i in row)))
-
-        table = ttable % (caption + hrow + data)
-
-        return u"<div>%s %s</div>" % (table, help_text)

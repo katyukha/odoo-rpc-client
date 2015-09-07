@@ -1,6 +1,9 @@
 #import openerp_proxy.orm.record
+import six
+import numbers
 import collections
-__all__ = ('empty_cache')
+
+__all__ = ('empty_cache',)
 
 
 class ObjectCache(dict):
@@ -32,7 +35,7 @@ class ObjectCache(dict):
             # and difference calls)
             self.update({cid: {'id': cid} for cid in keys})
         else:
-            self.update({cid: {'id': cid} for cid in set(keys).difference(self.viewkeys())})
+            self.update({cid: {'id': cid} for cid in set(keys).difference(six.viewkeys(self))})
         return self
 
     def update_context(self, new_context):
@@ -51,7 +54,7 @@ class ObjectCache(dict):
     def get_ids_to_read(self, field):
         """ Return list of ids, that have no specified field in cache
         """
-        return [key for key, val in self.viewitems() if field not in val]
+        return [key for key, val in six.viewitems(self) if field not in val]
 
     def cache_field(self, rid, ftype, field_name, value):
         """ This method impelment additional caching functionality,
@@ -66,9 +69,9 @@ class ObjectCache(dict):
         if value and ftype == 'many2one':
             rcache = self._root_cache[self._object.columns_info[field_name]['relation']]
 
-            if isinstance(value, (int, long)):
+            if isinstance(value, numbers.Integral):
                 rcache[value]  # internal dict {'id': key} will be created by default (see ObjectCache)
-            elif isinstance(value, (list, tuple)):
+            elif isinstance(value, collections.Iterable):
                 rcache[value[0]]['__name_get_result'] = value[1]
         elif value and ftype in ('many2many', 'one2many'):
             rcache = self._root_cache[self._object.columns_info[field_name]['relation']]
@@ -110,8 +113,8 @@ class ObjectCache(dict):
         to_prefetch, related = self.parse_prefetch_fields(fields)
 
         col_info = self._object.columns_info
-        for data in self._object.read(self.keys(), to_prefetch):
-            for field, value in data.iteritems():
+        for data in self._object.read(list(self), to_prefetch):
+            for field, value in data.items():
 
                 # Fill related cache
                 ftype = col_info.get(field, {}).get('type', None)
@@ -119,7 +122,7 @@ class ObjectCache(dict):
 
         if related:
             # TODO: think how to avoid infinite recursion and double reads
-            for obj_name, rfields in related.viewitems():
+            for obj_name, rfields in related.items():
                 self._root_cache[obj_name].prefetch_fields(rfields)
 
 

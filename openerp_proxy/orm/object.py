@@ -1,3 +1,4 @@
+import six
 from extend_me import ExtensibleByHashType
 
 from openerp_proxy.utils import AttrDict
@@ -24,7 +25,8 @@ def get_object(proxy, name):
 
 
 # TODO: think about connecting it to service instead of Proxy
-class Object(object):
+@six.python_2_unicode_compatible
+class Object(six.with_metaclass(ObjectType)):
     """ Base class for all Objects
 
         Provides simple interface to remote osv.osv objects
@@ -33,7 +35,6 @@ class Object(object):
             sale_obj = Object(erp, 'sale.order')
             sale_obj.search([('state','not in',['done','cancel'])])
     """
-    __metaclass__ = ObjectType
 
     def __init__(self, service, object_name):
         self._service = service
@@ -62,13 +63,13 @@ class Object(object):
     # Overriden to add some standard method to be available in introspection
     # Useful for IPython auto completition
     def __dir__(self):
-        res = dir(super(Object, self))
+        res = dir(super(self.__class__, self))
         res.extend(['read', 'search', 'write', 'unlink', 'create'])
         return res
 
     def __getattr__(self, name):
         def method_wrapper(object_name, method_name):
-            """ Wraper around ERP objects's methods.
+            """ Wraper around Odoo objects's methods.
 
                 for internal use.
                 It is used in Object class.
@@ -87,8 +88,10 @@ class Object(object):
         return getattr(self, name)
 
     def __str__(self):
-        return "Object ('%s')" % self.name
-    __repr__ = __str__
+        return u"Object ('%s')" % self.name
+
+    def __repr__(self):
+        return str(self)
 
     def __eq__(self, other):
         return self.name == other.name and self.proxy == other.proxy

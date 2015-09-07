@@ -1,8 +1,8 @@
 # python imports
-import xmlrpclib
+from six.moves import xmlrpc_client as xmlrpclib
 
 # project imports
-from openerp_proxy.connection.connection import ConnectorBase
+from .connection import ConnectorBase
 from openerp_proxy.utils import ustr
 import openerp_proxy.exceptions as exceptions
 

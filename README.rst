@@ -17,7 +17,7 @@ Overview
 This project is just **RPC client** for Odoo.
 It aims to ease access to openerp data via shell and used
 mostly for data debuging purposes. This project provides interface similar to
-OpenERP internal code to perform operations on **OpenERP** / **Odoo** objects hiding
+Odoo internal code to perform operations on **OpenERP** / **Odoo** objects hiding
 **XML-RPC** or **JSON-RPC** behind.
 
 
@@ -28,67 +28,54 @@ OpenERP internal code to perform operations on **OpenERP** / **Odoo** objects hi
 Features
 ~~~~~~~~
 
--  supports call to all public methods on any OpenERP/Odoo object including:
+-  *Python 3.3+* support
+-  You can call any public method on any OpenERP / Odoo object including:
    *read*, *search*, *write*, *unlink* and others
--  Have *a lot of speed optimizations* (especialy for situation, where required processing of
-   large datasets)
+-  Have *a lot of speed optimizations* (caching, read only fields accessed,
+   read data for all records in current set, by one RPC call, etc)
 -  Desinged to take as more benefits of **IPython autocomplete** as posible
 -  Works nice in **IPython Notebook** providing **HTML
    representation** for a most of objects.
--  Ability to display set of records as **HTML Table**
-   including conditional **row highlighting**.
-   (Useful in IPython Notebook for *data-analysis*)
--  Ability to represent HTML table also as *CSV file*
--  Provides session/history functionality, so if You used it to connect to
-   some database before, new connection will be simpler (just enter password).
-   Version 0.5 and higher have ability to store passwords. just use
-   ``session.option('store_passwords', True); session.save()``
+-  Ability to export HTML table recordlist representation to *CSV file*
+-  Ability to save connections to different databases in session.
+   (By default password is not saved, and will be asked, but if You need to save it, just do this:
+   ``session.option('store_passwords', True); session.save()``)
 -  Provides *browse\_record* like interface, allowing to browse related
-   models too. Supports *browse* method. Adds method *search\_records* to simplify
+   models too. Supports *browse* method. Also adds method *search\_records* to simplify
    search-and-read operations.
 -  *Extension support*. You can easily modify most of components of this app/lib
-   creating Your own extensions. It is realy simple. See for examples in
+   creating Your own extensions and plugins. It is realy simple. See for examples in
    openerp_proxy/ext/ directory.
--  *Plugin Support*. Plugins here meant utils, which could store some aditional
-   logic, to simplify routine operations.
-   Accessible from ``db.plugins.<plugin_name>`` attribute.
--  Support of **JSON-RPC** for *version 8* of OpenERP/Odoo (***experimental***)
+-  *Plugin Support*. Plugins are same as extensions, but aimed to implement additional logic.
+   For example look at *openerp_proxy/plugins* and *openerp_proxy/plugin.py* 
+-  Support of **JSON-RPC** for *version 8+* of Odoo
 -  Support of using **named parametrs** in RPC method calls (server version 6.1 and higher).
 -  *Sugar extension* which simplifys code a lot.
 
 -  Missed feature? ask in `Project Issues <https://github.com/katyukha/openerp-proxy/issues>`_
 
 
-Constraints
-~~~~~~~~~~~
+Supported Python versions
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For High level functionality Odoo server must be of version 6.1 or higher
+Support Python 2.7, 3.3, 3.4
+
+
+Supported Odoo server versions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tested with Odoo 7.0 and 8.0
+
+Also shoud work with Odoo 6.1 and 9.0
+
+Also it should work with Odoo version 6.0, except the things related to passing named parametrs
+to server methods, such as using context in ``openerp_proxy.orm`` package
 
 
 Examples
 ~~~~~~~~
 
 -  `Examples & HTML tests <http://nbviewer.ipython.org/github/katyukha/openerp-proxy/blob/master/examples/Examples%20&%20HTML%20tests.ipynb>`_
-
-
-What You can do with this
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
--  Quickly read and analyze some data that is not visible in interface
-   without access to DB
--  Use this project as library for code that need to access OpenERP data
--  Use in scripts that migrates OpenERP data (after, for example, adding
-   new functionality or changing old). (Migration using only SQL is bad
-   idea because of functional fields with *store=True* which must be
-   recalculated).
-
-Near future plans
-~~~~~~~~~~~~~~~~~
-
--  Django-like search API implemented as extension
-    - Something like ``F`` or ``Q`` expressions from Django
-    - to make working constructions like:
-      ``object.filter((F('price') > 100.0) & (F('price') != F('Price2')))``
 
 
 Install
@@ -107,7 +94,7 @@ If You want to install development version of *OpenERP Proxy* you can do it via:
 
 
 Also if You plan to use this project as shell client, it is **recommended to install IPython**
-and If You  would like to have ability to play with Odoo / OpenERP data in IPython notebook,
+and If You  would like to have ability to play with Odoo data in IPython notebook,
 it is recommended to also install IPython's Notebook support. To install IPython and IPython Notebook
 just type::
 
@@ -127,14 +114,14 @@ And You will get the openerp_proxy shell. If *IPython* is installed then IPython
 will be used, else usual python shell will be used. There is in context exists
 *session* variable that represents current session to work with
 
-Next You have to get connection to some OpenERP/Odoo database.
+Next You have to get connection to some Odoo database.
 
 ::
 
     >>> db = session.connect()
 
 This will ask You for host, port, database, etc to connect to. Now You
-have connection to OpenERP database which allows You to use database
+have connection to Odoo database which allows You to use database
 objects.
 
 
@@ -152,11 +139,11 @@ So here is a way to create connection
 
 ::
 
-    import openerp_proxy.core as oe_core
-    db = oe_core.Client(dbname='my_db',
-                           host='my_host.int',
-                           user='my_db_user',
-                           pwd='my_password here')
+    from openerp_proxy.core import Client
+    db = Client(host='my_host.int',
+                dbname='my_db',
+                user='my_db_user',
+                pwd='my_password here')
 
 And next all there same, no more differences betwen shell and lib usage.
 
@@ -168,12 +155,12 @@ To better suit for HTML capable notebook You would like to use IPython's version
 object and *openerp_proxy.ext.repr* extension.
 So in first cell of notebook import session and extensions/plugins You want::
 
-    from openerp_proxy.session import IPYSession as Session  # Use IPython-itegrated session class
-    import openerp_proxy.ext.repr              # Enable representation extension. This provides HTML representation of objects
-    from openerp_proxy.ext.repr import HField  # Used in .as_html_table method of RecordList
-
     # also You may import all standard extensions in one line:
     from openerp_proxy.ext.all import *
+
+    # note that extensions were imported before session,
+    # because some of them modify Session class
+    from openerp_proxy.session import Session
 
     session = Session()
 
@@ -186,9 +173,10 @@ To solve this, it is recommended to uses *store_passwords* option::
     session.option('store_passwords', True)
     session.save()
 
-In this way, only when You connect first time, You need to explicitly pass password to *connect* of *get_db* methods.
+Next use it likt shell (or like lib), but *do not forget to save session, after new connection*
 
-(*do not forget to save session, after new connection*)
+*Note*: in old version of IPython getpass was not work correctly,
+so maybe You will need to pass password directly to *session.connect* method.
 
 
 General usage
@@ -207,9 +195,9 @@ database:
 
 So we have 5 orders in done state. So let's read them.
 
-Default way to read data from OpenERP is to search for required records
+Default way to read data from Odoo is to search for required records
 with *search* method which return's list of IDs of records, then read
-data using *read* method. Both methods mostly same as OpenERP internal
+data using *read* method. Both methods mostly same as Odoo internal
 ones:
 
 ::
@@ -348,7 +336,7 @@ So let's start
    
    ``vim attendance.py``
 
-3. write folowing code there (note that this example works and tested for Odoo version 6.0)
+3. write folowing code there (note that this example works and tested for Odoo version 6.0 only)
 
     ::
 

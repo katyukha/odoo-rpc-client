@@ -1,9 +1,11 @@
-from extend_me import ExtensibleByHashType
+import six
+from extend_me import (ExtensibleByHashType,
+                       Extensible)
 
 __all__ = ('get_service_class', 'ServiceBase', 'ServiceManager')
 
 
-class ServiceManager(object):
+class ServiceManager(Extensible):
     """ Class to hold services related to specific proxy and to
         automaticaly clean service cached on update of service classes
 
@@ -43,7 +45,7 @@ class ServiceManager(object):
     def list(self):
         """ Returns list of all registered services
         """
-        return list(set(self.__services.keys() + ServiceType.get_registered_names()))
+        return list(set(list(self.__services.keys()) + ServiceType.get_registered_names()))
 
     def get_service(self, name):
         """ Returns instance of service with specified name
@@ -67,6 +69,9 @@ class ServiceManager(object):
     def __getitem__(self, name):
         return self.get_service(name)
 
+    def __contains__(self, name):
+        return name in self.list
+
 
 ServiceType = ExtensibleByHashType._('Service', hashattr='name')
 
@@ -77,10 +82,9 @@ def get_service_class(name):
     return ServiceType.get_class(name, default=True)
 
 
-class ServiceBase(object):
+class ServiceBase(six.with_metaclass(ServiceType, object)):
     """ Base class for all Services
     """
-    __metaclass__ = ServiceType
 
     def __init__(self, service, erp_proxy):
         self._erp_proxy = erp_proxy

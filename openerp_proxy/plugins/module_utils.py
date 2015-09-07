@@ -13,12 +13,16 @@ class ModuleObject(Object):
     def upgrade(self, ids):
         """ Immediatly upgrades module
         """
-        return self.button_immediate_upgrade(ids)
+        res = self.button_immediate_upgrade(ids)
+        self.proxy.clean_caches()  # because new models may appear in DB, so registered_objects shoud be refreshed
+        return res
 
     def install(self, ids):
         """ Immediatly install module
         """
-        return self.button_immediate_install(ids)
+        res = self.button_immediate_install(ids)
+        self.proxy.clean_caches()  # because new models may appear in DB, so registered_objects shoud be refreshed
+        return res
 
 
 class ModuleUtils(Plugin):

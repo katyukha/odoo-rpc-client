@@ -1,20 +1,36 @@
+import six
 import sys
+import json
 import functools
 
 __all__ = ('ustr', 'AttrDict', 'wpartial')
 
+# Python 2/3 workaround in raw_input
+try:
+    xinput = raw_input
+except NameError:
+    xinput = input
 
-def r_eval(code):
-    """ Helper function to be used in filters or so
-        At this moment this function mostly suitable for extensions like
-        'openerp_proxy.ext.data' or 'openerp_proxy.ext.repr'
+
+def json_read(file_path):
+    """ Read specified json file
     """
-    def r_eval_internal(record):
-        return eval(code, {
-            'r': record,
-            'rec': record,
-            'record': record})
-    return r_eval_internal
+    with open(file_path, 'rt') as json_data:
+        data = json.load(json_data)
+    return data
+
+
+def json_write(file_path, *args, **kwargs):
+    """ Write data to specified json file
+
+        Note, this function uses dumps function to convert data to json first,
+        and write only if conversion is successfule. This allows to avoid loss of data
+        when rewriting file.
+    """
+    json_data = json.dumps(*args, **kwargs)
+
+    with open(file_path, 'wt') as json_file:
+        json_file.write(json_data)
 
 
 def wpartial(func, *args, **kwargs):
@@ -24,13 +40,10 @@ def wpartial(func, *args, **kwargs):
     """
     partial = functools.partial(func, *args, **kwargs)
 
-    @functools.wraps(func)
-    def wrapper(*a, **kw):
-        return partial(*a, **kw)
-    return wrapper
+    return functools.wraps(func)(partial)
 
 
-# Copied from OpenERP source ustr function
+# Copied from Odoo source ustr function
 def get_encodings(hint_encoding='utf-8'):
     fallbacks = {
         'latin1': 'latin9',
@@ -57,12 +70,11 @@ def get_encodings(hint_encoding='utf-8'):
 
 
 def exception_to_unicode(e):
-    if (sys.version_info[:2] < (2, 6)) and hasattr(e, 'message'):
-        return ustr(e.message)
     if hasattr(e, 'args'):
         return "\n".join((ustr(a) for a in e.args))
+
     try:
-        return unicode(e)
+        return six.text_type(e)
     except Exception:
         return u"Unknown message"
 
@@ -88,26 +100,24 @@ def ustr(value, hint_encoding='utf-8', errors='strict'):
     if isinstance(value, Exception):
         return exception_to_unicode(value)
 
-    if isinstance(value, unicode):
+    if isinstance(value, six.text_type):
         return value
 
-    if not isinstance(value, basestring):
+    if not isinstance(value, six.string_types):
         try:
-            return unicode(value)
+            return six.text_type(value)
         except Exception:
             raise UnicodeError('unable to convert %r' % (value,))
 
     for ln in get_encodings(hint_encoding):
         try:
-            return unicode(value, ln, errors=errors)
+            return six.text_type(value, ln, errors=errors)
         except Exception:
             pass
     raise UnicodeError('unable to convert %r' % (value,))
 
 
 class AttrDict(dict):
-    # TODO: think about reimplementing it via self.__dict__ = self
-    #       (http://stackoverflow.com/questions/4984647/accessing-dict-keys-like-an-attribute-in-python)
     """ Simple class to make dictionary able to use attribute get operation
         to get elements it contains using syntax like:
 

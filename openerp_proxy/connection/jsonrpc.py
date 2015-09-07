@@ -1,11 +1,10 @@
 # python imports
 import json
-import urllib2
 import random
+import requests
 
 # project imports
-from openerp_proxy.connection.connection import ConnectorBase
-from openerp_proxy.utils import ustr
+from .connection import ConnectorBase
 import openerp_proxy.exceptions as exceptions
 
 
@@ -27,9 +26,6 @@ class JSONRPCError(exceptions.ConnectorError):
 
     def __str__(self):
         return unicode(self).encode('utf-8')
-
-    def _repr_pretty_(self):
-        return "TEST"
 
 
 class JSONRPCMethod(object):
@@ -54,20 +50,21 @@ class JSONRPCMethod(object):
             },
             "id": random.randint(0, 1000000000),
         }
-        req = urllib2.Request(url=self.__url, data=json.dumps(data), headers={
-            "Content-Type": "application/json",
-        })
-        result = urllib2.urlopen(req)
-        content = result.read()
         try:
-            result = json.loads(content)
+            res = requests.post(self.__url, data=json.dumps(data), headers={
+                "Content-Type": "application/json",
+            })
+        except requests.exceptions.RequestException:
+            raise JSONRPCError("Cannot connect to url %s" % self.__url)
+
+        try:
+            result = json.loads(res.text)
         except ValueError:
             info = {
                 "original_url": self.__url,
-                "url": result.geturl(),
-                "info": result.info(),
-                "code": result.getcode(),
-                "content": content,
+                "url": res.url,
+                "code": res.status_code,
+                "content": res.text,
             }
             raise JSONRPCError("Cannot decode JSON: %s" % info)
 

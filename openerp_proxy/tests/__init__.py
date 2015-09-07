@@ -1,3 +1,4 @@
+import six
 import unittest
 from openerp_proxy.utils import AttrDict
 
@@ -19,4 +20,13 @@ class BaseTestCase(unittest.TestCase):
             'password': os.environ.get('ODOO_TEST_PASSWORD', 'admin'),
             'super_password': os.environ.get('ODOO_TEST_SUPER_PASSWORD', 'admin'),
         })
+
+        # allow to specify if extensions should be enabled for testing
+        self.with_extensions = os.environ.get('TEST_WITH_EXTENSIONS', False)
+        if self.with_extensions:
+            import openerp_proxy.ext.all
+
+    if six.PY3:
+        def assertItemsEqual(self, *args, **kwargs):
+            return self.assertCountEqual(*args, **kwargs)
 

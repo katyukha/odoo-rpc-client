@@ -1,5 +1,5 @@
 # -*- coding: utf8 -*-
-""" This module provides some classes to simplify acces to OpenERP server via xmlrpc.
+""" This module provides some classes to simplify acces to Odoo server via xmlrpc.
     Some of these classes are may be not safe enough and should be used with carefully
 
     Example ussage of this module:
@@ -46,37 +46,27 @@
     ... 'assigned'
 """
 
+import six
 
 # project imports
-from openerp_proxy.connection import get_connector
-from openerp_proxy.exceptions import (Error,
-                                      ClientException,
-                                      LoginException)
-from openerp_proxy.service import ServiceManager
-from openerp_proxy.plugin import PluginManager
+from .connection import get_connector
+from .exceptions import LoginException
+from .service import ServiceManager
+from .plugin import PluginManager
 
-
-# Activate orm internal logic
-# TODO: think about not enabling it by default, allowing users to choose what
-# thay woudld like to use. Or simply create two entry points (one with all
-# enabled by default and another with only basic stuff which may be useful for
-# libraries that would like to get speed instead of better usability
-import openerp_proxy.orm
+# Enable ORM features
+from . import orm
 
 from extend_me import Extensible
 
 
-__all__ = ('ERPProxyException', 'Client', 'ERP_Proxy')
+__all__ = ('Client',)
 
 
-# Backward compatability
-ERPProxyException = ClientException
-
-
-
+@six.python_2_unicode_compatible
 class Client(Extensible):
     """
-       A simple class to connect ot ERP via RPC (XML-RPC, JSON-RPC)
+       A simple class to connect to Odoo instance via RPC (XML-RPC, JSON-RPC)
        Should be initialized with following arguments:
 
        :param str host: server host name to connect to
@@ -94,7 +84,7 @@ class Client(Extensible):
            >>> cl = Client('host')
            >>> db2 = cl.login('dbname', 'user', 'password')
 
-       Allows access to ERP objects via dictionary syntax::
+       Allows access to Odoo objects / models via dictionary syntax::
 
            >>> db['sale.order']
                Object ('sale.order')
@@ -199,7 +189,7 @@ class Client(Extensible):
 
     @property
     def registered_objects(self):
-        """ Stores list of registered in ERP database objects
+        """ Stores list of registered in Odoo database objects
         """
         return self.services['object'].get_registered_objects()
 
@@ -290,7 +280,7 @@ class Client(Extensible):
         return result_wkf
 
     def get_obj(self, object_name):
-        """ Returns wraper around openERP object 'object_name' which is instance of Object
+        """ Returns wraper around Odoo object 'object_name' which is instance of Object
 
             :param object_name: name of an object to get wraper for
             :return: instance of Object which wraps choosen object
@@ -353,7 +343,13 @@ class Client(Extensible):
         self.services.object.clean_caches()
 
     def __str__(self):
-        return "Client: %s" % self.get_url()
-    __repr__ = __str__
+        return u"Client: %s" % self.get_url()
 
-ERP_Proxy = Client
+    def __repr__(self):
+        return str(self)
+
+    def __eq__(self, other):
+        if isinstance(other, Client):
+            return self.get_url() == other.get_url()
+        else:
+            return False

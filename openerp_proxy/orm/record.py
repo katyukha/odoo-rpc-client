@@ -4,8 +4,11 @@ from openerp_proxy.orm.object import Object
 from openerp_proxy.orm.cache import empty_cache
 from extend_me import ExtensibleType
 
-import collections
+import six
 import abc
+import numbers
+import functools
+import collections
 
 
 __all__ = (
@@ -37,7 +40,8 @@ def get_record(obj, rid, cache=None, context=None):
     return RecordMeta.get_object(obj, rid, cache=cache, context=context)
 
 
-class Record(object):
+@six.python_2_unicode_compatible
+class Record(six.with_metaclass(RecordMeta, object)):
     """ Base class for all Records
 
         Constructor
@@ -50,12 +54,11 @@ class Record(object):
         Note, to create instance of cache call *empty_cache*
     """
 
-    __metaclass__ = RecordMeta
     __slots__ = ['__dict__', '_object', '_cache', '_lcache', '_id']
 
     def __init__(self, obj, rid, cache=None, context=None):
         assert isinstance(obj, Object), "obj should be Object"
-        assert isinstance(rid, (int, long)), "rid must be int"
+        assert isinstance(rid, numbers.Integral), "rid must be int"
 
         self._id = rid
         self._object = obj
@@ -66,7 +69,7 @@ class Record(object):
 
     def __dir__(self):
         # TODO: expose also object's methods
-        res = dir(super(Record, self))
+        res = dir(super(self.__class__, self))
         res.extend(self._columns_info.keys())
         res.extend(['read', 'search', 'write', 'unlink'])
         return res
@@ -120,16 +123,13 @@ class Record(object):
         """
         if self._data.get('__name_get_result', None) is None:
             lcache = self._lcache
-            data = self._object.name_get(lcache.keys(), context=self.context)
+            data = self._object.name_get(list(lcache), context=self.context)
             for _id, name in data:
                 lcache[_id]['__name_get_result'] = name
-        return self._data.get('__name_get_result', 'ERROR')
-
-    def __unicode__(self):
-        return u"R(%s, %s)[%s]" % (self._object.name, self.id, ustr(self._name))
+        return self._data.get('__name_get_result', u'ERROR')
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return u"R(%s, %s)[%s]" % (self._object.name, self.id, ustr(self._name))
 
     def __repr__(self):
         return str(self)
@@ -144,7 +144,7 @@ class Record(object):
         if isinstance(other, Record):
             return other.id == self._id
 
-        if isinstance(other, (int, long)):
+        if isinstance(other, numbers.Integral):
             return self._id == other
 
         return False
@@ -217,7 +217,7 @@ class Record(object):
             :rtype: dict
         """
         ctx = {} if self.context is None else self.context.copy()
-        args = [self._lcache.keys()] if multi else [[self.id]]
+        args = [list(self._lcache)] if multi else [[self.id]]
 
         kwargs = {}
 
@@ -255,7 +255,8 @@ def get_record_list(obj, ids=None, fields=None, cache=None, context=None):
     return RecordListMeta.get_object(obj, ids, fields=fields, cache=cache, context=context)
 
 
-class RecordList(collections.MutableSequence):
+@six.python_2_unicode_compatible
+class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence)):
     """Class to hold list of records with some extra functionality
 
         :param obj: instance of Object to make this list related to
@@ -270,8 +271,6 @@ class RecordList(collections.MutableSequence):
         :type context: dict
 
     """
-    __metaclass__ = RecordListMeta
-
     __slots__ = ('_object', '_cache', '_lcache', '_records')
 
     # TODO: expose object's methods via implementation of __dir__
@@ -347,12 +346,15 @@ class RecordList(collections.MutableSequence):
         if isinstance(index, slice):
             # Note no context passed, because it is stored in cache
             return get_record_list(self.object,
-                                   ids=(r.id for r in self._records[index]),
+                                   ids=[r.id for r in self._records[index]],
                                    cache=self._cache)
         return self._records[index]
 
     def __setitem__(self, index, value):
-        self._records[index] = value
+        if isinstance(value, Record):
+            self._records[index] = value
+        else:
+            raise ValueError("In 'RecordList[index] = value' operation, value must be instance of Record")
 
     def __delitem__(self, index):
         del self._records[index]
@@ -364,7 +366,7 @@ class RecordList(collections.MutableSequence):
         return self.length
 
     def __contains__(self, item):
-        if isinstance(item, (int, long)):
+        if isinstance(item, numbers.Integral):
             return item in self.ids
         if isinstance(item, Record):
             return item in self._records
@@ -373,13 +375,13 @@ class RecordList(collections.MutableSequence):
     def insert(self, index, item):
         """ Insert record to list
 
-            :param item: Record instance to be inserted into list. if int or long passed, it considered to be ID of record
-            :type item: Record|int|long
+            :param item: Record instance to be inserted into list. if int passed, it considered to be ID of record
+            :type item: Record|int
             :param int index: position where to place new element
             :return: self
             :rtype: RecordList
         """
-        assert isinstance(item, (Record, int, long)), "Only Record or int or long instances could be added to list"
+        assert isinstance(item, (Record, numbers.Integral)), "Only Record or int instances could be added to list"
         if isinstance(item, Record):
             self._records.insert(index, item)
         else:
@@ -390,13 +392,15 @@ class RecordList(collections.MutableSequence):
     # present in this RecordList
     def __getattr__(self, name):
         method = getattr(self.object, name)
-        res = wpartial(method, self.ids, context=self.context)
-        #setattr(self, name, res)  # commented because of __slots__
+        kwargs = {} if self.context is None else {'context': self.context}
+        res = wpartial(method, self.ids, **kwargs)
         return res
 
     def __str__(self):
-        return "RecordList(%s): length=%s" % (self.object.name, self.length)
-    __repr__ = __str__
+        return u"RecordList(%s): length=%s" % (self.object.name, self.length)
+
+    def __repr__(self):
+        return str(self)
 
     def refresh(self):
         """ Cleanup data caches. next try to get data will cause rereading of it
@@ -408,11 +412,69 @@ class RecordList(collections.MutableSequence):
             record.refresh()
         return self
 
-    def sort(self, cmp=None, key=None, reverse=False):
+    def sort(self, *args, **kwargs):
         """ sort(cmp=None, key=None, reverse=False) -- inplace sort
             cmp(x, y) -> -1, 0, 1
+
+            Note, that 'cmp' argument, not available for python 3
+
+            :return: self
         """
-        return self._records.sort(cmp=cmp, key=key, reverse=reverse)
+        self._records.sort(*args, **kwargs)
+        return self
+
+    def group_by(self, grouper):
+        """ Groups all records in list by specifed grouper.
+
+            :param grouper: field name or callable to group results by.
+                            if callable is passed, it should receive only
+                            one argument - record instance, and result of
+                            calling grouper will be used as key to group records by.
+            :type grouper: string|callable(record)
+
+            for example we have list of sale orders and want to group it by state::
+
+                # so_list - variable that contains list of sale orders selected
+                # by some criterias. so to group it by state we will do:
+                group = so_list.group_by('state')
+                for state, rlist in group.iteritems():  # Iterate over resulting dictionary
+                    print state, rlist.length           # Print state and amount of items with such state
+
+            or imagine that we would like to groupe records by last letter of sale order number::
+
+                # so_list - variable that contains list of sale orders selected
+                # by some criterias. so to group it by last letter of sale
+                # order name  we will do:
+                group = so_list.group_by(lambda so: so.name[-1])
+                for letter, rlist in group.iteritems():  # Iterate over resulting dictionary
+                    print letter, rlist.length           # Print state and amount of items with such state
+        """
+        cls_init = functools.partial(get_record_list,
+                                     self.object,
+                                     ids=[],
+                                     cache=self._cache)
+        res = collections.defaultdict(cls_init)
+        for record in self.records:
+            if isinstance(grouper, six.string_types):
+                key = record[grouper]
+            elif callable(grouper):
+                key = grouper(record)
+
+            res[key].append(record)
+        return res
+
+    def filter(self, func):
+        """ Filters items using *func*.
+
+            :param func: callable to check if record should be included in result.
+                         also *openerp_proxy.utils.r_eval* may be used
+            :type func: callable(record)->bool
+            :return: RecordList which contains records that matches results
+            :rtype: RecordList
+        """
+        return get_record_list(self.object,
+                               ids=[r.id for r in self.records if func(r)],
+                               cache=self._cache)
 
     def copy(self, context=None, new_cache=False):
         """ Returns copy of this list, possibly with modified context
@@ -474,7 +536,11 @@ class RecordList(collections.MutableSequence):
             :returns: list of IDs found
             :rtype: list of integers
         """
-        kwargs['context'] = self._new_context(kwargs.get('context', None))
+        ctx = self._new_context(kwargs.get('context', None))
+
+        if ctx is not None:
+            kwargs['context'] = ctx
+
         return self.object.search([('id', 'in', self.ids)] + domain, *args, **kwargs)
 
     def search_records(self, domain, *args, **kwargs):
@@ -483,7 +549,11 @@ class RecordList(collections.MutableSequence):
             :returns: RecordList of records found
             :rtype: RecordList instance
         """
-        kwargs['context'] = self._new_context(kwargs.get('context', None))
+        ctx = self._new_context(kwargs.get('context', None))
+
+        if ctx is not None:
+            kwargs['context'] = ctx
+
         return self.object.search_records([('id', 'in', self.ids)] + domain, *args, **kwargs)
 
     def read(self, fields=None, context=None):
@@ -493,7 +563,10 @@ class RecordList(collections.MutableSequence):
         kwargs = {}
         args = []
 
-        kwargs['context'] = self._new_context(kwargs.get('context', None))
+        ctx = self._new_context(kwargs.get('context', None))
+
+        if ctx is not None:
+            kwargs['context'] = ctx
 
         if fields is not None:
             args.append(fields)
@@ -521,7 +594,7 @@ class RecordRelations(Record):
         if name not in self._related_objects or not cached:
             if rel_data:
                 # Do not forged about relations in form [id, name]
-                rel_id = rel_data[0] if isinstance(rel_data, (list, tuple)) else rel_data
+                rel_id = rel_data[0] if isinstance(rel_data, collections.Iterable) else rel_data
 
                 rel_obj = self._service.get_obj(self._columns_info[name]['relation'])
                 self._related_objects[name] = get_record(rel_obj, rel_id, cache=self._cache, context=self.context)
@@ -559,7 +632,7 @@ class RecordRelations(Record):
         rel_objects = self._related_objects
         self._related_objects = {}
 
-        for rel in rel_objects.itervalues():
+        for rel in rel_objects.values():
             if isinstance(rel, (Record, RecordList)):
                 rel.refresh()  # both, Record and RecordList objects have 'refresh* method
         return self
@@ -658,17 +731,15 @@ class ObjectRecords(Object):
             >>> for order in data:
                     order.write({'note': 'order data is %s'%order.data})
         """
-        assert isinstance(ids, (int, long, list, tuple)), "ids must be instance of (int, long, list, tuple)"
-
-        if isinstance(ids, (int, long)):
+        if isinstance(ids, numbers.Integral):
             record = get_record(self, ids, context=context)
             if fields is not None:
                 record.read(fields)  # read specified fields
             return record
-        if isinstance(ids, (list, tuple)):
+        if isinstance(ids, collections.Iterable):
             return get_record_list(self, ids, fields=fields, context=context)
 
-        raise ValueError("Wrong type for ids args")
+        raise ValueError("Wrong type for ids argument: %s" % type(ids))
 
     def browse(self, *args, **kwargs):
         """ Aliase to *read_records* method. In most cases same as serverside *browse*

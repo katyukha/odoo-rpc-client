@@ -1,4 +1,18 @@
 master:
+    - *Backward incompatible*: Changed session file format.
+      *Start up imports* and *extra_paths* moved to *options* section of file.
+    - *Backward incompatible*: ``IPYSession`` moved to ``openerp_proxy.ext.repr`` extensions.
+      Now when using IPython notebook, this extension have to be imported first,
+      to enable HTML representation of session object
+    - *Backward incompatible*: Changed signature of ``Session.connect()`` method.
+    - *Backward incompatible*: Renamed ``ERP_Proxy`` to ``Client`` and inherited objects renamed in such way
+      (for example sugar extension module)
+    - *Backward incompatible*: removed ``ERP_Proxy` and ``ERP_Session`` compatability aliases
+
+    - Changed ``store_passwords`` option meaning. now if set it will store passwords bese64 encoded,
+      instead of using simple-crypt module. This change makes it faster to decode password,
+      because last-versions of simple-crypt become too slow. and usualy no encryption needed here.
+    - Experimental *Python 3.3+* support
     - Added ``HField.with_args`` method.
     - Added basic implementation of graph plugin.
     - Improved ``openerp_proxy.ext.log_execute_console`` extension. Added timing.
@@ -6,12 +20,9 @@ master:
     - RecordList prefetching logic moved to cache module and highly refactored
       (Added support of prefetching of related fields)
     - Added ``Client.login(dbname, user, password)`` method.
-    - Changed signature of ``Session.connect()`` method.
     - Added ``HTMLTable.update`` method.
     - Added ``RecordList.copy()`` and ``RecordList.existing()`` methods.
     - Added ``HTMLTable.to_csv()`` method.
-    - Renamed ``ERP_Proxy`` to ``Client`` and inherited objects renamed in such way
-      (for example sugar extension module)
     - Added ``Client.server_version`` property
     - Client parametrs (dbname, user, pwd) now are not required.
       This is useful when working with ``db`` service (``client.services.db``)

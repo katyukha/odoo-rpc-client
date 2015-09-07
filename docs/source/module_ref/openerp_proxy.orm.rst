@@ -16,6 +16,14 @@
     :undoc-members:
     :show-inheritance:
 
+:mod:`cache` Module
+--------------------
+
+.. automodule:: openerp_proxy.orm.cache
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`record` Module
 --------------------
 

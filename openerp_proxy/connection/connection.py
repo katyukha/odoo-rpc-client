@@ -1,3 +1,4 @@
+import six
 from extend_me import ExtensibleByHashType
 
 __all__ = ('get_connector', 'get_connector_names', 'ConnectorBase')
@@ -17,10 +18,9 @@ def get_connector_names():
     return ConnectorType.get_registered_names()
 
 
-class ConnectorBase(object):
+class ConnectorBase(six.with_metaclass(ConnectorType)):
     """ Base class for all connectors
     """
-    __metaclass__ = ConnectorType
 
     def __init__(self, host, port, verbose=False):
         self.host = host

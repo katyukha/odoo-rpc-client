@@ -7,6 +7,7 @@ used inside IPython notebook
 
 # TODO: rename to IPython or something like that
 
+import six
 import csv
 import tempfile
 
@@ -15,6 +16,7 @@ from openerp_proxy.orm.record import Record
 from openerp_proxy.orm.object import Object
 from openerp_proxy.core import Client
 from openerp_proxy.utils import AttrDict
+from openerp_proxy.session import Session
 
 from IPython.display import HTML, FileLink
 
@@ -211,7 +213,7 @@ class HTMLTable(HTML):
         for field in fields:
             if isinstance(field, HField):
                 self._fields.append(field)
-            elif isinstance(field, basestring):
+            elif isinstance(field, six.string_types):
                 self._fields.append(HField(field))
             elif callable(field):
                 self._fields.append(HField(field))
@@ -429,13 +431,13 @@ class HTMLRecord(Record):
 
         if not fields:
             fields = sorted((HField(col_name, name=col_data['string'])
-                             for col_name, col_data in self._columns_info.iteritems()
+                             for col_name, col_data in self._columns_info.items()
                              if col_name in self._object.simple_fields),
                             key=lambda x: _(x))
             self.read()
         else:
             # TODO: implement in better way this prefetching
-            read_fields = (f.split('.')[0] for f in fields if isinstance(f, basestring) and f.split('.')[0] in self._columns_info)
+            read_fields = (f.split('.')[0] for f in fields if isinstance(f, six.string_types) and f.split('.')[0] in self._columns_info)
             prefetch_fields = [f for f in read_fields if f not in self._data]
             self.read(prefetch_fields)
 
@@ -443,7 +445,7 @@ class HTMLRecord(Record):
         for field in fields:
             if isinstance(field, HField):
                 parsed_fields.append(field)
-            elif isinstance(field, basestring):
+            elif isinstance(field, six.string_types):
                 parsed_fields.append(HField(field))
             else:
                 raise TypeError("Bad type of field %s" % repr(field))
@@ -528,7 +530,7 @@ class ColInfo(AttrDict):
         """
         fields = self.default_fields if fields is None else fields
         info_struct = [{'name': key,
-                        'info': val} for key, val in self.iteritems()]
+                        'info': val} for key, val in self.items()]
         info_struct.sort(key=lambda x: x['name'])
         return HTMLTable(info_struct, fields, caption=u'Fields for %s' % _(self._object.name))
 
@@ -620,3 +622,37 @@ class ClientHTML(Client):
 
         table = ttable % (caption + data)
         return html % (table + help_text)
+
+
+class IPYSession(Session):
+    def _repr_html_(self):
+        """ Provides HTML representation of session (Used for IPython)
+        """
+        from openerp_proxy.utils import ustr as _
+
+        def _get_data():
+            for url in self._databases.keys():
+                index = self._index_url(url)
+                aliases = (_(al) for al, aurl in self.aliases.items() if aurl == url)
+                yield (url, index, u", ".join(aliases))
+        ttable = u"<table style='display:inline-block'>%s</table>"
+        trow = u"<tr>%s</tr>"
+        tdata = u"<td>%s</td>"
+        caption = u"<caption>Previous connections</caption>"
+        hrow = u"<tr><th>DB URL</th><th>DB Index</th><th>DB Aliases</th></tr>"
+        help_text = (u"<div style='display:inline-block;vertical-align:top;margin-left:10px;'>"
+                     u"To get connection just call<br/> <ul>"
+                     u"<li>session.<b>aliase</b></li>"
+                     u"<li>session[<b>index</b>]</li>"
+                     u"<li>session[<b>aliase</b>]</li> "
+                     u"<li>session[<b>url</b>]</li>"
+                     u"<li>session.get_db(<b>url</b>|<b>index</b>|<b>aliase</b>)</li>"
+                     u"</ul></div>")
+
+        data = u""
+        for row in _get_data():
+            data += trow % (u''.join((tdata % i for i in row)))
+
+        table = ttable % (caption + hrow + data)
+
+        return u"<div>%s %s</div>" % (table, help_text)

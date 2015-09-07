@@ -94,7 +94,7 @@ class ObjectSugar(ObjectRecords):
         # no arguments, only keyword arguments passsed,
         # so build domain based on keyword arguments
         if name is None:
-            domain = [(k, '=', v) for k, v in kwargs.iteritems()]
+            domain = [(k, '=', v) for k, v in kwargs.items()]
             return self.search_records(domain, *args)
 
         # normal domain passed, then just forward all arguments and
