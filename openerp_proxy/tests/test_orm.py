@@ -1,7 +1,8 @@
 from . import BaseTestCase
 from openerp_proxy.core import Client
-from openerp_proxy.orm.record import Record
-from openerp_proxy.orm.record import RecordList
+from openerp_proxy.orm.record import (Record,
+                                      RecordList,
+                                      get_record_list)
 from openerp_proxy.exceptions import ConnectorError
 
 try:
@@ -535,3 +536,72 @@ class Test_22_RecordList(BaseTestCase):
         # TODO: write better test
 
         res = self.recordlist.group_by('country_id')
+
+    def test_existing(self):
+        # all existing object ids
+        all_obj_ids = self.object.search([], limit=False)
+
+        # generate 10 unexisting ids
+        unexistent_ids = range(max(all_obj_ids) + 1, max(all_obj_ids) + 40, 4)
+        self.assertEqual(len(unexistent_ids), 10)
+
+        # test simple existense
+        rlist = get_record_list(self.object, all_obj_ids[:10] + unexistent_ids)
+        self.assertEqual(len(rlist), 20)
+        elist = rlist.existing()
+        self.assertEqual(len(elist), 10)
+        self.assertItemsEqual(elist.ids, all_obj_ids[:10])
+
+        # test existense with repeated items
+        rlist = get_record_list(self.object, all_obj_ids[:10] + unexistent_ids + all_obj_ids[:5])
+        self.assertEqual(len(rlist), 25)
+
+        # with uniqify=True (defualt)
+        elist = rlist.existing()
+        self.assertEqual(len(elist), 10)
+        self.assertItemsEqual(elist.ids, all_obj_ids[:10])
+
+        # with uniqify=False
+        elist = rlist.existing(uniqify=False)
+        self.assertEqual(len(elist), 15)
+        self.assertItemsEqual(elist.ids, all_obj_ids[:10] + all_obj_ids[:5])
+
+    def test_refresh(self):
+        # save cache pointers to local namespase to simplify access to it
+        cache = self.recordlist._cache
+        pcache = cache['res.partner']  # partner cache
+        ccache = cache['res.country']  # country cache
+
+        # load data to record list
+        self.recordlist.prefetch('name', 'country_id.name', 'country_id.code')
+
+        # create related records. This is still required, becuase, prefetch
+        # just fills cache without creating record instances
+        for rec in self.recordlist:
+            rec.country_id
+
+        self.assertTrue(len(pcache) == len(self.recordlist))
+        self.assertTrue(len(ccache) > 2)
+
+        clen = len(ccache)
+
+        for data in pcache.values():
+            self.assertItemsEqual(list(data), ['id', 'name', 'country_id'])
+
+        for data in ccache.values():
+            if '__name_get_result' in data:
+                self.assertItemsEqual(list(data), ['id', 'name', 'code', '__name_get_result'])
+            else:
+                self.assertItemsEqual(list(data), ['id', 'name', 'code'])
+
+        # refresh recordlist
+        self.recordlist.refresh()
+
+        self.assertTrue(len(pcache) == len(self.recordlist))
+        self.assertTrue(len(ccache) == clen)
+
+        for data in pcache.values():
+            self.assertItemsEqual(list(data), ['id'])
+
+        for data in ccache.values():
+            self.assertItemsEqual(list(data), ['id'])
