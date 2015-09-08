@@ -42,7 +42,7 @@ def get_record(obj, rid, cache=None, context=None):
 
 
 @six.python_2_unicode_compatible
-class Record(six.with_metaclass(RecordMeta, object), DirMixIn):
+class Record(six.with_metaclass(RecordMeta, DirMixIn)):
     """ Base class for all Records
 
         Constructor
@@ -55,7 +55,7 @@ class Record(six.with_metaclass(RecordMeta, object), DirMixIn):
         Note, to create instance of cache call *empty_cache*
     """
 
-    __slots__ = ['__dict__', '_object', '_cache', '_lcache', '_id']
+    __slots__ = ['_object', '_cache', '_lcache', '_id']
 
     def __init__(self, obj, rid, cache=None, context=None):
         assert isinstance(obj, Object), "obj should be Object"
@@ -257,7 +257,7 @@ def get_record_list(obj, ids=None, fields=None, cache=None, context=None):
 
 
 @six.python_2_unicode_compatible
-class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence), DirMixIn):
+class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence, DirMixIn)):
     """Class to hold list of records with some extra functionality
 
         :param obj: instance of Object to make this list related to

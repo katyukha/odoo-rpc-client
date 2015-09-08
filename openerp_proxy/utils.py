@@ -143,14 +143,18 @@ class AttrDict(dict):
         return dir(super(AttrDict, self)) + self.keys()
 
 
-class DirMixIn:
-    """ Mix in to make implementing __dir__ method in subclasses simpler
-    """
-
-    def __dir__(self):
-        if six.PY3:
-            return super(DirMixIn, self).__dir__()
-        else:
+if six.PY3:
+    # There are no need to implement any aditional logic for Python 3, becuase
+    # there base class 'object' already have implemented '__dir__' method,
+    # which could be accessed via super() by subclasses
+    class DirMixIn:
+        pass
+else:
+    # implement basic __dir__ to make it assessible via super() by subclasses
+    class DirMixIn(object):
+        """ Mix in to make implementing __dir__ method in subclasses simpler
+        """
+        def __dir__(self):
             # code is based on
             # http://www.quora.com/How-dir-is-implemented-Is-there-any-PEP-related-to-that
             def get_attrs(obj):

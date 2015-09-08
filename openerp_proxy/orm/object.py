@@ -27,7 +27,7 @@ def get_object(proxy, name):
 
 # TODO: think about connecting it to service instead of Proxy
 @six.python_2_unicode_compatible
-class Object(six.with_metaclass(ObjectType)):
+class Object(six.with_metaclass(ObjectType, DirMixIn)):
     """ Base class for all Objects
 
         Provides simple interface to remote osv.osv objects

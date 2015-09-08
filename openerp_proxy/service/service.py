@@ -48,7 +48,10 @@ class ServiceManager(Extensible, DirMixIn):
     def list(self):
         """ Returns list of all registered services
         """
-        return list(set(list(self.__services.keys()) + ServiceType.get_registered_names()))
+        service_names = set()
+        service_names.update(list(self.__services))
+        service_names.update(ServiceType.get_registered_names())
+        return list(service_names)
 
     def get_service(self, name):
         """ Returns instance of service with specified name
@@ -67,6 +70,10 @@ class ServiceManager(Extensible, DirMixIn):
         self.__services = {}
 
     def __getattr__(self, name):
+        if name.startswith('_'):
+            raise AttributeError("Service '%s' not found."
+                                 "Service names could not be "
+                                 "started with '_'.")
         return self.get_service(name)
 
     def __getitem__(self, name):
@@ -99,9 +106,5 @@ class ServiceBase(six.with_metaclass(ServiceType, object)):
         """
         return self._erp_proxy
 
-    def __getattribute__(self, name):
-        try:
-            res = super(ServiceBase, self).__getattribute__(name)
-        except AttributeError:
-            res = getattr(self._service, name)
-        return res
+    def __getattr__(self, name):
+        return getattr(self._service, name)
