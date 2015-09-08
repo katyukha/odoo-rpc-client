@@ -234,13 +234,13 @@ class Session(Extensible, DirMixIn):
             if self.option('store_passwords') and 'password' in ep_args:
                 import base64
                 crypter, password = base64.b64decode(ep_args.pop('password').encode('utf8')).split(b':')
-                if crypter == 'simplecrypt':  # pragma: no cover
+                if crypter == b'simplecrypt':  # pragma: no cover
                     import simplecrypt
                     ep_args['pwd'] = simplecrypt.decrypt(Client.to_url(ep_args), base64.b64decode(password))
-                elif crypter == 'plain':
+                elif crypter == b'plain':
                     ep_args['pwd'] = password.decode('utf-8')
-                else:
-                    raise Exception("Unknown crypter used in session")
+                else:  # pragma: no cover
+                    raise Exception("Unknown crypter (%s) used in session" % repr(crypter))
             else:
                 ep_args['pwd'] = getpass('Password: ')  # pragma: no cover
 
