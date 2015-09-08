@@ -2,10 +2,13 @@ import six
 from extend_me import (ExtensibleByHashType,
                        Extensible)
 
+from openerp_proxy.utils import DirMixIn
+
+
 __all__ = ('get_service_class', 'ServiceBase', 'ServiceManager')
 
 
-class ServiceManager(Extensible):
+class ServiceManager(Extensible, DirMixIn):
     """ Class to hold services related to specific proxy and to
         automaticaly clean service cached on update of service classes
 
@@ -37,7 +40,7 @@ class ServiceManager(Extensible):
         self.__services = {}
 
     def __dir__(self):
-        res = set(dir(super(ServiceManager, self)))
+        res = set(super(ServiceManager, self).__dir__())
         res.update(self.list)
         return list(res)
 

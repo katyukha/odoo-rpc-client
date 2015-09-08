@@ -2,6 +2,8 @@
 import six
 import extend_me
 
+from openerp_proxy.utils import DirMixIn
+
 PluginMeta = extend_me.ExtensibleByHashType._('Plugin', hashattr='name')
 
 
@@ -65,7 +67,7 @@ class TestPlugin(Plugin):
         return self.proxy.get_url()
 
 
-class PluginManager(extend_me.Extensible):
+class PluginManager(extend_me.Extensible, DirMixIn):
     """ Class that holds information about all plugins
 
         :param erp_proxy: instance of Client to bind plugins to
@@ -105,7 +107,7 @@ class PluginManager(extend_me.Extensible):
         return name in self.registered_plugins
 
     def __dir__(self):
-        res = dir(super(PluginManager, self))
+        res = super(PluginManager, self).__dir__()
         res.extend(self.registered_plugins)
         return res
 

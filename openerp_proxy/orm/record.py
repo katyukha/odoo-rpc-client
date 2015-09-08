@@ -1,5 +1,6 @@
-from openerp_proxy.utils import wpartial
-from openerp_proxy.utils import ustr
+from openerp_proxy.utils import (wpartial,
+                                 ustr,
+                                 DirMixIn)
 from openerp_proxy.orm.object import Object
 from openerp_proxy.orm.cache import empty_cache
 from extend_me import ExtensibleType
@@ -41,7 +42,7 @@ def get_record(obj, rid, cache=None, context=None):
 
 
 @six.python_2_unicode_compatible
-class Record(six.with_metaclass(RecordMeta, object)):
+class Record(six.with_metaclass(RecordMeta, object), DirMixIn):
     """ Base class for all Records
 
         Constructor
@@ -69,7 +70,7 @@ class Record(six.with_metaclass(RecordMeta, object)):
 
     def __dir__(self):
         # TODO: expose also object's methods
-        res = dir(super(self.__class__, self))
+        res = super(Record, self).__dir__()
         res.extend(self._columns_info.keys())
         res.extend(['read', 'search', 'write', 'unlink'])
         return res
@@ -256,7 +257,7 @@ def get_record_list(obj, ids=None, fields=None, cache=None, context=None):
 
 
 @six.python_2_unicode_compatible
-class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence)):
+class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence), DirMixIn):
     """Class to hold list of records with some extra functionality
 
         :param obj: instance of Object to make this list related to

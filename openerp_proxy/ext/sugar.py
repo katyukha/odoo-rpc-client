@@ -5,6 +5,7 @@ Provides some syntax sugar to ease acces to objects, records, etc
 
 import numbers
 
+from openerp_proxy.utils import DirMixIn
 from openerp_proxy.orm.record import ObjectRecords
 from openerp_proxy.orm.record import get_record_list
 from openerp_proxy.core import Client
@@ -111,7 +112,7 @@ class ObjectSugar(ObjectRecords):
         return get_record_list(self, ids=ids, context=context)
 
 
-class ClientSugar(Client):
+class ClientSugar(Client, DirMixIn):
     """ Provides some syntax sugar for Client class
 
         As one of it's features is ability to access objects as
@@ -142,7 +143,7 @@ class ClientSugar(Client):
         return self._object_aliases
 
     def __dir__(self):
-        res = dir(super(ClientSugar, self))
+        res = super(ClientSugar, self).__dir__()
         res += self.object_aliases.keys()
         return res
 

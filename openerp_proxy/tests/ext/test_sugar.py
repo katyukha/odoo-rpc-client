@@ -67,7 +67,11 @@ class Test_31_ExtSugar(BaseTestCase):
             fake_search_records.assert_called_with([('name', '=', 'admin')])
 
     def test_client_dir(self):
+        # test if models a in dir
         self.assertIn('_res_partner', dir(self.client))
+
+        # test if normal methods are listed in dir(client)
+        self.assertIn('execute', dir(self.client))
 
     def test_client_getattr(self):
         res = self.client._res_partner

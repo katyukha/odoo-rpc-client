@@ -9,13 +9,14 @@ from extend_me import Extensible
 from .core import Client
 from .utils import (json_read,
                     json_write,
-                    xinput)
+                    xinput,
+                    DirMixIn)
 
 
 __all__ = ('Session',)
 
 
-class Session(Extensible):
+class Session(Extensible, DirMixIn):
 
     """ Simple session manager which allows to manage databases easier
         This class stores information about databases You used in home
@@ -342,6 +343,6 @@ class Session(Extensible):
         return pprint.pformat(self.index)
 
     def __dir__(self):
-        res = dir(super(Session, self))
+        res = super(Session, self).__dir__()
         res += self.aliases.keys()
         return res

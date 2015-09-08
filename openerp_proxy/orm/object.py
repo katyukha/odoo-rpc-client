@@ -1,7 +1,8 @@
 import six
 from extend_me import ExtensibleByHashType
 
-from openerp_proxy.utils import AttrDict
+from openerp_proxy.utils import (AttrDict,
+                                 DirMixIn)
 
 
 __all__ = ('Object', 'get_object')
@@ -63,7 +64,7 @@ class Object(six.with_metaclass(ObjectType)):
     # Overriden to add some standard method to be available in introspection
     # Useful for IPython auto completition
     def __dir__(self):
-        res = dir(super(self.__class__, self))
+        res = super(Object, self).__dir__()
         res.extend(['read', 'search', 'write', 'unlink', 'create'])
         return res
 

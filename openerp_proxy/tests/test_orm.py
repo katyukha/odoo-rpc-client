@@ -34,8 +34,8 @@ class Test_20_Object(BaseTestCase):
         self.assertIn('create', dir(self.object))
 
         # test if normal mehtods avalilable in dir(object)
-        #self.assertIn('search_records', dir(self.object))
-        #self.assertIn('browse', dir(self.object))
+        self.assertIn('search_records', dir(self.object))
+        self.assertIn('browse', dir(self.object))
 
     def test_getttr(self):
         self.assertEqual(self.object.search.__name__, 'res.partner:search')
@@ -159,7 +159,7 @@ class Test_21_Record(BaseTestCase):
         self.assertIn('unlink', dir(self.record))
 
         # test if normal mehtods avalilable in dir(object)
-        #self.assertIn('refresh', dir(self.record))
+        self.assertIn('refresh', dir(self.record))
 
     def test_proxy_property(self):
         self.assertIs(self.record._proxy, self.client)

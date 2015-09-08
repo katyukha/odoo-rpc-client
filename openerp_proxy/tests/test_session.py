@@ -189,6 +189,9 @@ class Test_90_Session(BaseTestCase):
         self.assertIs(session.cl1, session.cl3)
         self.assertIn('cl1', dir(session))
 
+        # Test taht normal attributes in dir
+        self.assertIn('aliases', dir(session))
+
         # save the session
         session.save()
         del session
