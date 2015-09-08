@@ -27,7 +27,7 @@ class ConnectorBase(six.with_metaclass(ConnectorType)):
         self.port = port
         self.verbose = verbose
 
-    def _get_service(self, name):
+    def _get_service(self, name):  # pragma: no cover
         raise NotImplementedError
 
     def get_service(self, name):

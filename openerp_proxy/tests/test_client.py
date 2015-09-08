@@ -100,6 +100,9 @@ class Test_10_Client(BaseTestCase):
         self.assertIn('object', dir(self.client.services))
         self.assertIn('report', dir(self.client.services))
 
+        with self.assertRaises(AttributeError):
+            self.client.services._private_service
+
     def test_80_execute(self):
         res = self.client.execute('res.partner', 'read', 1)
         self.assertIsInstance(res, dict)
@@ -110,3 +113,6 @@ class Test_10_Client(BaseTestCase):
         self.assertEqual(len(res), 1)
         self.assertIsInstance(res[0], dict)
         self.assertEqual(res[0]['id'], 1)
+
+    def test_not_equal(self):
+        self.assertNotEqual(self.client, 42)

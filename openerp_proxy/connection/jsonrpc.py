@@ -1,4 +1,5 @@
 # python imports
+import six
 import json
 import random
 import requests
@@ -6,15 +7,17 @@ import requests
 # project imports
 from .connection import ConnectorBase
 import openerp_proxy.exceptions as exceptions
+from openerp_proxy.utils import ustr
 
 
+@six.python_2_unicode_compatible
 class JSONRPCError(exceptions.ConnectorError):
     def __init__(self, message, code=None, data=None):
         self.message = message
         self.code = code
         self.data = data
 
-    def __unicode__(self):
+    def __str__(self):
         if self.data is None:
             return self.message
 
@@ -22,10 +25,7 @@ class JSONRPCError(exceptions.ConnectorError):
             res_tmpl = u"""%(message)s\n%(debug)s\n"""
             return res_tmpl % self.data
 
-        return unicode(self.data)
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
+        return ustr(self.data)
 
 
 class JSONRPCMethod(object):

@@ -1,6 +1,7 @@
 from . import BaseTestCase
 from openerp_proxy.core import Client
 from openerp_proxy.exceptions import LoginException
+from openerp_proxy.connection import get_connector_names
 
 
 class Test_00_Connection(BaseTestCase):
@@ -74,5 +75,8 @@ class Test_00_Connection(BaseTestCase):
         new_uid = cl.reconnect()
         self.assertEqual(old_uid, new_uid)
         self.assertEqual(old_uid, cl.uid)
+
+    def test_06_get_connector_names(self):
+        self.assertItemsEqual(get_connector_names(), ['json-rpc', 'json-rpcs', 'xml-rpc', 'xml-rpcs'])
 
 

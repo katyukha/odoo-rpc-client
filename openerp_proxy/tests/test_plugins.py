@@ -58,6 +58,9 @@ class Test_25_Plugin_ModuleUtils(BaseTestCase):
 
         self.assertIn(ModuleObject, res._object.__class__.__bases__)
 
+        with self.assertRaises(AttributeError):
+            self.client.plugins.module_utils.m_unexistent_module
+
     def test_35_module_install(self):
         smod = self.client.plugins.module_utils.m_sale
 

@@ -45,7 +45,7 @@ class ObjectWorkflow(ObjectRecords):
         """
         assert isinstance(obj_id, numbers.Integral), "obj_id must be integer"
         assert isinstance(signal, six.string_types), "signal must be string"
-        return self.service.execute_wkf(self.name, signal, obj_id)
+        return self.proxy.execute_wkf(self.name, signal, obj_id)
 
 
 class RecordWorkflow(Record):

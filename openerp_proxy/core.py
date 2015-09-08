@@ -276,7 +276,7 @@ class Client(Extensible):
             :param object_id: ID of document (record) to send signal to
             :type obejct_id: int
         """
-        result_wkf = self.services['object'].exec_workflow(object_name, signal, object_id)
+        result_wkf = self.services['object'].execute_wkf(object_name, signal, object_id)
         return result_wkf
 
     def get_obj(self, object_name):
