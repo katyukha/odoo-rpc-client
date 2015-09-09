@@ -673,7 +673,7 @@ class ObjectRecords(Object):
 
             :type: list of strings
         """
-        return [f for f, d in self.columns_info.iteritems()
+        return [f for f, d in six.iteritems(self.columns_info)
                 if d['type'] != 'binary' and not d.get('function', False)]
 
     def search_records(self, *args, **kwargs):

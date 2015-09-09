@@ -24,9 +24,10 @@ function run_single_test {
                 source ./venv_test/bin/activate && \
                 pip install --upgrade pip setuptools coverage mock pudb ipython[notebook] simple-crypt && \
                 python setup.py develop && \
-                coverage run -p --source openerp_proxy -m unittest -v $TEST_MODULE && \
+                coverage run -p -m unittest -v $TEST_MODULE && \
                 deactivate && \
-                rm -rf venv_test)
+                rm -rf venv_test
+    )
 }
 
 function main {

@@ -308,7 +308,7 @@ class HTMLTable(HTML):
             :return: instance of FileLink
             :rtype: FileLink
         """
-        CSV_PATH = './tmp/csv/' # TODO: use enviroment var or some sort of config
+        CSV_PATH = './tmp/csv/'  # TODO: use enviroment var or some sort of config
         import os.path
         import os
 
@@ -317,12 +317,20 @@ class HTMLTable(HTML):
         except os.error:
             pass
 
-        tmp_file = tempfile.NamedTemporaryFile(dir=CSV_PATH, suffix='.csv', delete=False)
+        # Python 2/3 compatability
+        if six.PY3:
+            adapt = lambda s: s
+            fmode = 'wt'
+        else:
+            fmode = 'wb'
+            adapt = lambda s: s.encode('utf-8')
+
+        tmp_file = tempfile.NamedTemporaryFile(mode=fmode, dir=CSV_PATH, suffix='.csv', delete=False)
         with tmp_file as csv_file:
             csv_writer = csv.writer(csv_file)
-            csv_writer.writerow(tuple((h.encode('utf-8') for h in self.iheaders)))
+            csv_writer.writerow(tuple((adapt(h) for h in self.iheaders)))
             for record in self.irecords:
-                csv_writer.writerow(tuple((r.encode('utf-8') for r in record['row'])))
+                csv_writer.writerow(tuple((adapt(r) for r in record['row'])))
         return FileLink(CSV_PATH + os.path.split(tmp_file.name)[-1])
 
 
