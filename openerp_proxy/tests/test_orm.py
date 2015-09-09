@@ -3,6 +3,8 @@ from openerp_proxy.core import Client
 from openerp_proxy.orm.record import (Record,
                                       RecordList,
                                       get_record_list)
+from openerp_proxy.orm.cache import (empty_cache,
+                                     ObjectCache)
 from openerp_proxy.exceptions import ConnectorError
 
 try:
@@ -605,3 +607,28 @@ class Test_22_RecordList(BaseTestCase):
 
         for data in ccache.values():
             self.assertItemsEqual(list(data), ['id'])
+
+
+class Test_23_Cache(BaseTestCase):
+
+    def setUp(self):
+        super(self.__class__, self).setUp()
+        self.client = Client(self.env.host,
+                             dbname=self.env.dbname,
+                             user=self.env.user,
+                             pwd=self.env.password,
+                             protocol=self.env.protocol,
+                             port=self.env.port)
+        self.cache = empty_cache(self.client)
+
+    def test_proxy(self):
+        self.assertIs(self.cache.proxy, self.client)
+
+    def test_missing(self):
+        obj_cache = self.cache['res.partner']
+        self.assertIsInstance(obj_cache, ObjectCache)
+
+        # Test that KeyError is raised on attempt to get cache for object that
+        # does not exist in client database
+        with self.assertRaises(KeyError):
+            self.cache['unexisting.object']

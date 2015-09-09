@@ -1,5 +1,4 @@
 import six
-import sys
 import json
 import functools
 
@@ -117,32 +116,6 @@ def ustr(value, hint_encoding='utf-8', errors='strict'):
     raise UnicodeError('unable to convert %r' % (value,))
 
 
-class AttrDict(dict):
-    """ Simple class to make dictionary able to use attribute get operation
-        to get elements it contains using syntax like:
-
-        >>> d = AttrDict(arg1=1, arg2='hello')
-        >>> print(d.arg1)
-            1
-        >>> print(d.arg2)
-            hello
-        >>> print(d['arg2'])
-            hello
-        >>> print(d['arg1'])
-            1
-    """
-    def __getattr__(self, name):
-        res = None
-        try:
-            res = super(AttrDict, self).__getitem__(name)
-        except KeyError:
-            raise AttributeError(name)
-        return res
-
-    def __dir__(self):
-        return dir(super(AttrDict, self)) + self.keys()
-
-
 if six.PY3:
     # There are no need to implement any aditional logic for Python 3, becuase
     # there base class 'object' already have implemented '__dir__' method,
@@ -186,3 +159,30 @@ else:
                 return list(attrs)
 
             return dir2(self)
+
+
+class AttrDict(dict, DirMixIn):
+    """ Simple class to make dictionary able to use attribute get operation
+        to get elements it contains using syntax like:
+
+        >>> d = AttrDict(arg1=1, arg2='hello')
+        >>> print(d.arg1)
+            1
+        >>> print(d.arg2)
+            hello
+        >>> print(d['arg2'])
+            hello
+        >>> print(d['arg1'])
+            1
+    """
+    def __getattr__(self, name):
+        res = None
+        try:
+            res = super(AttrDict, self).__getitem__(name)
+        except KeyError as e:
+            raise AttributeError(str(e))
+        return res
+
+    def __dir__(self):
+        return super(AttrDict, self).__dir__() + self.keys()
+
