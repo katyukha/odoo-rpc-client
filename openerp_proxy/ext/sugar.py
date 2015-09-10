@@ -28,7 +28,7 @@ class ObjectSugar(ObjectRecords):
 
                 move = obj[125]   # returns stock move record with ID=125
                 moves = obj[125,126,127]  # returns record list of three move records
-                                        # for IDS 125, 126, 127
+                                          # for IDS 125, 126, 127
 
         2. name_search
 
@@ -120,9 +120,11 @@ class ClientSugar(Client, DirMixIn):
         with underscores replaced by double underscores and dots replaced by
         single underscores and prefixed by underscore.
 
-        For example::
+        For example all folowing lines will return same result::
 
-            proxy._stock_move == proxy['stock.move'] == proxy.get_obj('stock.move')
+            sm = client._stock_move
+            sm = client['stock.move']
+            sm = client.get_obj('stock.move')
 
     """
 

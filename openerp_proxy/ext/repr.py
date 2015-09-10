@@ -55,8 +55,8 @@ class HField(object):
                       if path is string, then it should be dot separated list of
                       fields/subfields to get value from. for example
                       ``sale_line_id.order_id.name`` or ``picking_id.move_lines.0.location_id``
-        :type field: string|func(record)->value
-        :param string name: name of field. (optional)
+        :type field: str | func(record)->value
+        :param str name: name of field. (optional)
                             if specified, then this value will be used in column header of table.
         :param bool silent: If set to True, then not exceptions will be raised and *default* value
                             will be returned. (default=False)
@@ -68,12 +68,15 @@ class HField(object):
                          HField('picking_id.move_lines.as_html_table',
                                 args=('id', '_name', HField('location_id._name', 'Location')))
 
-                    or better way::
+                     or better way::
 
-                         HField('picking_id.move_lines.as_html_table').\
-                             with_args('id', '_name', HField('location_id._name', 'Location'))
+                         HField('picking_id.move_lines.as_html_table').with_args(
+                             'id',
+                             '_name',
+                             HField('location_id._name', 'Location')
+                         )
 
-        :type args: list|tuple
+        :type args: list | tuple
         :param dict kwargs: same as *args* but for keyword arguments
     """
 
@@ -124,7 +127,7 @@ class HField(object):
         """ Returns requested value from specified record (object)
 
             :param record: Record instance to get field from (also should work on any other object)
-            :type record: Record instance
+            :type record: Record
             :return: requested value
         """
 
@@ -155,7 +158,7 @@ class HField(object):
         """ Get value from specified record
 
             :param record: object to get field from
-            :type record: usualy Record instance
+            :type record: Record
             :return: value of self-field of record
         """
         return self.get_field(record)
@@ -170,12 +173,12 @@ class HTMLTable(HTML):
     """ HTML Table representation object for RecordList
 
         :param recordlist: record list to create represetation for
-        :type recordlist: RecordList instance
+        :type recordlist: RecordList
         :param fields: list of fields to display. each field should be string
                        with dot splitted names of related object, or callable
                        of one argument (record instance) or *HField* instance or
                        tuple(field_path|callable, field_name)
-        :type fields: list(string | callable | HField instance | tuple(field, name))
+        :type fields: list(str | callable | HField instance | tuple(field, name))
         :param dict highlighters: dictionary in format::
 
                                       {color: callable(record)->bool}
@@ -365,9 +368,9 @@ class RecordListData(RecordList):
         """ HTML Table representation object for RecordList
 
             :param fields: list of fields to display. each field should be string
-                        with dot splitted names of related object, or callable
-                        of one argument (record instance) or *HField* instance or
-                        tuple(field_path|callable, field_name)
+                           with dot splitted names of related object, or callable
+                           of one argument (record instance) or *HField* instance or
+                           tuple(field_path|callable, field_name)
             :type fields: list(string | callable | HField instance | tuple(field, name))
             :param dict highlighters: dictionary in format::
 
@@ -380,7 +383,7 @@ class RecordListData(RecordList):
                                 (old_style)
             :type highlight_row: callable(record) -> bool
             :param str caption: String to be used as table caption
-            :return: HTMLTable instance
+            :return: HTMLTable
         """
         if not fields:
             fields = ('id', '_name')
@@ -433,6 +436,7 @@ class HTMLRecord(Record):
 
            :param list fields: list of field names to display in HTML representation
            :return: ipython's HTML object representing this record
+           :rtype: HTML
         """
         table_tmpl = u"<table><caption>Record %s</caption><tr><th>Column</th><th>Value</th></tr>%s</table>"
         row_tmpl = u"<tr><th>%s</th><td>%s</td></tr>"
@@ -532,7 +536,6 @@ class ColInfo(AttrDict):
         """ Generates HTMLTable representation for this columns info
 
             :param fields: list of fields to display instead of defaults
-            :type fields: list
             :return: generated HTMLTable instanse
             :rtype: HTMLTable
         """

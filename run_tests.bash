@@ -12,6 +12,44 @@
 SCRIPT=`readlink -f "$0"`
 SCRIPTPATH=`dirname "$SCRIPT"`  # directory that contains this script
 
+usage="
+    Usage:
+
+        run_tests.bash [--py-version v1] [--py-version v2] [--with-extensions] [--test-module <module>]
+
+"
+        
+
+# process cmdline options
+while [[ $# -gt 0 ]]
+do
+    key="$1";
+    case $key in
+        -h|--help|help)
+            echo "$usage";
+            exit 0;
+        ;;
+        --py-version)
+            PY_VERSIONS="$PY_VERSIONS $2";
+            shift;
+        ;;
+        --with-extensions)
+            export TEST_WITH_EXTENSIONS=1;
+        ;;
+        --test-module)
+            TEST_MODULE="$2";
+            shift;
+        ;;
+        *)
+            echo "Unknown option $key";
+            exit 1;
+        ;;
+    esac
+    shift
+done
+
+
+# config defaults
 TEST_MODULE=${TEST_MODULE:-'openerp_proxy.tests.all'};
 PY_VERSIONS=${PY_VERSIONS:-"2.7 3.4"};
 

@@ -8,6 +8,10 @@ master:
     - *Backward incompatible*: Renamed ``ERP_Proxy`` to ``Client`` and inherited objects renamed in such way
       (for example sugar extension module)
     - *Backward incompatible*: removed ``ERP_Proxy` and ``ERP_Session`` compatability aliases
+    - *Backward incompatible*: rename ``openerp_proxy.service.service.ServiceManager.list`` to
+      ``openerp_proxy.service.service.ServiceManager.service_list``
+      This affects ``Client.services`` so now ``Client.services.service_list`` should be used
+      instead of using ``Client.services.list``
 
     - Changed ``store_passwords`` option meaning. now if set it will store passwords bese64 encoded,
       instead of using simple-crypt module. This change makes it faster to decode password,

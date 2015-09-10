@@ -26,9 +26,14 @@ class Test_00_Connection(BaseTestCase):
     def test_01_create_db(self):
         client = self.client
         if self.env.dbname in client.services.db.list_db():
+            self.assertIn(self.env.dbname, client.services.db)
             return self.skipTest("Database already created")
+
+        self.assertNotIn(self.env.dbname, client.services.db)
+
         cl = client.services.db.create_db(self.env.super_password, self.env.dbname, demo=True, admin_password=self.env.password)
 
+        self.assertIn(self.env.dbname, client.services.db)
         # cl is object of same class as client, but with credential filled
         self.assertIsInstance(cl, Client)
 

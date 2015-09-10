@@ -13,7 +13,7 @@ class DBService(ServiceBase):
     def list_db(self):
         """ Display list of databses of thist connection
         """
-        return self.list()
+        return self._service.list()
 
     def create_db(self, password, dbname, demo=False, lang='en_US', admin_password='admin'):
         """ Create new database on server, named *dbname*
@@ -68,3 +68,7 @@ class DBService(ServiceBase):
             (Already parsed with pkg_resources.parse_version)
         """
         return parse_version(self._service.server_version())
+
+    # make able to check if there some databases on server exists
+    def __contains__(self, name):
+        return name in self.list_db()

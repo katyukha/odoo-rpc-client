@@ -12,14 +12,14 @@ ObjectType = ExtensibleByHashType._('Object', hashattr='name')
 
 
 def get_object(proxy, name):
-    """ Create new Objct instance.
+    """ Create new Object instance.
 
         :param proxy: Client instance to bind this object to
         :type proxy: Client
         :param name: name of object. Ex. 'sale.order'
-        :type name: string
+        :type name: str
         :return: Created Object instance
-        :rtype: Object instance
+        :rtype: Object
     """
     cls = ObjectType.get_class(name, default=True)
     return cls(proxy, name)
@@ -30,11 +30,14 @@ def get_object(proxy, name):
 class Object(six.with_metaclass(ObjectType, DirMixIn)):
     """ Base class for all Objects
 
-        Provides simple interface to remote osv.osv objects
+        Provides simple interface to remote osv.osv objects::
 
             erp = Client(...)
             sale_obj = Object(erp, 'sale.order')
             sale_obj.search([('state','not in',['done','cancel'])])
+
+        To create new instance - use *get_object* function
+
     """
 
     def __init__(self, service, object_name):

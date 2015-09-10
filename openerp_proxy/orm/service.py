@@ -20,7 +20,7 @@ class Service(ObjectService):
             :param object_name: name of an object to get wraper for
             :type object_name: string
             :return: instance of Object which wraps choosen object
-            :rtype: Object instance
+            :rtype: Object
         """
         if object_name in self.__objects:
             return self.__objects[object_name]

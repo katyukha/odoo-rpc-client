@@ -12,12 +12,13 @@ class ServiceManager(Extensible, DirMixIn):
     """ Class to hold services related to specific proxy and to
         automaticaly clean service cached on update of service classes
 
-        Usage:
+        Usage::
+
             services = ServiceManager(erp_proxy)
-            services.list    # get list of registered services
-            services.object  # returns service with name 'object'
-            services['common']  # returns service with name 'common'
-            services.get_service('report')  # returns service with name 'report'
+            services.list                   # get list of registered services
+            services.object                 # returns service with name 'object'
+            services['common']              # returns service with name 'common'
+            services.get_service('report')  # returns service named 'report'
     """
 
     __managers = []
@@ -41,11 +42,11 @@ class ServiceManager(Extensible, DirMixIn):
 
     def __dir__(self):
         res = set(super(ServiceManager, self).__dir__())
-        res.update(self.list)
+        res.update(self.service_list)
         return list(res)
 
     @property
-    def list(self):
+    def service_list(self):
         """ Returns list of all registered services
         """
         service_names = set()
@@ -80,7 +81,7 @@ class ServiceManager(Extensible, DirMixIn):
         return self.get_service(name)
 
     def __contains__(self, name):
-        return name in self.list
+        return name in self.service_list
 
 
 ServiceType = ExtensibleByHashType._('Service', hashattr='name')

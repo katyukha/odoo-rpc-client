@@ -3,7 +3,7 @@ import six
 import numbers
 import collections
 
-__all__ = ('empty_cache',)
+__all__ = ('empty_cache', 'Cache', 'ObjectCache')
 
 
 class ObjectCache(dict):
@@ -103,9 +103,11 @@ class ObjectCache(dict):
 
     def prefetch_fields(self, fields):
         """ Prefetch specified fields for this cache.
-            Also, dot (".") may be used in fields name's to prefetch related fields::
+            Also, dot (".") may be used in field name
+            to prefetch related fields::
 
-                cache.prefetch_fields(['myfield1', 'myfields2_ids.relatedfield'])
+                cache.prefetch_fields(
+                    ['myfield1', 'myfields2_ids.relatedfield'])
 
             :param list fields: list of fields to prefetch
 
@@ -135,6 +137,8 @@ class Cache(dict):
 
     @property
     def proxy(self):
+        """ Access to Client instance this cache is belongs to
+        """
         return self._proxy
 
     def __missing__(self, key):
@@ -146,10 +150,14 @@ class Cache(dict):
         return self[key]
 
 
-def empty_cache(proxy):
+def empty_cache(client):
     """ Create instance of empty cache for Record
 
-        Usualy cache will be dictionary structure like::
+        :param Client client: instance of Client to create cache for
+        :return: instance of Cache class
+        :rtype: Cache
+
+        Cache is dictionary-like object with structure like::
 
             cache = {
                 'product.product': {
@@ -162,5 +170,5 @@ def empty_cache(proxy):
             }
 
     """
-    return Cache(proxy)
+    return Cache(client)
 

@@ -92,9 +92,9 @@ class Test_10_Client(BaseTestCase):
         self.assertIn('object', self.client.services)
         self.assertIn('report', self.client.services)
 
-        self.assertIn('db', self.client.services.list)
-        self.assertIn('object', self.client.services.list)
-        self.assertIn('report', self.client.services.list)
+        self.assertIn('db', self.client.services.service_list)
+        self.assertIn('object', self.client.services.service_list)
+        self.assertIn('report', self.client.services.service_list)
 
         self.assertIn('db', dir(self.client.services))
         self.assertIn('object', dir(self.client.services))
