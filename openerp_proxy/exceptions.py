@@ -13,6 +13,11 @@ class ClientException(Error):
     """
     pass
 
+class ReportError(Error):
+    """ Error raise in process of report generation
+    """
+    pass
+
 
 class LoginException(ClientException):
     """ This exception should be raised, when operations requires

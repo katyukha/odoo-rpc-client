@@ -1,16 +1,29 @@
-import six
+""" Report printing logic
+
+Best way to generate report is::
+
+    sale_orders = db['sale.order'].search_records([], limit=10)
+    report = db.services.report['sale.order'].generate(sale_orders)
+    report.content
+
+where report is instance of ReportResult and report.content
+returns already base64 decoded content of report,
+which could be directly written to file
+"""
+
+import time
 import numbers
-from openerp_proxy.service.service import ServiceBase
-from extend_me import ExtensibleType
+from pkg_resources import parse_version
+from extend_me import Extensible
 
-from openerp_proxy.exceptions import Error
+from .service import ServiceBase
+from openerp_proxy.orm import (Record,
+                               RecordList)
+
+from openerp_proxy.exceptions import ReportError
 
 
-class ReportError(Error):
-    pass
-
-
-class ReportResult(six.with_metaclass(ExtensibleType._('ReportResult'), object)):
+class ReportResult(Extensible):
     """ Just a simple and extensible wrapper on report result
 
         As variant of usage - wrap result returned by server methods
@@ -20,7 +33,8 @@ class ReportResult(six.with_metaclass(ExtensibleType._('ReportResult'), object))
 
     """
 
-    def __init__(self, result, path=None):
+    def __init__(self, report, result, path=None):
+        self._report = report
         self._orig_result = result
         self._state = result.get('state', False)
         self._result = result.get('result', None)
@@ -70,7 +84,10 @@ class ReportResult(six.with_metaclass(ExtensibleType._('ReportResult'), object))
         if self._path is None:
             import hashlib
             content_hash = hashlib.sha256(self.result).hexdigest()
-            self._path = content_hash + '.' + self.format
+            report_name_base = self._report.report_action.name
+            report_name_base = report_name_base.replace('/', '-')\
+                                               .replace(':', '-')
+            self._path = report_name_base + content_hash + '.' + self.format
         return self._path
 
     def save(self, path=None):
@@ -84,23 +101,80 @@ class ReportResult(six.with_metaclass(ExtensibleType._('ReportResult'), object))
         return self
 
 
+class Report(Extensible):
+    """ Class that represents report.
+
+        useful to simplify report generation
+
+        :param ReportService service: instance of report service to bind report to
+        :param Record report: model of report action
+
+    """
+
+    def __init__(self, service, report):
+        self._service = service
+        self._report = report
+
+    @property
+    def service(self):
+        """ Service this report is binded to
+        """
+        return self._service
+
+    @property
+    def report_action(self):
+        """ Action of this report
+        """
+        return self._report
+
+    @property
+    def name(self):
+        """ Name of report
+        """
+        return self.report_action.report_name
+
+    def generate(self, model_data, report_type='pdf', context=None):
+        """ Generate report
+
+            :param report_data: RecordList or Record or ('model_name', obj_ids).
+                                represent document or documents to generate report for
+            :param str report_type: Type of report to generate. default is 'pdf'.
+            :param dict context: Aditional info. Optional.
+            :raises: ReportError
+            :return: ReportResult instance that contains generated report
+            :rtype: ReportResult
+        """
+        return self.service.generate_report(self.name,
+                                            model_data,
+                                            report_type=report_type,
+                                            context=context)
+
+
 class ReportService(ServiceBase):
     """ Service class to simplify interaction with 'report' service
     """
     class Meta:
         name = 'report'
 
+    def __init__(self, *args, **kwargs):
+        super(ReportService, self).__init__(*args, **kwargs)
+        self._reports = None
+
     def _get_available_reports(self):
-        """ Returns list of report names registered in system
+        """ Returns list of reports registered in system
         """
         report_obj = self.proxy.get_obj('ir.actions.report.xml')
-        return list(set((r.report_name for r in report_obj.search_records([]))))
+        return {r.report_name: Report(self, r) for r in report_obj.search_records([])}
 
     @property
     def available_reports(self):
-        """ Returns list of report names registered in system
+        """ Returns dictionary with all available reports
+
+            {<report name> : <Report instance>}
         """
-        return self._get_available_reports()
+        if self._reports is None:
+            self._reports = self._get_available_reports()
+        return self._reports
 
     def _prepare_report_data(self, model, ids, report_type):
         """ Performs preparation of data
@@ -112,6 +186,19 @@ class ReportService(ServiceBase):
             'ids': ids,
             'report_type': report_type,
         }
+
+    def __getitem__(self, name):
+        return self.available_reports[name]
+
+    def __getattr__(self, name):
+        try:
+            res = self[name]
+        except KeyError as exc:
+            raise AttributeError(str(exc))
+        return res
+
+    def __contains__(self, report):
+        return report in self.available_reports
 
     def report(self, report_name, model, ids, report_type='pdf', context=None):
         """ Proxy to report service *report* method
@@ -136,34 +223,24 @@ class ReportService(ServiceBase):
                                     data,
                                     context)
 
-    def report_get(self, report_id, wrap_result=False):
+    def report_get(self, report_id):
         """ Proxy method to report service *report_get* method
 
             :param int report_id: int that represents ID of report to get
                                   (value returned by report method)
-            :param bool wrap_result: if set to True, then instead of standard dict,
-                                     ReportResult instance will be returned.
-                                     default: False
-            :return: ReportResult or dictinary with keys:
+            :return: dictinary with keys:
                         - 'state': boolean, True if report generated correctly
                         - 'result': base64 encoded content of report file
                         - 'format': string representing format, report generated in
 
-                     return type controlled be *wrap_result* parametr
-            :rtype: dict|ReportResult
+            :rtype: dict
         """
-        if wrap_result:
-            return ReportResult(self._service.report_get(self.proxy.dbname,
-                                                         self.proxy.uid,
-                                                         self.proxy._pwd,
-                                                         report_id))
-        else:
-            return self._service.report_get(self.proxy.dbname,
-                                            self.proxy.uid,
-                                            self.proxy._pwd,
-                                            report_id)
+        return self._service.report_get(self.proxy.dbname,
+                                        self.proxy.uid,
+                                        self.proxy._pwd,
+                                        report_id)
 
-    def render_report(self, report_name, model, ids, report_type='pdf', context=None, wrap_result=False):
+    def render_report(self, report_name, model, ids, report_type='pdf', context=None):
         """ Proxy to report service *render_report* method
 
             NOTE: available after version 6.1.
@@ -174,34 +251,73 @@ class ReportService(ServiceBase):
             :type ids: list of int | int
             :param str report_type: Type of report to generate. default is 'pdf'.
             :param dict context: Aditional info. Optional.
-            :param bool wrap_result: if set to True, then instead of standard dict,
-                                     ReportResult instance will be returned.
-                                     default: False
-            :return: ReportResult or dictinary with keys:
+            :return: dictinary with keys:
                         - 'state': boolean, True if report generated correctly
                         - 'result': base64 encoded content of report file
                         - 'format': string representing format, report generated in
 
-                     return type controlled be *wrap_result* parametr
-            :rtype: dict|ReportResult
+            :rtype: dict
         """
         context = {} if context is None else context
         ids = [ids] if isinstance(ids, numbers.Integral) else ids
         data = self._prepare_report_data(model, ids, report_type)
 
-        if wrap_result:
-            return ReportResult(self._service.render_report(self.proxy.dbname,
-                                                            self.proxy.uid,
-                                                            self.proxy._pwd,
-                                                            report_name,
-                                                            ids,
-                                                            data,
-                                                            context))
-        else:
-            return self._service.render_report(self.proxy.dbname,
-                                               self.proxy.uid,
-                                               self.proxy._pwd,
-                                               report_name,
-                                               ids,
-                                               data,
-                                               context)
+        return self._service.render_report(self.proxy.dbname,
+                                           self.proxy.uid,
+                                           self.proxy._pwd,
+                                           report_name,
+                                           ids,
+                                           data,
+                                           context)
+
+    def generate_report(self, report_name, report_data, report_type='pdf', context=None):
+        """ Generate specified report for specifed report data.
+            Report data could be RecordList or Record instance.
+            Result is wrapped into ReportResult class
+
+
+            :param str report_name: string representing name of report service
+            :param report_data: RecordList or Record or ('model_name', obj_ids).
+                                represent document or documents to generate report for
+            :param str report_type: Type of report to generate. default is 'pdf'.
+            :param dict context: Aditional info. Optional.
+            :raises: ReportError
+            :return: ReportResult instance that contains generated report
+            :rtype: ReportResult
+        """
+        if isinstance(report_data, RecordList):
+            report_model = report_data.object.name
+            obj_ids = report_data.ids
+        elif isinstance(report_data, Record):
+            report_model = report_data._object.name
+            obj_ids = report_data.id
+        else:  # report_data is ('model_name', model_ids)
+            report_model, obj_ids = report_data
+
+        if self.proxy.server_version >= parse_version('6.1'):
+            report_result = self.render_report(report_name,
+                                               report_model,
+                                               obj_ids,
+                                               report_type=report_type,
+                                               context=context)
+        else:  # server < 6.1
+            report_id = self.report(report_name,
+                                    report_model,
+                                    obj_ids,
+                                    report_type=report_type,
+                                    context=context)
+            attempt = 0
+            while True:
+                report_result = self.report_get(report_id)
+                if report_result['state']:
+                    break
+                else:
+                    time.sleep(1)
+                    attempt += 1
+
+                if attempt > 200:
+                    raise ReportError("Report download timeout!")
+
+        return ReportResult(self.available_reports[report_name],
+                            report_result)
+

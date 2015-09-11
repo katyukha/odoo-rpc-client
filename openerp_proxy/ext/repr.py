@@ -9,18 +9,38 @@ used inside IPython notebook
 
 import six
 import csv
+import os.path
 import tempfile
 
-from openerp_proxy.orm.record import RecordList
-from openerp_proxy.orm.record import Record
-from openerp_proxy.orm.object import Object
-from openerp_proxy.core import Client
+from openerp_proxy import (Client,
+                           Session)
+from openerp_proxy.orm import (RecordList,
+                               Record,
+                               Object)
+from openerp_proxy.service.report import (Report,
+                                          ReportResult,
+                                          ReportService)
 from openerp_proxy.utils import AttrDict
-from openerp_proxy.session import Session
 
 from IPython.display import HTML, FileLink
 
 from openerp_proxy.utils import ustr as _
+
+
+# TODO: use enviroment var or some sort of config
+GEN_FILE_PATH = os.path.normpath(os.path.join('.', 'tmp'))
+CSV_PATH = os.path.join(GEN_FILE_PATH, 'csv')
+REPORTS_PATH = os.path.join(GEN_FILE_PATH, 'reports')
+
+try:
+    os.makedirs(CSV_PATH)
+except os.error:
+    pass
+
+try:
+    os.makedirs(REPORTS_PATH)
+except os.error:
+    pass
 
 
 class FieldNotFoundException(Exception):
@@ -311,14 +331,8 @@ class HTMLTable(HTML):
             :return: instance of FileLink
             :rtype: FileLink
         """
-        CSV_PATH = './tmp/csv/'  # TODO: use enviroment var or some sort of config
         import os.path
         import os
-
-        try:
-            os.makedirs(CSV_PATH)
-        except os.error:
-            pass
 
         # Python 2/3 compatability
         if six.PY3:
@@ -633,6 +647,83 @@ class ClientHTML(Client):
 
         table = ttable % (caption + data)
         return html % (table + help_text)
+
+
+class AvailableReportsInfo(AttrDict):
+    """ Simple class to get HTML representation of available reports
+    """
+    def __init__(self, *args, **kwargs):
+        super(AvailableReportsInfo, self).__init__(*args, **kwargs)
+
+        self._fields = None
+        self._html_table = None
+
+    @property
+    def default_fields(self):
+        """ Default fields displayed in resulting HTML table
+        """
+        if self._fields is None:
+            self._fields = [
+                HField('report_action.report_name',
+                       'report service naem',
+                       silent=True),
+                HField('report_action.name',
+                       'report name',
+                       silent=True),
+                HField('report_action.model',
+                       'report model',
+                       silent=True),
+                HField('report_action.help',
+                       'report help info',
+                       silent=True),
+            ]
+        return self._fields
+
+    def as_html_table(self, fields=None):
+        """ Generates HTMLTable representation for this reports info
+
+            :param fields: list of fields to display instead of defaults
+            :return: generated HTMLTable instanse
+            :rtype: HTMLTable
+        """
+        fields = self.default_fields if fields is None else fields
+        return HTMLTable(sorted(self.values(), key=lambda x: x.name),
+                         fields,
+                         caption=u'Available reports')
+
+    def _repr_html_(self):
+        """ HTML representation for reports info
+        """
+        if self._html_table is None:
+            self._html_table = self.as_html_table()
+        return self._html_table._repr_html_()
+
+
+class ReportServiceExt(ReportService):
+    """ Adds html representation for report service
+    """
+
+    def _get_available_reports(self):
+        """ Returns list of reports registered in system
+        """
+        return AvailableReportsInfo(
+            super(ReportServiceExt, self)._get_available_reports())
+
+    def _repr_html_(self):
+        return ("<div><span>This is report service. To get list of available reports "
+                "You can access <i>available_reports</i> property of this service: "
+                "<pre>.available_reports</pre></span>"
+                "</div>")
+
+
+class ReportResultExt(ReportResult):
+    """ Adds HTML representation of Report Result
+    """
+
+    def _repr_html_(self):
+        # TODO: refactor this
+        path = os.path.join(REPORTS_PATH, self.path)
+        return FileLink(self.save(path).path)._repr_html_()
 
 
 class IPYSession(Session):

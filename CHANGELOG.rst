@@ -12,7 +12,17 @@
       ``openerp_proxy.service.service.ServiceManager.service_list``
       This affects ``Client.services`` so now ``Client.services.service_list`` should be used
       instead of using ``Client.services.list``
+    - *Backward incompatible*: reports service refactored. ``wrap_result`` parametr to report
+      service method removed. instead added ``generate_report`` method, which is recommended to use.
 
+
+    - Added new way reports could be generated in:
+      ``client.services.report[<report_name>].generate(<report_data>)`` where
+      ``report_data`` could be one of:
+        - Record instance
+        - RecordList instance
+        - tuple('model.name', model_ids))
+    - Added HTML representation for report service objects
     - Changed ``store_passwords`` option meaning. now if set it will store passwords bese64 encoded,
       instead of using simple-crypt module. This change makes it faster to decode password,
       because last-versions of simple-crypt become too slow. and usualy no encryption needed here.
