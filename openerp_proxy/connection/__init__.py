@@ -3,8 +3,3 @@ from . import (xmlrpc,
 from .connection import (ConnectorBase,
                          get_connector,
                          get_connector_names)
-
-__all__ = (
-    'get_connector',
-    'get_connector_names',
-    'ConnectorBase')

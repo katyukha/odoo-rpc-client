@@ -71,6 +71,33 @@ Features
 -  Missed feature? ask in `Project Issues <https://github.com/katyukha/openerp-proxy/issues>`_
 
 
+Quick example
+~~~~~~~~~~~~~
+
+::
+
+    from openerp_proxy import Client
+
+    client = Client('localhost', 'my_db', 'user', 'password')
+
+    # get current user
+    client.user
+    print(user.name)
+
+    # simple rpc calls
+    client.execute('res.partner', 'read', [user.partner_id.id])
+
+    # Model browsing
+    SaleOrder = client['sale.order']
+    s_orders = SaleOrder.search_records([])
+    for order in s_orders:
+        print(order.name)
+        for line in order.order_line:
+            print("\t%s" % line.name)
+        print("-"*5)
+        print()
+
+
 Supported Python versions
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
