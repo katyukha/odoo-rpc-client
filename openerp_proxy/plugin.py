@@ -2,7 +2,7 @@
 import six
 import extend_me
 
-from openerp_proxy.utils import DirMixIn
+from .utils import DirMixIn
 
 PluginMeta = extend_me.ExtensibleByHashType._('Plugin', hashattr='name')
 

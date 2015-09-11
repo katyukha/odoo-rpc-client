@@ -8,14 +8,19 @@ class ConnectorError(Error):
     pass
 
 
-class ObjectException(Error):
-    """ Base class for exceptions related to Objects """
-    pass
-
-
 class ClientException(Error):
+    """ Base class for client related exceptions
+    """
     pass
+
 
 class LoginException(ClientException):
+    """ This exception should be raised, when operations requires
+        login and password. For example interaction with Odoo object service.
+    """
     pass
 
+
+class ObjectException(ClientException):
+    """ Base class for exceptions related to Objects """
+    pass

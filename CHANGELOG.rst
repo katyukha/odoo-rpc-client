@@ -1,4 +1,4 @@
-master:
+0.6:
     - *Backward incompatible*: Changed session file format.
       *Start up imports* and *extra_paths* moved to *options* section of file.
     - *Backward incompatible*: ``IPYSession`` moved to ``openerp_proxy.ext.repr`` extensions.

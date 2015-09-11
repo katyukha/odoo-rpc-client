@@ -219,7 +219,7 @@ class Client(Extensible):
 
             :return: Id of user logged in or new Client instance (if kwargs passed)
             :rtype: int|Client
-            :raises ClientException: if wrong login or password
+            :raises LoginException: if wrong login or password
         """
         if kwargs:
             init_kwargs = self.get_init_args()

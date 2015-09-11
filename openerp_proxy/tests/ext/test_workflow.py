@@ -10,7 +10,6 @@ from openerp_proxy.tests import BaseTestCase
 from openerp_proxy.core import Client
 from openerp_proxy.orm.record import (Record,
                                       RecordList)
-from openerp_proxy.orm.object import Object
 
 
 @unittest.skipUnless(os.environ.get('TEST_WITH_EXTENSIONS', False), 'requires tests enabled')
@@ -29,11 +28,20 @@ class Test_32_ExtWorkFlow(BaseTestCase):
         self.obj_ids = self.object.search([], limit=10)
         self.recordlist = self.object.read_records(self.obj_ids)
 
+        self.object_no_wkf = self.client.get_obj('res.partner')
+        self.record_no_wkf = self.object_no_wkf.browse(1)
+        self.obj_ids_no_wkf = self.object_no_wkf.search([], limit=10)
+        self.recordlist_no_wkf = self.object_no_wkf.read_records(self.obj_ids_no_wkf)
+
     def test_obj_workflow(self):
         res = self.object.workflow
         self.assertIsInstance(res, Record)
         self.assertEqual(res._object.name, 'workflow')
         self.assertEqual(res.osv, 'sale.order')
+
+        res = self.object_no_wkf.workflow
+        self.assertIsInstance(res, bool)
+        self.assertIs(res, False)
 
     def test_record_wkf_instance(self):
         res = self.record.workflow_instance
@@ -41,11 +49,19 @@ class Test_32_ExtWorkFlow(BaseTestCase):
         self.assertEqual(res.wkf_id.id, self.object.workflow.id)
         self.assertEqual(res.res_id, self.record.id)
 
+        res = self.record_no_wkf.workflow_instance
+        self.assertIsInstance(res, bool)
+        self.assertIs(res, False)
+
     def test_record_wkf_items(self):
         res = self.record.workflow_items
         self.assertIsInstance(res, RecordList)
         self.assertEqual(len(res), 1)
         self.assertEqual(res[0]._object.name, 'workflow.workitem')
+
+        res = self.record_no_wkf.workflow_items
+        self.assertIsInstance(res, list)
+        self.assertEqual(res, [])
 
     @unittest.skipIf(os.environ.get('TEST_WITHOUT_DB_CHANGES', False), 'db changes not allowed. skipped')
     def test_record_signal_send(self):

@@ -50,9 +50,12 @@ done
 
 
 # config defaults
-TEST_MODULE=${TEST_MODULE:-'openerp_proxy.tests.all'};
 PY_VERSIONS=${PY_VERSIONS:-"2.7 3.4"};
 
+
+if [ ! -z $TEST_MODULE ]; then
+    TEST_MODULE_OPT=" --test-suite=\"$TEST_MODULE\"";
+fi
 
 # run_single_test <python version>
 function run_single_test {
@@ -60,9 +63,8 @@ function run_single_test {
     (cd $SCRIPTPATH && \
                 virtualenv venv_test -p python${py_version} && \
                 source ./venv_test/bin/activate && \
-                pip install --upgrade pip setuptools coverage mock pudb ipython[notebook] simple-crypt && \
-                python setup.py develop && \
-                coverage run -p -m unittest -v $TEST_MODULE && \
+                pip install --upgrade pip pudb && \
+                coverage run -p setup.py test $TEST_MODULE_OPT && \
                 deactivate && \
                 rm -rf venv_test
     )

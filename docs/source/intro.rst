@@ -1,14 +1,30 @@
 OpenERP / Odoo proxy
 ====================
 
-Build Status
-------------
 
 .. image:: https://travis-ci.org/katyukha/openerp-proxy.svg?branch=master
     :target: https://travis-ci.org/katyukha/openerp-proxy
 
 .. image:: https://coveralls.io/repos/katyukha/openerp-proxy/badge.svg?branch=master&service=github
     :target: https://coveralls.io/github/katyukha/openerp-proxy?branch=master
+    
+.. image:: https://img.shields.io/pypi/v/openerp_proxy.svg
+    :target: https://pypi.python.org/pypi/openerp_proxy/
+
+.. image:: https://img.shields.io/pypi/l/openerp_proxy.svg
+    :target: https://pypi.python.org/pypi/openerp_proxy/
+
+..
+  .. image:: https://img.shields.io/pypi/pyversions/openerp_proxy.svg
+      :target: https://pypi.python.org/pypi/openerp_proxy/
+    
+  .. image:: https://img.shields.io/pypi/format/openerp_proxy.svg
+      :target: https://pypi.python.org/pypi/openerp_proxy/
+
+-------------------
+
+.. contents::
+   :depth: 2
 
 
 Overview
@@ -81,7 +97,8 @@ Examples
 Install
 -------
 
-To install package just use PIP::
+This project is present on `PyPI <https://pypi.python.org/pypi/openerp_proxy/>`_
+do it could be installed via PIP::
 
     pip install openerp_proxy
     
@@ -101,8 +118,11 @@ just type::
     pip install ipython ipython[notebook]
 
 
+Usage
+-----
+
 Use as shell
-------------
+~~~~~~~~~~~~
 
 After instalation run in shell:
 
@@ -120,13 +140,12 @@ Next You have to get connection to some Odoo database.
 
     >>> db = session.connect()
 
-This will ask You for host, port, database, etc to connect to. Now You
-have connection to Odoo database which allows You to use database
-objects.
+This will ask You for host, port, database, etc to connect to and return Client instance
+which represents database connection.
 
 
 Use as library
---------------
+~~~~~~~~~~~~~~
 
 The one diference betwen using as lib and using as shell is the way
 connection to database is created. When using as shell the primary object
@@ -149,7 +168,7 @@ And next all there same, no more differences betwen shell and lib usage.
 
 
 Use in IPython's notebook
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To better suit for HTML capable notebook You would like to use IPython's version of *session*
 object and *openerp_proxy.ext.repr* extension.
@@ -161,6 +180,7 @@ So in first cell of notebook import session and extensions/plugins You want::
     # note that extensions were imported before session,
     # because some of them modify Session class
     from openerp_proxy.session import Session
+    from openerp_proxy.core import Client
 
     session = Session()
 
@@ -173,17 +193,27 @@ To solve this, it is recommended to uses *store_passwords* option::
     session.option('store_passwords', True)
     session.save()
 
-Next use it likt shell (or like lib), but *do not forget to save session, after new connection*
+Next use it like shell, but *do not forget to save session, after new connection*::
+
+    db = session.connect()
+    session.save()
+    
+or like lib::
+
+    db = Client(host='my_host.int',
+                dbname='my_db',
+                user='my_db_user',
+                pwd='my_password here')
 
 *Note*: in old version of IPython getpass was not work correctly,
 so maybe You will need to pass password directly to *session.connect* method.
 
 
 General usage
--------------
+~~~~~~~~~~~~~
 
-Lets try to find how many sale orders in 'done' state we have in
-database:
+For example lets try to find how many sale orders in 'done' state we have in
+our database. (Look above sections to get help on how to connect to Odoo database)
 
 ::
 
@@ -191,7 +221,7 @@ database:
     >>>
     >>> # Now lets search for sale orders:
     >>> sale_order_obj.search([('state', '=', 'done')], count=True)
-    >>> 5
+    5
 
 So we have 5 orders in done state. So let's read them.
 
@@ -228,25 +258,28 @@ to lazily fetch related fields.
 
     >>> sale_orders = sale_order_obj.search_records([('state', '=', 'done')])
     >>> sale_orders[0]
-    ... R(sale.order, 9)[SO0011]
+    R(sale.order, 9)[SO0011]
     >>>
     >>> # So we have list of Record objects. Let's check what they are
     >>> so = sale_orders[0]
     >>> so.id
-    ... 9
+    9
     >>> so.name
-    ... SO0011
+    SO0011
     >>> so.partner_id 
-    ... R(res.partner, 9)[Better Corp]
+    R(res.partner, 9)[Better Corp]
     >>>
     >>> so.partner_id.name
-    ... Better Corp
+    Better Corp
     >>> so.partner_id.active
-    ... True
+    True
 
+
+Additional features
+-------------------
 
 Session: db aliases
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 Session provides ability to add aliases to databases, which will simplify access to them.
 To add aliase to our db do the folowing:
@@ -266,7 +299,7 @@ this allows to faster get connection to database Your with which You are working
 
 
 Sugar extension
----------------
+~~~~~~~~~~~~~~~
 
 This extension provides some syntax sugar to ease access to objects
 
@@ -295,12 +328,12 @@ And after that You will have folowing features working
 For other extensions look at *openerp_proxy/ext* subdirectory
 
 
-Start-up imports
-----------------
+Session: Start-up imports
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If You want some modules (extensions/plugins) to be automatiacly loaded/imported
 at start-up, there are ``session.start_up_imports`` property, that points to 
-list that holds names of movedule to be imported at start-up.
+list that holds names of modules to be imported at session creation time.
 
 For example, if You want *Sugar extension* to be automaticaly imported, just
 add it to ``session.start_up_imports`` list
@@ -314,7 +347,7 @@ will be automaticaly enable.
 
 
 Plugins
--------
+~~~~~~~
 
 In version 0.4 plugin system was completly refactored. At this version
 we start using [*extend_me*](https://pypi.python.org/pypi/extend_me)
@@ -355,20 +388,21 @@ So let's start
                 emp_id = emp_obj.search([('user_id', '=', self.proxy.uid)])
                 emp = emp_obj.read(emp_id, ['state'])
                 return emp[0]['state']
+                
+4. Now your plugin is completed, but it is not on python path.
+   There is ability to add additional paths to session, so
+   when session starts, ``sys.path`` will be patched with that paths.
+   To add your extra path to session You need do folowing::
+   
+       >>> session.add_path('~/oerp_proxy_plugins/')
+       >>> session.save()
+       
+   Now, each time session created, this path will be added to python path
 
-4. Now Your plugin is done. Let's test it.
-   Run ``openerp_proxy`` and try to import it
+5. Now we cat test our plugin.
+   Run ``openerp_proxy`` and try to import it::
 
-    ::
-
-        >>> # First add path of Your plugin to session.
-        >>> # When session is started all registered paths 
-        >>> # will be automaticaly added to sys.path.
-        >>> # If You do not want this behavior,
-        >>> # use standard 'sys.path.append(path)'
-        >>> session.add_path('~/oerp_proxy_plugins/')
-
-        >>> # and import our plugin
+        >>> #import our plugin
         >>> import attendance
 
         >>> # and use it
@@ -380,7 +414,7 @@ So let's start
         >>> # modules imported at start-up of session, do this
         >>> session.start_up_imports.add('attendance')
 
-As You see above, to use plugin (or extension), just import it module (better at startu-up)
+As You see above, to use plugin (or extension), just import it's module (better at startu-up)
 
 --------------
 
@@ -390,10 +424,9 @@ code <https://github.com/katyukha/openerp-proxy>`_ or
 
 
 Alternatives
-~~~~~~~~~~~~
+------------
 
 -  `Official OpenERP client
    library <https://github.com/OpenERP/openerp-client-lib>`_
 -  `ERPpeek <https://pypi.python.org/pypi/ERPpeek>`_
 -  `OEERPLib <https://pypi.python.org/pypi/OERPLib>`_
-

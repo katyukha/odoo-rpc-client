@@ -4,15 +4,16 @@
 from openerp_proxy.utils import (wpartial,
                                  ustr,
                                  DirMixIn)
-from openerp_proxy.orm.object import Object
-from openerp_proxy.orm.cache import empty_cache
-from extend_me import ExtensibleType
+from .object import Object
+from .cache import empty_cache
+
 
 import six
 import abc
 import numbers
 import functools
 import collections
+from extend_me import ExtensibleType
 
 
 __all__ = (
@@ -20,7 +21,8 @@ __all__ = (
     'RecordRelations',
     'ObjectRecords',
     'RecordList',
-    'empty_cache',
+    'get_record',
+    'get_record_list',
 )
 
 

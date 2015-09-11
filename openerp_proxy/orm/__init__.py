@@ -1,3 +1,18 @@
-from openerp_proxy.orm.object import *
-from openerp_proxy.orm.record import *
-from openerp_proxy.orm.service import *
+from .cache import empty_cache
+from .object import (get_object,
+                     Object)
+from .record import (get_record,
+                     get_record_list,
+                     Record,
+                     RecordList)
+from .service import Service
+
+__all__ = (
+    'get_object',
+    'get_record',
+    'get_record_list',
+    'empty_cache',
+    'Object',
+    'Record',
+    'RecordList',
+)

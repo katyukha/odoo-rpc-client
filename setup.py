@@ -1,14 +1,22 @@
 #!/usr/bin/env python
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+import os.path
+from setuptools import setup, compat
 
-import openerp_proxy.version
+# workaround for: https://github.com/travis-ci/travis-ci/issues/1778
+import multiprocessing
+
+# load version info
+version_file = os.path.join(os.path.dirname(__file__), 'openerp_proxy', 'version.py')
+if compat.PY2:
+    execfile(version_file)
+elif compat.PY3:
+    with open(version_file, 'rb') as f:
+        exec(compile(f.read(), version_file, 'exec'))
+
 
 setup(name='openerp_proxy',
-      version=openerp_proxy.version.version,
+      version=version,
       description='Odoo/OpenERP CLI interface and library for RPC',
       author='Dmytro Katyukha',
       author_email='firemage.dima@gmail.com',
@@ -46,5 +54,13 @@ setup(name='openerp_proxy',
           'six',
           'extend_me>=1.1.3',
           'requests',
+          'ipython>=3',
       ],
+      tests_require=[
+          'mock',
+          'nbformat',
+          'jupyter_client',
+          'coverage',
+      ],
+      test_suite='openerp_proxy.tests.all',
 )
