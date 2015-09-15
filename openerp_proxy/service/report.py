@@ -75,7 +75,7 @@ class ReportResult(Extensible):
         """
         if self._content is None:
             import base64
-            self._content = base64.decodestring(self.result)
+            self._content = base64.b64decode(self.result.encode('utf-8'))
         return self._content
 
     @property
@@ -84,11 +84,11 @@ class ReportResult(Extensible):
         """
         if self._path is None:
             import hashlib
-            content_hash = hashlib.sha256(self.result).hexdigest()
-            report_name_base = self._report.report_action.name
-            report_name_base = report_name_base.replace('/', '-')\
-                                               .replace(':', '-')
-            self._path = report_name_base + content_hash + '.' + self.format
+            content_hash = hashlib.sha256(self.content).hexdigest().encode('utf-8')
+            report_name_base = self._report.report_action.name.encode('utf-8')
+            report_name_base = report_name_base.replace(b'/', b'-')\
+                                               .replace(b':', b'-')
+            self._path = str(report_name_base + content_hash + b'.' + self.format.encode('utf-8'))
         return self._path
 
     def save(self, path=None):

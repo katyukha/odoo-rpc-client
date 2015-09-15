@@ -54,16 +54,17 @@ PY_VERSIONS=${PY_VERSIONS:-"2.7 3.4"};
 
 
 if [ ! -z $TEST_MODULE ]; then
-    TEST_MODULE_OPT=" --test-suite=\"$TEST_MODULE\"";
+    TEST_MODULE_OPT=" --test-suite=$TEST_MODULE";
 fi
 
 # run_single_test <python version>
 function run_single_test {
     local py_version=$1;
     (cd $SCRIPTPATH && \
-                virtualenv venv_test -p python${py_version} && \
+                virtualenv --no-site-packages -p python${py_version} venv_test&& \
                 source ./venv_test/bin/activate && \
-                pip install --upgrade pip pudb && \
+                pip install --upgrade pip setuptools pbr && \
+                pip install --upgrade coverage six extend_me requests mock pudb ipython[notebook] && \
                 coverage run -p setup.py test $TEST_MODULE_OPT && \
                 deactivate && \
                 rm -rf venv_test

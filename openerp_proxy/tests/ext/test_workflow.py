@@ -12,7 +12,7 @@ from openerp_proxy.orm.record import (Record,
                                       RecordList)
 
 
-@unittest.skipUnless(os.environ.get('TEST_WITH_EXTENSIONS', False), 'requires tests enabled')
+@unittest.skipUnless(os.environ.get('TEST_WITH_EXTENSIONS', False), 'requires extensions enabled')
 class Test_32_ExtWorkFlow(BaseTestCase):
     def setUp(self):
         super(Test_32_ExtWorkFlow, self).setUp()

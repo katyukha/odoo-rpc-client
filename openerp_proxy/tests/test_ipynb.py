@@ -88,7 +88,7 @@ class NBRunner(object):
             content = msg['content']
 
             # set the prompt number for the input and the output
-            if 'execution_count' in content:
+            if cell and 'execution_count' in content:
                 cell['execution_count'] = content['execution_count']
 
             if msg_type == 'status':
@@ -145,10 +145,12 @@ class NBRunner(object):
 
     def _prepare_run(self):
         # enable coverage:
-        self.kc.execute(
-            "import os, coverage;\n"
+        import sys
+        msg_id = self.kc.execute(
+            "import sys, os, coverage;\n"
             "_coverage = coverage.control.coverage(data_suffix='%s-ipython' % os.getpid());\n"
-            "_coverage.start()\n")
+            "_coverage.start();\n"
+        )
 
         reply = self.kc.get_shell_msg(timeout=20)['content']
         if reply['status'] == 'error':
