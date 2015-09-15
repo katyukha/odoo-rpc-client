@@ -32,10 +32,10 @@ class Service(ObjectService):
         self.__objects[object_name] = obj
         return obj
 
-    def clean_caches(self):
+    def clean_cache(self):
         """ Cleans caches, to fill them with fresh data with next call of related methods
         """
-        super(Service, self).clean_caches()
+        super(Service, self).clean_cache()
         self.__objects = {}
 
 

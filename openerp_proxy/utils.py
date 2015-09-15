@@ -1,3 +1,4 @@
+import os
 import six
 import json
 import functools
@@ -9,6 +10,17 @@ try:
     xinput = raw_input
 except NameError:
     xinput = input
+
+
+def makedirs(path):
+    """ os.makedirs wrapper. No errors raised if directory already exists
+
+        :param str path: directory path to create
+    """
+    try:
+        os.makedirs(path)
+    except os.error:
+        pass
 
 
 def json_read(file_path):

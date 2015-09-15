@@ -6,7 +6,7 @@ used inside IPython notebook
 """
 
 # TODO: rename to IPython or something like that
-
+import os
 import six
 import csv
 import os.path
@@ -20,27 +20,54 @@ from openerp_proxy.orm import (RecordList,
 from openerp_proxy.service.report import (Report,
                                           ReportResult,
                                           ReportService)
-from openerp_proxy.utils import AttrDict
 
 from IPython.display import HTML, FileLink
 
 from openerp_proxy.utils import ustr as _
+from openerp_proxy.utils import (AttrDict,
+                                 makedirs)
 
 
 # TODO: use enviroment var or some sort of config
+# Here we use paths based on current directory, because default IPython
+# notebook configuration does not allow to access files located somewere else
 GEN_FILE_PATH = os.path.normpath(os.path.join('.', 'tmp'))
 CSV_PATH = os.path.join(GEN_FILE_PATH, 'csv')
 REPORTS_PATH = os.path.join(GEN_FILE_PATH, 'reports')
 
-try:
-    os.makedirs(CSV_PATH)
-except os.error:
-    pass
+# Create required paths
+makedirs(CSV_PATH)
+makedirs(REPORTS_PATH)
 
-try:
-    os.makedirs(REPORTS_PATH)
-except os.error:
-    pass
+# HTML Templates
+TMPL_INFO_WITH_HELP = u"""
+<div>
+    <div style="display:inline-block">%(info)s</div>
+    <div style="display:inline-block;vertical-align:top;margin-left:10px;">%(help)s</div>
+</div>
+"""
+
+TMPL_TABLE = u"""
+<table style="%(styles)s"><caption>%(caption)s</caption>%(rows)s</table>
+"""
+
+TMPL_TABLE_ROW = u"<tr>%s</tr>"
+TMPL_TABLE_DATA = u"<td>%s</td>"
+TMPL_TABLE_HEADER = u"<th>%s</th>"
+
+
+def th(val):
+    return TMPL_TABLE_HEADER % _(val)
+
+
+def td(val):
+    return TMPL_TABLE_DATA % _(val)
+
+
+def tr(*args):
+    """ data is list
+    """
+    return TMPL_TABLE_ROW % u"".join(args)
 
 
 class FieldNotFoundException(Exception):
@@ -331,9 +358,6 @@ class HTMLTable(HTML):
             :return: instance of FileLink
             :rtype: FileLink
         """
-        import os.path
-        import os
-
         # Python 2/3 compatability
         if six.PY3:
             adapt = lambda s: s
@@ -348,7 +372,7 @@ class HTMLTable(HTML):
             csv_writer.writerow(tuple((adapt(h) for h in self.iheaders)))
             for record in self.irecords:
                 csv_writer.writerow(tuple((adapt(r) for r in record['row'])))
-        return FileLink(CSV_PATH + os.path.split(tmp_file.name)[-1])
+        return FileLink(os.path.join(CSV_PATH, os.path.split(tmp_file.name)[-1]))
 
 
 class RecordListData(RecordList):
@@ -406,14 +430,7 @@ class RecordListData(RecordList):
     def _repr_html_(self):
         """ Builds HTML representation for IPython
         """
-        html = u"<div>%s</div>"
-        ttable = u"<table style='display:inline-block'>%s</table>"
-        trow = u"<tr>%s</tr>"
-        tdata = u"<td>%s</td>"
-        thead = u"<th>%s</th>"
-        caption = u"<caption>%s</caption>" % _(self)
-        help_text = (u"<div style='display:inline-block;vertical-align:top;margin-left:10px;'>"
-                     u"To get table representation of data call method<br/>"
+        help_text = (u"To get table representation of data call method<br/>"
                      u"&nbsp;<i>.as_html_table</i><br/>"
                      u"passing as arguments fields You want to see in resulting table<br/>"
                      u"for better information get doc on as_html_table method:<br/>"
@@ -421,20 +438,19 @@ class RecordListData(RecordList):
                      u"example of using this mehtod:<br/>"
                      u"&nbsp;<i>.as_html_table('id','name','_name')</i><br/>"
                      u"Here <i>_name</i> field is aliase for result of <i>name_get</i> method"
-                     u"called on record"
-                     u"</div>")
+                     u"called on record")
 
-        def to_row(header, val):
-            return trow % ((thead % _(header)) + (tdata % _(val)))
+        data = u"".join((
+            tr(th("Object"), td(self.object)),
+            tr(th("Proxy"), td(self.object.proxy.get_url())),
+            tr(th("Record count"), td(len(self))),
+        ))
 
-        data = u""
-        data += to_row("Object", self.object)
-        data += to_row("Proxy", self.object.proxy.get_url())
-        data += to_row("Record count", len(self))
+        table = TMPL_TABLE % {'styles': '',
+                              'caption': _(self),
+                              'rows': data}
 
-        table = ttable % (caption + data)
-
-        return html % (table + help_text)
+        return TMPL_INFO_WITH_HELP % {'info': table, 'help': help_text}
 
 
 class HTMLRecord(Record):
@@ -486,32 +502,27 @@ class HTMLRecord(Record):
     def _repr_html_(self):
         """ Builds HTML representation for IPython
         """
-        html = u"<div>%s</div>"
-        ttable = u"<table style='display:inline-block'>%s</table>"
         trow = u"<tr>%s</tr>"
         tdata = u"<td>%s</td>"
         thead = u"<th>%s</th>"
-        caption = u"<caption>%s</caption>" % _(self)
-        help_text = (u"<div style='display:inline-block;vertical-align:top;margin-left:10px;'>"
-                     u"To get HTML Table representation of this record call method:<br/>"
+        help_text = (u"To get HTML Table representation of this record call method:<br/>"
                      u"&nbsp;<i>.as_html()</i><br/>"
                      u"Optionaly You can pass list of fields You want to see:<br/>"
                      u"&nbsp;<i>.as_html('name', 'origin')</i><br/>"
                      u"for better information get doc on <i>as_html</i> method:<br/>"
-                     u"&nbsp;<i>.as_html?</i><br/>"
-                     u"</div>")
+                     u"&nbsp;<i>.as_html?</i><br/>")
 
-        def to_row(header, val):
-            return trow % ((thead % _(header)) + (tdata % _(val)))
+        data = u"".join((
+            tr(th("Object"), td(self._object)),
+            tr(th("Proxy"), td(self._proxy.get_url())),
+            tr(th("Name"), td(self._name)),
+        ))
 
-        data = u""
-        data += to_row("Object", self._object)
-        data += to_row("Proxy", self._proxy.get_url())
-        data += to_row("Name", self._name)
+        table = TMPL_TABLE % {'styles': '',
+                              'caption': _(self),
+                              'rows': data}
 
-        table = ttable % (caption + data)
-
-        return html % (table + help_text)
+        return TMPL_INFO_WITH_HELP % {'info': table, 'help': help_text}
 
 
 class ColInfo(AttrDict):
@@ -579,14 +590,7 @@ class ObjectHTML(Object):
         """ Builds HTML representation for IPython
         """
         model = self.model
-        html = u"<div>%s</div>"
-        ttable = u"<table style='display:inline-block'>%s</table>"
-        trow = u"<tr>%s</tr>"
-        tdata = u"<td>%s</td>"
-        thead = u"<th>%s</th>"
-        caption = u"<caption>Object '%s'</caption>" % _(model.name)
-        help_text = (u"<div style='display:inline-block;vertical-align:top;margin-left:10px;'>"
-                     u"To get information about columns access property<br/>"
+        help_text = (u"To get information about columns access property<br/>"
                      u"&nbsp;<i>.columns_info</i><br/>"
                      u"Also there are available standard server-side methods:<br/>"
                      u"&nbsp;<i>search</i>, <i>read</i>, <i>write</i>, <i>unlink</i></br>"
@@ -594,21 +598,20 @@ class ObjectHTML(Object):
                      u"<ul style='margin-top:1px'>"
                      u"<li><i>search_records</i> - same as <i>search</i> but returns <i>RecordList</i> instance</li>"
                      u"<li><i>read_records</i> - same as <i>read</i> but returns <i>Record</i> or <i>RecordList</i> instance</li>"
-                     u"<ul><br/>"
-                     u"</div>")
+                     u"<ul><br/>")
 
-        def to_row(header, val):
-            return trow % ((thead % _(header)) + (tdata % _(val)))
+        data = u"".join((
+            tr(th("Name"), td(model.name)),
+            tr(th("Proxy"), td(self.proxy.get_url())),
+            tr(th("Model"), td(model.model)),
+            tr(th("Record count"), td(self.search([], count=True))),
+        ))
 
-        data = u""
-        data += to_row("Name", model.name)
-        data += to_row("Proxy", self.proxy.get_url())
-        data += to_row("Model", model.model)
-        data += to_row("Record count", self.search([], count=True))
+        table = TMPL_TABLE % {'styles': '',
+                              'caption': u"Object '%s'" % _(model.name),
+                              'rows': data}
 
-        table = ttable % (caption + data)
-
-        return html % (table + help_text)
+        return TMPL_INFO_WITH_HELP % {'info': table, 'help': help_text}
 
 
 class ClientHTML(Client):
@@ -618,35 +621,27 @@ class ClientHTML(Client):
     def _repr_html_(self):
         """ Builds HTML representation for IPython
         """
-        html = u"<div>%s</div>"
-        ttable = u"<table style='display:inline-block'>%s</table>"
-        trow = u"<tr>%s</tr>"
-        tdata = u"<td>%s</td>"
-        thead = u"<th>%s</th>"
-        caption = u"<caption style='white-space:nowrap;font-weight: bold;'>%s</caption>" % self.get_url()
-        help_text = (u"<div style='display:inline-block;vertical-align:top;margin-left:10px;'>"
-                     u"To get list of registered objects for thist database<br/>"
+        help_text = (u"To get list of registered objects for thist database<br/>"
                      u"access <i>registered_objects</i> property:<br/>"
                      u"&nbsp;<i>.registered_objects</i>"
                      u"To get Object instance just call <i>get_obj</i> method<br/>"
                      u"&nbsp;<i>.get_obj(name)</i><br/>"
                      u"where <i>name</i> is name of Object You want to get"
                      u"<br/>or use get item syntax instead:</br>"
-                     u"&nbsp;<i>[name]</i>"
-                     u"</div>")
+                     u"&nbsp;<i>[name]</i>")
 
-        def to_row(header, val):
-            return trow % ((thead % _(header)) + (tdata % _(val)))
+        data = u"".join((
+            tr(th("Host"), td(self.host)),
+            tr(th("Port"), td(self.port)),
+            tr(th("Protocol"), td(self.protocol)),
+            tr(th("Database"), td(self.dbname)),
+            tr(th("login"), td(self.username)),
+        ))
 
-        data = u""
-        data += to_row("Host", self.host)
-        data += to_row("Port", self.port)
-        data += to_row("Protocol", self.protocol)
-        data += to_row("Database", self.dbname)
-        data += to_row("login", self.username)
-
-        table = ttable % (caption + data)
-        return html % (table + help_text)
+        table = TMPL_TABLE % {'styles': '',
+                              'caption': u'RPC Client',
+                              'rows': data}
+        return TMPL_INFO_WITH_HELP % {'info': table, 'help': help_text}
 
 
 class AvailableReportsInfo(AttrDict):
@@ -665,7 +660,7 @@ class AvailableReportsInfo(AttrDict):
         if self._fields is None:
             self._fields = [
                 HField('report_action.report_name',
-                       'report service naem',
+                       'report service name',
                        silent=True),
                 HField('report_action.name',
                        'report name',
@@ -710,10 +705,34 @@ class ReportServiceExt(ReportService):
             super(ReportServiceExt, self)._get_available_reports())
 
     def _repr_html_(self):
-        return ("<div><span>This is report service. To get list of available reports "
-                "You can access <i>available_reports</i> property of this service: "
-                "<pre>.available_reports</pre></span>"
+        return ("<div>This is report service. <br/>"
+                "To get list of available reports<br/>"
+                "You can access <i>available_reports</i><br/>"
+                "property of this service: "
+                "<pre>.available_reports</pre>"
                 "</div>")
+
+
+class ReportExt(Report):
+    def _repr_html_(self):
+        help_text = (u"This is report representation.<br/>"
+                     u"call <i>generate<i> method to generate new report<br/>"
+                     u"&nbsp;<i>.generate([1, 2, 3])</i><br/>"
+                     u"Also <i>generate</i> method can receive <br/>"
+                     u"RecordList or Record instance as first argument.<br/>"
+                     u"For more information look in "
+                     u"<a href='http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.service.html#module-openerp_proxy.service.report'>documentation</a>")
+
+        data = u"".join((
+            tr(th("Name"), td(self.report_action.name)),
+            tr(th("Service name"), td(self.name)),
+            tr(th("Model"), td(self.report_action.model)),
+        ))
+
+        table = TMPL_TABLE % {'styles': '',
+                              'caption': u'Report %s' % _(self.report_action.name),
+                              'rows': data}
+        return TMPL_INFO_WITH_HELP % {'info': table, 'help': help_text}
 
 
 class ReportResultExt(ReportResult):
@@ -730,31 +749,27 @@ class IPYSession(Session):
     def _repr_html_(self):
         """ Provides HTML representation of session (Used for IPython)
         """
-        from openerp_proxy.utils import ustr as _
-
         def _get_data():
             for url in self._databases.keys():
                 index = self._index_url(url)
                 aliases = (_(al) for al, aurl in self.aliases.items() if aurl == url)
                 yield (url, index, u", ".join(aliases))
-        ttable = u"<table style='display:inline-block'>%s</table>"
         trow = u"<tr>%s</tr>"
         tdata = u"<td>%s</td>"
-        caption = u"<caption>Previous connections</caption>"
         hrow = u"<tr><th>DB URL</th><th>DB Index</th><th>DB Aliases</th></tr>"
-        help_text = (u"<div style='display:inline-block;vertical-align:top;margin-left:10px;'>"
-                     u"To get connection just call<br/> <ul>"
+        help_text = (u"To get connection just call<br/> <ul>"
                      u"<li>session.<b>aliase</b></li>"
                      u"<li>session[<b>index</b>]</li>"
                      u"<li>session[<b>aliase</b>]</li> "
                      u"<li>session[<b>url</b>]</li>"
-                     u"<li>session.get_db(<b>url</b>|<b>index</b>|<b>aliase</b>)</li>"
-                     u"</ul></div>")
+                     u"<li>session.get_db(<b>url</b>|<b>index</b>|<b>aliase</b>)</li></ul>")
 
         data = u""
         for row in _get_data():
             data += trow % (u''.join((tdata % i for i in row)))
 
-        table = ttable % (caption + hrow + data)
+        table = TMPL_TABLE % {'styles': '',
+                              'caption': u"Previous connections",
+                              'rows': hrow + data}
 
-        return u"<div>%s %s</div>" % (table, help_text)
+        return TMPL_INFO_WITH_HELP % {'info': table, 'help': help_text}

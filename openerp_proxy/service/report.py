@@ -2,13 +2,14 @@
 
 Best way to generate report is::
 
-    sale_orders = db['sale.order'].search_records([], limit=10)
-    report = db.services.report['sale.order'].generate(sale_orders)
+    data_records = db['res.partner'].search_records([], limit=10)
+    report = db.services.report['res.partner'].generate(data_records)
     report.content
 
-where report is instance of ReportResult and report.content
-returns already base64 decoded content of report,
-which could be directly written to file
+where *report* is instance of *ReportResult* and *report.content*
+returns already *base64* decoded content of report,
+which could be directly written to file (or
+just use *report.save(path)* method)
 """
 
 import time
@@ -136,7 +137,7 @@ class Report(Extensible):
     def generate(self, model_data, report_type='pdf', context=None):
         """ Generate report
 
-            :param report_data: RecordList or Record or ('model_name', obj_ids).
+            :param report_data: RecordList or Record or list of obj_ids.
                                 represent document or documents to generate report for
             :param str report_type: Type of report to generate. default is 'pdf'.
             :param dict context: Aditional info. Optional.
@@ -286,13 +287,13 @@ class ReportService(ServiceBase):
             :rtype: ReportResult
         """
         if isinstance(report_data, RecordList):
-            report_model = report_data.object.name
             obj_ids = report_data.ids
         elif isinstance(report_data, Record):
-            report_model = report_data._object.name
-            obj_ids = report_data.id
-        else:  # report_data is ('model_name', model_ids)
-            report_model, obj_ids = report_data
+            obj_ids = [report_data.id]
+        else:  # report_data is list of object ids
+            obj_ids = report_data
+
+        report_model = self[report_name].report_action.model
 
         if self.proxy.server_version >= parse_version('6.1'):
             report_result = self.render_report(report_name,
