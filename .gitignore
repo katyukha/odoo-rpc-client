@@ -17,4 +17,5 @@
 /coverage/
 .ipynb_checkpoints/
 /examples/tmp
+.eggs/
 

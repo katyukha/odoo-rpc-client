@@ -340,7 +340,7 @@ class Client(Extensible):
     def clean_caches(self):
         """ Clean client related caches
         """
-        self.services.object.clean_caches()
+        self.services.clean_service_caches()
 
     def __str__(self):
         return u"Client: %s" % self.get_url()

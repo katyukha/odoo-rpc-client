@@ -23,14 +23,6 @@ class ServiceManager(Extensible, DirMixIn):
 
     __managers = []
 
-    @classmethod
-    def clean_caches(cls):
-        """ Cleans saved service instances, so on next access new service instances will be generated.
-            This usualy happens when new service extension enabled (new class inherited from ServiceBase created)
-        """
-        for manager in cls.__managers:
-            manager.clean_cache()
-
     def __new__(cls, *args, **kwargs):
         inst = super(ServiceManager, cls).__new__(cls, *args, **kwargs)
         cls.__managers.append(inst)
@@ -65,11 +57,6 @@ class ServiceManager(Extensible, DirMixIn):
             self.__services[name] = service
         return service
 
-    def clean_cache(self):
-        """ Cleans service cache
-        """
-        self.__services = {}
-
     def __getattr__(self, name):
         if name.startswith('_'):
             raise AttributeError("Service '%s' not found."
@@ -82,6 +69,27 @@ class ServiceManager(Extensible, DirMixIn):
 
     def __contains__(self, name):
         return name in self.service_list
+
+    @classmethod
+    def clean_caches(cls):
+        """ Cleans saved service instances, so on next access new service instances will be generated.
+            This usualy happens when new service extension enabled (new class inherited from ServiceBase created)
+        """
+        for manager in cls.__managers:
+            manager.clean_cache()
+
+    def clean_cache(self):
+        """ Cleans manager's service cache.
+        """
+        self.__services = {}
+
+    def clean_service_caches(self):
+        """ Clean caches of all services handled by this mananger
+            usualy this should be called on module update,
+            when list of available objects or reports changed
+        """
+        for service in self.__services.values():
+            service.clean_cache()
 
 
 ServiceType = ExtensibleByHashType._('Service', hashattr='name')
@@ -109,3 +117,8 @@ class ServiceBase(six.with_metaclass(ServiceType, object)):
 
     def __getattr__(self, name):
         return getattr(self._service, name)
+
+    def clean_cache(self):
+        """ To be implemented by subclasses, if needed
+        """
+        pass
