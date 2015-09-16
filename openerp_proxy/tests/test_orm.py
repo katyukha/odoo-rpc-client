@@ -538,6 +538,7 @@ class Test_22_RecordList(BaseTestCase):
         # TODO: write better test
 
         res = self.recordlist.group_by('country_id')
+        self.assertIsInstance(res, collections.defaultdict)
 
     def test_existing(self):
         # all existing object ids

@@ -15,11 +15,25 @@ from nbformat.v4 import output_from_msg
 from jupyter_client.manager import start_new_kernel
 
 
+PROJECT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..',))
+
+# list of paths of notebooks to run
+notebooks_to_run = [
+    os.path.join(PROJECT_DIR, 'examples', 'Examples & HTML tests.ipynb'),
+]
+
+
 class CellExecuteError(Exception):
+    """ Cell execution error
+    """
     pass
 
 
 class NBRunner(object):
+    """ Runs test for a single notebook
+
+        Tests each cell of type code
+    """
     def __init__(self, nb, timeout=20, debug=False, name=None):
         self.nb = nb
         self.km = None
@@ -33,13 +47,19 @@ class NBRunner(object):
 
     @property
     def ok(self):
+        """ Return True if all cells processed successfully
+        """
         return self.cells_processed > 0 and self.failures == 0
 
     @property
     def failed(self):
+        """ Return True if at leas one cell failed
+        """
         return self.failures > 0
 
     def start_kernel(self):
+        """ Start IPython kernel
+        """
         self.km, self.kc = start_new_kernel(
             #kernel_name=kernel_name,
             #extra_arguments=self.extra_arguments,
@@ -48,19 +68,30 @@ class NBRunner(object):
         self.kc.allow_stdin = False
 
     def stop_kernel(self):
+        """ Stop IPython kernel
+        """
         self.kc.stop_channels()
         self.km.shutdown_kernel(now=True)
         self.km = None
         self.kc = None
 
     def log(self, *args, **kwargs):
+        """ Simply print all arga and keyword args
+        """
         print(args, kwargs)
 
     def log_debug(self, *args, **kwargs):
+        """ Same as *log*, but prints only if debug set to True
+        """
         if self.debug:
             print(args, kwargs)
 
     def log_failure(self, cell, exc):
+        """ Print's failure
+            (including traceback)
+
+            also increments failure count
+        """
         self.failures += 1
         print("\nFAILURE:")
         print(cell.source)
@@ -68,10 +99,17 @@ class NBRunner(object):
         print('raised:\n\t%s' % str(exc))
 
     def log_cell_processed(self, cell):
+        """ Print that cell processed successfully
+
+            just prints '.' to stdout
+        """
         self.cells_processed += 1
         sys.stdout.write('.')
 
     def handle_iopub_for_msg(self, cell, msg_id):
+        """ Process additional data sent by kernel
+            (output, ...)
+        """
         outs = []
 
         while True:
@@ -115,6 +153,8 @@ class NBRunner(object):
         return outs
 
     def run_cell(self, cell):
+        """ Run cell. Send cell's source to kernel, and process result
+        """
         msg_id = self.kc.execute(cell.source)
         self.log_debug("Executing cell:\n%s", cell.source)
         # wait for finish, with timeout
@@ -176,6 +216,8 @@ class NBRunner(object):
             raise Exception("Cannot finish coverage support", reply['traceback'])
 
     def run_notebook(self):
+        """ Run tests for all cells
+        """
         self._prepare_run()
 
         self.outputs = []
@@ -206,6 +248,8 @@ class NBRunner(object):
         return self
 
     def run(self):
+        """ start kernel, run tests and stop kernel after
+        """
         self.start_kernel()
         res = self.run_notebook()
         self.stop_kernel()
@@ -213,6 +257,8 @@ class NBRunner(object):
 
 
 class NBMultiRunner(object):
+    """ Class to test multiple notebooks at same time
+    """
     def __init__(self, notebook_paths, timeout=20, debug=False):
         self.notebook_paths = notebook_paths
         self.notebooks = []
@@ -223,13 +269,19 @@ class NBMultiRunner(object):
 
     @property
     def ok(self):
+        """ True all notebooks processed successfully
+        """
         return self.processed > 0 and self.failures == 0
 
     @property
     def failed(self):
+        """ Return True if atleast one notebook failed
+        """
         return self.failures > 0
 
     def run(self):
+        """ Run test all notebooks
+        """
         for ipynb in self.notebook_paths:
             nb_name = os.path.split(ipynb)[-1]
             nb = nbformat.read(ipynb, 4)
@@ -245,11 +297,6 @@ class NBMultiRunner(object):
             self.processed += 1
 
         return self
-
-
-notebooks_to_run = [
-    (os.path.abspath(os.path.dirname(__file__)) + '/../../examples/Examples & HTML tests.ipynb'),
-]
 
 
 @unittest.skipUnless(os.environ.get('TEST_WITH_EXTENSIONS', False), 'requires extensions enabled')

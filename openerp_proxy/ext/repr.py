@@ -65,8 +65,6 @@ def td(val):
 
 
 def tr(*args):
-    """ data is list
-    """
     return TMPL_TABLE_ROW % u"".join(args)
 
 

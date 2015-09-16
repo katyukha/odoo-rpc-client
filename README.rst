@@ -14,12 +14,11 @@ OpenERP / Odoo proxy
 .. image:: https://img.shields.io/pypi/l/openerp_proxy.svg
     :target: https://pypi.python.org/pypi/openerp_proxy/
 
-..
-  .. image:: https://img.shields.io/pypi/pyversions/openerp_proxy.svg
-      :target: https://pypi.python.org/pypi/openerp_proxy/
-    
-  .. image:: https://img.shields.io/pypi/format/openerp_proxy.svg
-      :target: https://pypi.python.org/pypi/openerp_proxy/
+.. image:: https://img.shields.io/pypi/pyversions/openerp_proxy.svg
+    :target: https://pypi.python.org/pypi/openerp_proxy/
+
+.. image:: https://img.shields.io/pypi/format/openerp_proxy.svg
+    :target: https://pypi.python.org/pypi/openerp_proxy/
 
 -------------------
 
@@ -96,12 +95,6 @@ Quick example
             print("\t%s" % line.name)
         print("-"*5)
         print()
-
-
-Supported Python versions
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Support Python 2.7, 3.3, 3.4
 
 
 Supported Odoo server versions
@@ -448,12 +441,3 @@ As You see above, to use plugin (or extension), just import it's module (better 
 For more information see `source
 code <https://github.com/katyukha/openerp-proxy>`_ or
 `documentation <http://pythonhosted.org//openerp_proxy/>`_.
-
-
-Alternatives
-------------
-
--  `Official OpenERP client
-   library <https://github.com/OpenERP/openerp-client-lib>`_
--  `ERPpeek <https://pypi.python.org/pypi/ERPpeek>`_
--  `OEERPLib <https://pypi.python.org/pypi/OERPLib>`_
