@@ -1,7 +1,29 @@
+import six
 import time
+import base64
 from pkg_resources import parse_version
 
 from openerp_proxy.service.service import ServiceBase
+
+__all__ = ('DBService',)
+
+
+def to_dbname(db):
+    """ Converts db to string, that represents database name
+
+        :param db: Client instance or string with name of database
+        :type db: Client|str
+        :return: string with database name
+        :rtype: str
+        :raises ValueError: value of db is not parsable
+    """
+    from openerp_proxy.core import Client
+    if isinstance(db, six.string_types):
+        return db
+    elif isinstance(db, Client) and db.dbname is not None:
+        return db.dbname
+    else:
+        raise ValueError("Wrong value for db!")
 
 
 class DBService(ServiceBase):
@@ -52,15 +74,56 @@ class DBService(ServiceBase):
                                   with *client.dbname is not None* name secified
             :raise: `ValueError` (unsupported value of *db* argument)
         """
-        from openerp_proxy.core import Client
-        if isinstance(db, basestring):
-            dbname = db
-        elif isinstance(db, Client) and db.dbname is not None:
-            dbname = db.dbname
-        else:
-            raise ValueError("Wrong value for db!")
+        return self.drop(password, to_dbname(db))
 
-        return self.drop(password, dbname)
+    def dump_db(self, password, db, **kwargs):
+        """ Dump database
+
+            Note, that from defined arguments, may be passed other arguments
+            (for example odoo version 9.0 requires format arg to be passed)
+
+            :param str password: super admin password
+            :param str|Client db: name of database or *Client* instance
+                                  with *client.dbname is not None* name secified
+            :param str fpath: path to file to save dbdump in (default: None)
+            :param str format: (only odoo 9.0) (default: zip)
+            :raise: `ValueError` (unsupported value of *db* argument)
+            :return: bytestring with laready base64 decoded data
+            :rtype: bytes
+        """
+        fpath = kwargs.get('fpath', None)
+
+        # format argument available only for odoo version 9.0
+        if self.server_version() >= parse_version('9.0'):
+            args = [kwargs.get('format', 'zip')]
+        else:
+            args = []
+
+        dump_data = self.dump(password, to_dbname(db), *args)
+        dump_data = base64.b64decode(dump_data.encode())
+        if fpath:
+            with open(fpath, 'wb') as f:
+                f.write(dump_data)
+
+        return dump_data
+
+    def restore_db(self, password, dbname, fpath, **kwargs):
+        """ Restore database
+
+            :param str password: super admin password
+            :param str dbname: name of database
+            :param str fpath: path to file that contains dbdump
+            :param bool copy: (only odoo 8.0)if set to True, then new dbuid will be generated. (default: False)
+            :return: True
+            :rtype: bool
+        """
+        with open(fpath, 'rb') as f:
+            if self.server_version() >= parse_version('8.0') and 'copy' in kwargs:
+                args = [kwargs['copy']]
+            else:
+                args = []
+            data = base64.b64encode(f.read()).decode()
+            return self.restore(password, dbname, data, *args)
 
     def server_version(self):
         """ Returns server version.

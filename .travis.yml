@@ -6,12 +6,15 @@ python:
   - "3.5"
 
 env:
-  - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='xml-rpc'
-  - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='json-rpc'
-  - ODOO_VERSION="7.0" ODOO_PACKAGE="openerp" ODOO_TEST_PROTOCOL='xml-rpc'
-  - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='xml-rpc' TEST_WITH_EXTENSIONS='openerp_proxy.ext.all'
-  - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='json-rpc' TEST_WITH_EXTENSIONS='openerp_proxy.ext.all'
-  - ODOO_VERSION="7.0" ODOO_PACKAGE="openerp" ODOO_TEST_PROTOCOL='xml-rpc' TEST_WITH_EXTENSIONS='openerp_proxy.ext.all'
+  gloabal:
+    - TEST_DB_SERVICE=1
+  matrix:
+    - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='xml-rpc'
+    - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='json-rpc'
+    - ODOO_VERSION="7.0" ODOO_PACKAGE="openerp" ODOO_TEST_PROTOCOL='xml-rpc'
+    - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='xml-rpc' TEST_WITH_EXTENSIONS=1
+    - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='json-rpc' TEST_WITH_EXTENSIONS=1
+    - ODOO_VERSION="7.0" ODOO_PACKAGE="openerp" ODOO_TEST_PROTOCOL='xml-rpc' TEST_WITH_EXTENSIONS=1
 
 install:
   - "wget http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/${ODOO_PACKAGE}_${ODOO_VERSION}.latest_all.deb"

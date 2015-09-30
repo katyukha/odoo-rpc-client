@@ -15,7 +15,7 @@ SCRIPTPATH=`dirname "$SCRIPT"`  # directory that contains this script
 usage="
     Usage:
 
-        run_tests.bash [--py-version v1] [--py-version v2] [--with-extensions] [--test-module <module>]
+        run_tests.bash [--py-version v1] [--py-version v2] [--with-extensions] [--with-db] [--test-module <module>]
 
 "
         
@@ -35,6 +35,9 @@ do
         ;;
         --with-extensions)
             export TEST_WITH_EXTENSIONS=1;
+        ;;
+        --with-db)
+            export TEST_DB_SERVICE=1;
         ;;
         --test-module)
             TEST_MODULE="$2";

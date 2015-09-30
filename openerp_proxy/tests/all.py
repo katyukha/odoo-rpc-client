@@ -6,3 +6,4 @@ from .test_session import *
 from .ext.test_sugar import *
 from .ext.test_workflow import *
 from .test_ipynb import *
+from .test_db import *

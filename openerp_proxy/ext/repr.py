@@ -68,7 +68,25 @@ def tr(*args):
     return TMPL_TABLE_ROW % u"".join(args)
 
 
+def dict_to_html_table_info(data, caption='', help='', table_styles=''):
+    """ Converts dictionary to html table string
+
+        :param dict data: dictionary like object. must contain .items() method
+        :param str caption: table's caption
+        :param str help: help message to be displayed near table
+        :param str table_styles: string with styles for table
+    """
+    html_data = u"".join((tr(th(k), td(v)) for k, v in data.items()))
+
+    table = TMPL_TABLE % {'styles': table_styles,
+                          'caption': caption,
+                          'rows': html_data}
+    return TMPL_INFO_WITH_HELP % {'info': table, 'help': help}
+
+
 class FieldNotFoundException(Exception):
+    """ Exception raised when HField cannot find field in object been processed
+    """
     def __init__(self, obj, field, original_exc=None):
         self.field = field
         self.obj = obj
@@ -92,6 +110,7 @@ class FieldNotFoundException(Exception):
         return str(self)
 
 
+@six.python_2_unicode_compatible
 class HField(object):
     """ Describes how to get a field.
         Primaraly used in html representation logic.
@@ -208,7 +227,7 @@ class HField(object):
         """
         return self.get_field(record)
 
-    def __unicode__(self):
+    def __str__(self):
         return _(self._name) if self._name is not None else _(self._field)
 
 
@@ -500,9 +519,6 @@ class HTMLRecord(Record):
     def _repr_html_(self):
         """ Builds HTML representation for IPython
         """
-        trow = u"<tr>%s</tr>"
-        tdata = u"<td>%s</td>"
-        thead = u"<th>%s</th>"
         help_text = (u"To get HTML Table representation of this record call method:<br/>"
                      u"&nbsp;<i>.as_html()</i><br/>"
                      u"Optionaly You can pass list of fields You want to see:<br/>"
@@ -513,6 +529,7 @@ class HTMLRecord(Record):
         data = u"".join((
             tr(th("Object"), td(self._object)),
             tr(th("Proxy"), td(self._proxy.get_url())),
+            tr(th("ID"), td(self.id)),
             tr(th("Name"), td(self._name)),
         ))
 

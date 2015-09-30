@@ -26,6 +26,8 @@ class BaseTestCase(unittest.TestCase):
         if self.with_extensions:
             import openerp_proxy.ext.all
 
+        self.test_db_service = os.environ.get('TEST_DB_SERVICE', False)
+
     if six.PY3:
         def assertItemsEqual(self, *args, **kwargs):
             return self.assertCountEqual(*args, **kwargs)

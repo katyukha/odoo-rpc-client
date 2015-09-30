@@ -185,10 +185,9 @@ class NBRunner(object):
 
     def _prepare_run(self):
         # enable coverage:
-        import sys
         msg_id = self.kc.execute(
             "import sys, os, coverage;\n"
-            "_coverage = coverage.control.coverage(data_suffix='%s-ipython' % os.getpid());\n"
+            "_coverage = coverage.coverage(data_suffix='%s-ipython' % os.getpid());\n"
             "_coverage.start();\n"
         )
 
