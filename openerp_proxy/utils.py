@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 import os
 import six
 import json
@@ -38,6 +39,9 @@ def json_write(file_path, *args, **kwargs):
         and write only if conversion is successfule. This allows to avoid loss of data
         when rewriting file.
     """
+    # note, using dumps instead of dump, becouse we need to check if data will
+    # be dumped correctly. using dump on incorect data, causes file to be half
+    # written, and thus broken
     json_data = json.dumps(*args, **kwargs)
 
     with open(file_path, 'wt') as json_file:
@@ -54,78 +58,53 @@ def wpartial(func, *args, **kwargs):
     return functools.wraps(func)(partial)
 
 
-# Copied from Odoo source ustr function
-def get_encodings(hint_encoding='utf-8'):
-    fallbacks = {
-        'latin1': 'latin9',
-        'iso-8859-1': 'iso8859-15',
-        'cp1252': '1252',
-    }
-    if hint_encoding:
-        yield hint_encoding
-        if hint_encoding.lower() in fallbacks:
-            yield fallbacks[hint_encoding.lower()]
+class UConverter(object):
+    """ Simple converter to unicode
 
-    # some defaults (also taking care of pure ASCII)
-    for charset in ['utf8', 'latin1']:
-        if not hint_encoding or (charset.lower() != hint_encoding.lower()):
-            yield charset
+        Create instance with specified list of encodings to
+        try to convert value to unicode
 
-    from locale import getpreferredencoding
-    prefenc = getpreferredencoding()
-    if prefenc and prefenc.lower() != 'utf-8':
-        yield prefenc
-        prefenc = fallbacks.get(prefenc.lower())
-        if prefenc:
-            yield prefenc
+        Example::
 
-
-def exception_to_unicode(e):
-    if hasattr(e, 'args'):
-        return "\n".join((ustr(a) for a in e.args))
-
-    try:
-        return six.text_type(e)
-    except Exception:
-        return u"Unknown message"
-
-
-def ustr(value, hint_encoding='utf-8', errors='strict'):
-    """This method is similar to the builtin `unicode`, except
-    that it may try multiple encodings to find one that works
-    for decoding `value`, and defaults to 'utf-8' first.
-
-    :param: value: the value to convert
-    :param: hint_encoding: an optional encoding that was detecte
-        upstream and should be tried first to decode ``value``.
-    :param str errors: optional `errors` flag to pass to the unicode
-        built-in to indicate how illegal character values should be
-        treated when converting a string: 'strict', 'ignore' or 'replace'
-        (see ``unicode()`` constructor).
-        Passing anything other than 'strict' means that the first
-        encoding tried will be used, even if it's not the correct
-        one to use, so be careful! Ignored if value is not a string/unicode.
-    :raise: UnicodeError if value cannot be coerced to unicode
-    :return: unicode string representing the given value
+            ustr = UConverter(['utf-8', 'cp-1251'])
+            my_unicode_str = ustr(b'hello - привет')
     """
-    if isinstance(value, Exception):
-        return exception_to_unicode(value)
+    default_encodings = ['utf-8', 'ascii']
 
-    if isinstance(value, six.text_type):
-        return value
+    def __init__(self, hint_encodings=None):
+        if hint_encodings:
+            self.encodings = hint_encodings
+        else:
+            self.encodings = self.default_encodings[:]
 
-    if not isinstance(value, six.string_types):
-        try:
-            return six.text_type(value)
-        except Exception:
-            raise UnicodeError('unable to convert %r' % (value,))
+    def __call__(self, value):
+        """ Convert value to unicode
 
-    for ln in get_encodings(hint_encoding):
-        try:
-            return six.text_type(value, ln, errors=errors)
-        except Exception:
-            pass
-    raise UnicodeError('unable to convert %r' % (value,))
+        :param value: the value to convert
+        :raise: UnicodeError if value cannot be coerced to unicode
+        :return: unicode string representing the given value
+        """
+        # it is unicode
+        if isinstance(value, six.text_type):
+            return value
+
+        # it is not binary type (str for python2 and bytes for python3)
+        if not isinstance(value, six.binary_type):
+            try:
+                return six.text_type(value)
+            except Exception:
+                raise UnicodeError('unable to convert to unicode %r' % (value,))
+
+        # value is binary type (str for python2 and bytes for python3)
+        for ln in self.encodings:
+            try:
+                return six.text_type(value, ln)
+            except Exception:
+                pass
+        raise UnicodeError('unable to convert %r' % (value,))
+
+# default converter instance
+ustr = UConverter()
 
 
 if six.PY3:
