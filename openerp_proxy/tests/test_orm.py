@@ -1,11 +1,11 @@
 from . import BaseTestCase
-from openerp_proxy.core import Client
-from openerp_proxy.orm.record import (Record,
-                                      RecordList,
-                                      get_record_list)
-from openerp_proxy.orm.cache import (empty_cache,
-                                     ObjectCache)
-from openerp_proxy.exceptions import ConnectorError
+from ..core import Client
+from ..orm.record import (Record,
+                          RecordList,
+                          get_record_list)
+from ..orm.cache import (empty_cache,
+                         ObjectCache)
+from ..exceptions import ConnectorError
 
 try:
     import unittest.mock as mock

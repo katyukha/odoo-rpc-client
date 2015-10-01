@@ -27,6 +27,7 @@ class BaseTestCase(unittest.TestCase):
             import openerp_proxy.ext.all
 
         self.test_db_service = os.environ.get('TEST_DB_SERVICE', False)
+        self.recreate_db = os.environ.get('RECREATE_DB', False)
 
     if six.PY3:
         def assertItemsEqual(self, *args, **kwargs):

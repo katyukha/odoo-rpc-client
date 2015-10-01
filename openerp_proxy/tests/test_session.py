@@ -1,6 +1,6 @@
 from . import BaseTestCase
-from openerp_proxy.core import Client
-from openerp_proxy.session import Session
+from .. import (Client,
+                Session)
 
 try:
     import unittest.mock as mock

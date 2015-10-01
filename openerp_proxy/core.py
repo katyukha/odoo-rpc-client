@@ -183,7 +183,7 @@ class Client(Extensible):
     def server_version(self):
         """ Server version
 
-            :rtype: str
+            (Already parsed with pkg_resources.parse_version)
         """
         return self.services.db.server_version()
 

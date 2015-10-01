@@ -1,8 +1,8 @@
 dev:
     - DB service little bit refactored.
       added methods:
-        - dump_db: wrapper around ``db.dump`` server method. automaticaly performs base64 decoding
-        - restore_db: wrapper around ``db.restore`` server methods. automaticaly base64 encode file before sending
+        - dump_db: wrapper around ``db.dump`` server method.
+        - restore_db: wrapper around ``db.restore`` server methods.
 
 0.6:
     - *Backward incompatible*: Changed session file format.

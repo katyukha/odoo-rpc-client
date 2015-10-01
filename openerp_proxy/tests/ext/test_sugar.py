@@ -6,11 +6,11 @@ try:
 except ImportError:
     import mock
 
-from openerp_proxy.tests import BaseTestCase
-from openerp_proxy.core import Client
-from openerp_proxy.orm.record import (Record,
-                                      RecordList)
-from openerp_proxy.orm.object import Object
+from .. import BaseTestCase
+from ... import Client
+from ...orm import (Record,
+                    RecordList,
+                    Object)
 
 
 @unittest.skipUnless(os.environ.get('TEST_WITH_EXTENSIONS', False), 'requires extensions enabled')

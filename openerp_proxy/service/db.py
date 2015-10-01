@@ -1,9 +1,8 @@
 import six
 import time
-import base64
 from pkg_resources import parse_version
 
-from openerp_proxy.service.service import ServiceBase
+from ..service.service import ServiceBase
 
 __all__ = ('DBService',)
 
@@ -85,45 +84,38 @@ class DBService(ServiceBase):
             :param str password: super admin password
             :param str|Client db: name of database or *Client* instance
                                   with *client.dbname is not None* name secified
-            :param str fpath: path to file to save dbdump in (default: None)
             :param str format: (only odoo 9.0) (default: zip)
             :raise: `ValueError` (unsupported value of *db* argument)
             :return: bytestring with laready base64 decoded data
             :rtype: bytes
         """
-        fpath = kwargs.get('fpath', None)
-
         # format argument available only for odoo version 9.0
         if self.server_version() >= parse_version('9.0'):
             args = [kwargs.get('format', 'zip')]
         else:
             args = []
 
-        dump_data = self.dump(password, to_dbname(db), *args)
-        dump_data = base64.b64decode(dump_data.encode())
-        if fpath:
-            with open(fpath, 'wb') as f:
-                f.write(dump_data)
+        dump_data = self.dump(password, to_dbname(db), *args).encode()
 
         return dump_data
 
-    def restore_db(self, password, dbname, fpath, **kwargs):
+    def restore_db(self, password, dbname, data, **kwargs):
         """ Restore database
 
             :param str password: super admin password
             :param str dbname: name of database
-            :param str fpath: path to file that contains dbdump
+            :param bytes data: restore data (base64 encoded string)
             :param bool copy: (only odoo 8.0)if set to True, then new dbuid will be generated. (default: False)
             :return: True
             :rtype: bool
         """
-        with open(fpath, 'rb') as f:
-            if self.server_version() >= parse_version('8.0') and 'copy' in kwargs:
-                args = [kwargs['copy']]
-            else:
-                args = []
-            data = base64.b64encode(f.read()).decode()
-            return self.restore(password, dbname, data, *args)
+        assert isinstance(data, bytes), "data must be instance of bytes"
+        if self.server_version() >= parse_version('8.0') and 'copy' in kwargs:
+            args = [kwargs['copy']]
+        else:
+            args = []
+
+        return self.restore(password, dbname, data.decode(), *args)
 
     def server_version(self):
         """ Returns server version.

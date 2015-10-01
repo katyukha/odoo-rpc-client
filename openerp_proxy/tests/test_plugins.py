@@ -1,8 +1,6 @@
 from . import BaseTestCase
-from openerp_proxy.core import Client
-from openerp_proxy.orm.record import Record
-from openerp_proxy.orm.record import RecordList
-from openerp_proxy.exceptions import ConnectorError
+from .. import Client
+from ..orm import Record
 
 import unittest
 
@@ -10,9 +8,6 @@ try:
     import unittest.mock as mock
 except ImportError:
     import mock
-
-import numbers
-import collections
 
 
 class Test_25_Plugin_ModuleUtils(BaseTestCase):

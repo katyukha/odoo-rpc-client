@@ -1,7 +1,7 @@
 from . import BaseTestCase
-from openerp_proxy.core import Client
-from openerp_proxy.exceptions import LoginException
-from openerp_proxy.connection import get_connector_names
+from ..core import Client
+from ..exceptions import LoginException
+from ..connection import get_connector_names
 
 
 class Test_00_Connection(BaseTestCase):
@@ -27,7 +27,11 @@ class Test_00_Connection(BaseTestCase):
         client = self.client
         if self.env.dbname in client.services.db.list_db():
             self.assertIn(self.env.dbname, client.services.db)
-            return self.skipTest("Database already created")
+
+            if self.recreate_db:
+                client.services.db.drop_db(self.env.super_password, self.env.dbname)
+            else:
+                return self.skipTest("Database already created")
 
         self.assertNotIn(self.env.dbname, client.services.db)
 

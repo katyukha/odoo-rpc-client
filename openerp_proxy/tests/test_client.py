@@ -1,11 +1,11 @@
 from pkg_resources import parse_version
 
 from . import BaseTestCase
-from openerp_proxy.core import Client
-from openerp_proxy.orm.object import Object
-from openerp_proxy.orm.record import Record
-from openerp_proxy.service.service import ServiceManager
-from openerp_proxy.plugin import Plugin
+from ..core import Client
+from ..orm.object import Object
+from ..orm.record import Record
+from ..service.service import ServiceManager
+from ..plugin import Plugin
 
 
 class Test_10_Client(BaseTestCase):
