@@ -1,4 +1,4 @@
-from openerp_proxy.service.object import ObjectService
+from ..service.object import ObjectService
 from .object import get_object
 
 __all__ = ('Service',)

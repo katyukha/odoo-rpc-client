@@ -1,13 +1,13 @@
 """ Just imports of all extensions
 """
 
-import openerp_proxy.ext.field_datetime
-import openerp_proxy.ext.sugar
-import openerp_proxy.ext.workflow
+from . import field_datetime
+from . import sugar
+from . import workflow
 
-from openerp_proxy.ext.repr import (FieldNotFoundException,
-                                    HField,
-                                    HTMLTable)
+from .repr import (FieldNotFoundException,
+                   HField,
+                   HTMLTable)
 
 __all__ = ('FieldNotFoundException',
            'HField',

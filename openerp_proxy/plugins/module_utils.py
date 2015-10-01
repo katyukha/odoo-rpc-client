@@ -1,5 +1,5 @@
-from openerp_proxy.plugin import Plugin
-from openerp_proxy.orm.object import Object
+from ..plugin import Plugin
+from ..orm.object import Object
 
 
 # Overriden to add shortcut for module update

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from extend_me import Extensible
 
-from openerp_proxy.plugin import Plugin
-from openerp_proxy.orm.object import Object
+from ..plugin import Plugin
+from ..orm.object import Object
 
 try:
     import pydot

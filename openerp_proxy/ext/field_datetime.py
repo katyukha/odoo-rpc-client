@@ -1,4 +1,4 @@
-from openerp_proxy.orm.record import Record
+from ..orm.record import Record
 
 import datetime
 

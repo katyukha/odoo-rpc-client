@@ -1,4 +1,4 @@
-from openerp_proxy.service.object import ObjectService
+from ..service.object import ObjectService
 from contextlib import contextmanager
 import time
 

@@ -1,9 +1,9 @@
 """ This module contains classes and logic to handle operations on records
 """
 
-from openerp_proxy.utils import (wpartial,
-                                 ustr,
-                                 DirMixIn)
+from ..utils import (wpartial,
+                     ustr,
+                     DirMixIn)
 from .object import Object
 from .cache import empty_cache
 

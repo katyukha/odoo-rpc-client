@@ -1,8 +1,8 @@
 import six
 from extend_me import ExtensibleByHashType
 
-from openerp_proxy.utils import (AttrDict,
-                                 DirMixIn)
+from ..utils import (AttrDict,
+                     DirMixIn)
 
 
 __all__ = ('Object', 'get_object')

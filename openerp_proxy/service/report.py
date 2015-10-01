@@ -18,10 +18,10 @@ from pkg_resources import parse_version
 from extend_me import Extensible
 
 from .service import ServiceBase
-from openerp_proxy.orm import (Record,
-                               RecordList)
+from ..orm import (Record,
+                   RecordList)
 
-from openerp_proxy.exceptions import ReportError
+from ..exceptions import ReportError
 
 
 class ReportResult(Extensible):

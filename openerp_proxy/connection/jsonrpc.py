@@ -6,8 +6,8 @@ import requests
 
 # project imports
 from .connection import ConnectorBase
-import openerp_proxy.exceptions as exceptions
-from openerp_proxy.utils import ustr
+from .. import exceptions as exceptions
+from ..utils import ustr
 
 
 @six.python_2_unicode_compatible

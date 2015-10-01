@@ -2,7 +2,7 @@ import six
 from extend_me import (ExtensibleByHashType,
                        Extensible)
 
-from openerp_proxy.utils import DirMixIn
+from ..utils import DirMixIn
 
 
 __all__ = ('get_service_class', 'ServiceBase', 'ServiceManager')

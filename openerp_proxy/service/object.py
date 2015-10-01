@@ -1,5 +1,5 @@
-from openerp_proxy.service.service import ServiceBase
-from openerp_proxy.exceptions import ConnectorError
+from ..service.service import ServiceBase
+from ..exceptions import ConnectorError
 
 
 class ObjectService(ServiceBase):

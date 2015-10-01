@@ -7,9 +7,11 @@ to records from Object and Record interfaces.
 """
 import numbers
 import six
-from openerp_proxy.orm.record import Record
-from openerp_proxy.orm.record import ObjectRecords
-from openerp_proxy.exceptions import ObjectException
+
+
+from ..orm.record import (Record,
+                          ObjectRecords)
+from ..exceptions import ObjectException
 
 
 __all__ = ('RecordWorkflow', 'ObjectWorkflow')

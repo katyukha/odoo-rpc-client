@@ -3,8 +3,8 @@ from six.moves import xmlrpc_client as xmlrpclib
 
 # project imports
 from .connection import ConnectorBase
-from openerp_proxy.utils import ustr
-import openerp_proxy.exceptions as exceptions
+from ..utils import ustr
+from .. import exceptions as exceptions
 
 
 class XMLRPCError(exceptions.ConnectorError):

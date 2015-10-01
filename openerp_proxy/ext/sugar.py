@@ -5,10 +5,10 @@ Provides some syntax sugar to ease acces to objects, records, etc
 
 import numbers
 
-from openerp_proxy.utils import DirMixIn
-from openerp_proxy.orm.record import ObjectRecords
-from openerp_proxy.orm.record import get_record_list
-from openerp_proxy.core import Client
+from ..utils import DirMixIn
+from ..orm.record import (ObjectRecords,
+                          get_record_list)
+from .. import Client
 
 
 class ObjectSugar(ObjectRecords):
