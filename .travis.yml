@@ -6,7 +6,7 @@ python:
   - "3.5"
 
 env:
-  gloabal:
+  global:
     - TEST_DB_SERVICE=1
   matrix:
     - ODOO_VERSION="7.0" ODOO_PACKAGE="openerp" ODOO_TEST_PROTOCOL='xml-rpc'
@@ -23,6 +23,7 @@ env:
     - ODOO_VERSION="9.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='xml-rpc' TEST_WITH_EXTENSIONS=1
 
 install:
+  - "env"
   - "wget http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/${ODOO_PACKAGE}_${ODOO_VERSION}.latest_all.deb -O odoo.deb"
   - "sudo apt-get update && sudo apt-get install -f -y"
   - "sudo apt-get install aptitude"

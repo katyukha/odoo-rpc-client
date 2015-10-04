@@ -230,7 +230,7 @@ class Test_21_Record(BaseTestCase):
         res = self.record.child_ids  # read data from res.partner:child_ids field
 
         self.assertIsInstance(res, RecordList)
-        self.assertTrue(res.length >= 1)
+        self.assertGreaterEqual(res.length, 1)
         self.assertIsInstance(res[0], Record)
         self.assertEqual(res[0]._object.name, 'res.partner')
 
@@ -254,7 +254,7 @@ class Test_21_Record(BaseTestCase):
         self.record.company_id.name
 
         # check that data had been loaded
-        self.assertTrue(len(self.record._data.keys()) > 5)
+        self.assertGreater(len(self.record._data.keys()), 5)
 
         # test before refresh
         self.assertEqual(len(self.record._cache.keys()), 2)
@@ -578,13 +578,13 @@ class Test_22_RecordList(BaseTestCase):
         # load data to record list
         self.recordlist.prefetch('name', 'country_id.name', 'country_id.code')
 
-        # create related records. This is still required, becuase, prefetch
+        # create related records. This is still required, becuase prefetch
         # just fills cache without creating record instances
         for rec in self.recordlist:
             rec.country_id
 
-        self.assertTrue(len(pcache) == len(self.recordlist))
-        self.assertTrue(len(ccache) > 2)
+        self.assertEqual(len(pcache), len(self.recordlist))
+        self.assertGreaterEqual(len(ccache), 1)  # there are atleast on country in cache
 
         clen = len(ccache)
 
@@ -600,12 +600,14 @@ class Test_22_RecordList(BaseTestCase):
         # refresh recordlist
         self.recordlist.refresh()
 
-        self.assertTrue(len(pcache) == len(self.recordlist))
-        self.assertTrue(len(ccache) == clen)
+        self.assertEqual(len(pcache), len(self.recordlist))
+        self.assertEqual(len(ccache), clen)
 
+        # test that data for each partner is empty
         for data in pcache.values():
             self.assertItemsEqual(list(data), ['id'])
 
+        # test that data for each country is empty
         for data in ccache.values():
             self.assertItemsEqual(list(data), ['id'])
 

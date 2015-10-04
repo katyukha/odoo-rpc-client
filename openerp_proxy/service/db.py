@@ -105,7 +105,7 @@ class DBService(ServiceBase):
             :param str password: super admin password
             :param str dbname: name of database
             :param bytes data: restore data (base64 encoded string)
-            :param bool copy: (only odoo 8.0)if set to True, then new dbuid will be generated. (default: False)
+            :param bool copy: (only odoo 8.0+) if set to True, then new dbuid will be generated. (default: False)
             :return: True
             :rtype: bool
         """
