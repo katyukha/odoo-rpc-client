@@ -11,21 +11,21 @@ import six
 import csv
 import os.path
 import tempfile
-
-from openerp_proxy import (Client,
-                           Session)
-from openerp_proxy.orm import (RecordList,
-                               Record,
-                               Object)
-from openerp_proxy.service.report import (Report,
-                                          ReportResult,
-                                          ReportService)
-
 from IPython.display import HTML, FileLink
 
-from openerp_proxy.utils import ustr as _
-from openerp_proxy.utils import (AttrDict,
-                                 makedirs)
+from .. import (Client,
+                Session)
+from ..orm import (RecordList,
+                   Record,
+                   Object)
+from ..service.report import (Report,
+                              ReportResult,
+                              ReportService)
+
+
+from ..utils import ustr as _
+from ..utils import (AttrDict,
+                     makedirs)
 
 
 # TODO: use enviroment var or some sort of config
@@ -87,14 +87,15 @@ def dict_to_html_table_info(data, caption='', help='', table_styles=''):
 class FieldNotFoundException(Exception):
     """ Exception raised when HField cannot find field in object been processed
     """
-    def __init__(self, obj, field, original_exc=None):
-        self.field = field
+    def __init__(self, obj, name, hfield, original_exc=None):
+        self.hfield = hfield
+        self.name = name
         self.obj = obj
         self.orig_exc = original_exc
 
     @property
     def message(self):
-        return u"Field %s not found in obj %s" % (_(self.field), _(self.obj))
+        return u"Field %s not found in obj %s while calculation hfield %s" % (_(self.field), _(self.obj), self.hfield)
 
     # TODO: implement correct behavior. It fails in IPython notebook with
     # UnicodeEncodeError because of python's standard warnings module
@@ -125,6 +126,9 @@ class HField(object):
         :param bool silent: If set to True, then not exceptions will be raised and *default* value
                             will be returned. (default=False)
         :param default: default value to be returned if field not found. default=None
+        :param HField parent: (for internal usage) parent field. First get value of parent field
+                              for record, and then get value of current field based on value
+                              of parent field: ( self.get_field(self._parent.get_field(record)) )
         :param args: if specified, then it means that field is callable, and *args* should be passed
                      to it as positional arguments. This may be useful to call *as_html_table* method
                      of internal field. for example::
@@ -144,13 +148,31 @@ class HField(object):
         :param dict kwargs: same as *args* but for keyword arguments
     """
 
-    def __init__(self, field, name=None, silent=False, default=None, args=None, kwargs=None):
+    def __init__(self, field, name=None, silent=False, default=None, parent=None, args=None, kwargs=None):
         self._field = field
         self._name = name
         self._silent = silent
         self._default = default
+        self._parent = parent
         self._args = tuple() if args is None else args
         self._kwargs = dict() if kwargs is None else kwargs
+
+    def F(self, field, **kwargs):
+        """ Create chained field
+            Could be used for complicated field.
+            for example::
+
+                HField('myfield.myvalue', default={'a': 5}).F('a')
+        """
+        return HField(
+            field,
+            parent=self,
+            name=kwargs.get('name', self._name),
+            silent=kwargs.get('silent', self._silent),
+            default=kwargs.get('default', self._default),
+            args=kwargs.get('args', self._args),
+            kwargs=kwargs.get('kwargs', self._kwargs),
+        )
 
     def with_args(self, *args, **kwargs):
         """ If field is string pointing to function (or method),
@@ -194,7 +216,11 @@ class HField(object):
             :type record: Record
             :return: requested value
         """
+        # process parent field
+        if self._parent is not None:
+            record = self._parent.get_field(record)
 
+        # check if field is callable
         if callable(self._field):
             return self._field(record, *self._args, **self._kwargs)
 

@@ -1,6 +1,8 @@
 import unittest
 import os
 
+from pkg_resources import parse_version as V
+
 try:
     import unittest.mock as mock
 except ImportError:
@@ -23,6 +25,9 @@ class Test_32_ExtWorkFlow(BaseTestCase):
                              pwd=self.env.password,
                              protocol=self.env.protocol,
                              port=self.env.port)
+
+        if self.client.server_version >= V('9.0'):
+            self.skipTest('No workflow tests for Odoo version 9.0')
         self.object = self.client.get_obj('sale.order')
         self.record = self.object.browse(1)
         self.obj_ids = self.object.search([], limit=10)
