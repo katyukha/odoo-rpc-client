@@ -7,23 +7,17 @@ python:
 
 env:
   global:
-    - TEST_DB_SERVICE=1
+    - TEST_DB_SERVICE=1 TEST_WITH_EXTENSIONS=1
   matrix:
     - ODOO_VERSION="7.0" ODOO_PACKAGE="openerp" ODOO_TEST_PROTOCOL='xml-rpc'
-    - ODOO_VERSION="7.0" ODOO_PACKAGE="openerp" ODOO_TEST_PROTOCOL='xml-rpc' TEST_WITH_EXTENSIONS=1
 
     - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='json-rpc'
-    - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='json-rpc' TEST_WITH_EXTENSIONS=1
     - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='xml-rpc'
-    - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='xml-rpc' TEST_WITH_EXTENSIONS=1
 
     - ODOO_VERSION="9.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='json-rpc'
-    - ODOO_VERSION="9.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='json-rpc' TEST_WITH_EXTENSIONS=1
     - ODOO_VERSION="9.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='xml-rpc'
-    - ODOO_VERSION="9.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='xml-rpc' TEST_WITH_EXTENSIONS=1
 
 install:
-  - "env"
   - "wget http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/${ODOO_PACKAGE}_${ODOO_VERSION}.latest_all.deb -O odoo.deb"
   - "wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-trusty-amd64.deb -O wkhtmltox.deb"
   - "sudo dpkg --force-depends -i wkhtmltox.deb"
@@ -36,10 +30,11 @@ install:
 
 before_script:
   - "sudo invoke-rc.d ${ODOO_PACKAGE} restart"
-  - sleep 5
+  - "sleep 5"
 
 script:
-  - coverage run -p setup.py test && coverage combine
+  - "coverage run -p setup.py test"
+  - "coverage combine"
 
 after_success:
   - coveralls
