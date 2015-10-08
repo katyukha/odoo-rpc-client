@@ -41,14 +41,22 @@ makedirs(REPORTS_PATH)
 
 # HTML Templates
 TMPL_INFO_WITH_HELP = u"""
-<div>
-    <div style="display:inline-block">%(info)s</div>
-    <div style="display:inline-block;vertical-align:top;margin-left:10px;">%(help)s</div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-7 col-lg-7">%(info)s</div>
+        <div style="display:inline-block" class="panel panel-default col-md-5 col-lg-5">
+            <div class="panel-heading">Info</div>
+            <div class="panel-body">%(help)s</div>
+        </div>
+    </div>
 </div>
 """
 
 TMPL_TABLE = u"""
-<table style="%(styles)s"><caption>%(caption)s</caption>%(rows)s</table>
+<table class="table table-bordered table-condensed %(extra_classes)s" style="margin-left:0;%(styles)s">
+<caption>%(caption)s</caption>
+%(rows)s
+</table>
 """
 
 TMPL_TABLE_ROW = u"<tr>%s</tr>"
@@ -81,7 +89,8 @@ def describe_object_html(data, caption='', help='', table_styles=''):
 
     table = TMPL_TABLE % {'styles': table_styles,
                           'caption': caption,
-                          'rows': html_data}
+                          'rows': html_data,
+                          'extra_classes': ''}
     return TMPL_INFO_WITH_HELP % {'info': table, 'help': help}
 
 
@@ -369,9 +378,10 @@ class HTMLTable(HTML):
     def _repr_html_(self):
         """ HTML representation
         """
-        theaders = u"".join((u"<th>%s</th>" % header for header in self.iheaders))
+        theaders = u"".join((th(header) for header in self.iheaders))
         help = u"Note, that You may use <i>.to_csv()</i> method of this table to export it to CSV format"
-        table = (u"<div><div>{help}</div><table>"
+        table = (u"<div><div>{help}</div>"
+                 u"<table class='table table-bordered table-condensed table-striped'>"
                  u"<caption>{self.caption}</caption>"
                  u"<tr>{headers}</tr>"
                  u"%s</table>"
@@ -383,7 +393,7 @@ class HTMLTable(HTML):
         data = u""
         for record in self.irecords:
             hcolor = record['color']
-            tdata = u"".join((u"<td>%s</td>" % fval for fval in record['row']))
+            tdata = u"".join((td(fval) for fval in record['row']))
             if hcolor:
                 data += throw % (hcolor, tdata)
             else:
@@ -481,7 +491,7 @@ class RecordListData(RecordList):
         return describe_object_html({
             "Object": self.object,
             "Client": self.object.proxy.get_url(),
-            "Record count": self.length(),
+            "Record count": self.length,
         }, caption=_(self), help=help_text)
 
 
@@ -774,6 +784,7 @@ class IPYSession(Session):
             data += tr(*[td(i) for i in row])
 
         table = TMPL_TABLE % {'styles': '',
+                              'extra_classes': 'table-striped',
                               'caption': u"Previous connections",
                               'rows': hrow + data}
 
