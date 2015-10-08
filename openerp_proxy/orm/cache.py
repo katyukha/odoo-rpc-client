@@ -12,6 +12,7 @@ class ObjectCache(dict):
         Automatically generates empty data dicts for records requested.
         Also contains object context
     """
+    __slots__ = ('_root_cache', '_object', '_context')
 
     def __init__(self, root, obj, *args, **kwargs):
         self._root_cache = root
@@ -131,6 +132,8 @@ class ObjectCache(dict):
 class Cache(dict):
     """ Cache to be used for Record's data
     """
+    __slots__ = ('_proxy',)
+
     def __init__(self, proxy, *args, **kwargs):
         self._proxy = proxy
         super(Cache, self).__init__(*args, **kwargs)

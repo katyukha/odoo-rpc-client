@@ -24,8 +24,8 @@ env:
 
 install:
   - "env"
-  - "wget -q http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/${ODOO_PACKAGE}_${ODOO_VERSION}.latest_all.deb -O odoo.deb"
-  - "wget -q http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-trusty-amd64.deb -O wkhtmltox.deb"
+  - "wget http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/${ODOO_PACKAGE}_${ODOO_VERSION}.latest_all.deb -O odoo.deb"
+  - "wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-trusty-amd64.deb -O wkhtmltox.deb"
   - "sudo dpkg --force-depends -i wkhtmltox.deb"
   - "sudo apt-get update && sudo apt-get install -f -y"
   - "sudo apt-get install aptitude"

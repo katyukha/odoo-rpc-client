@@ -100,9 +100,9 @@ Quick example
 Supported Odoo server versions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tested with Odoo 7.0 and 8.0
+Tested with Odoo 7.0, 8.0, 9.0
 
-Also shoud work with Odoo 6.1 and 9.0
+Also shoud work with Odoo 6.1
 
 Also it should work with Odoo version 6.0, except the things related to passing named parametrs
 to server methods, such as using context in ``openerp_proxy.orm`` package
@@ -370,7 +370,7 @@ Plugins
 ~~~~~~~
 
 In version 0.4 plugin system was completly refactored. At this version
-we start using [*extend_me*](https://pypi.python.org/pypi/extend_me)
+we start using `extend_me <https://pypi.python.org/pypi/extend_me>`_
 library to build extensions and plugins easily.
 
 Plugins are usual classes that provides functionality that should be available
