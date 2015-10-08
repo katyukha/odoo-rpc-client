@@ -68,10 +68,11 @@ def tr(*args):
     return TMPL_TABLE_ROW % u"".join(args)
 
 
-def dict_to_html_table_info(data, caption='', help='', table_styles=''):
-    """ Converts dictionary to html table string
+def describe_object_html(data, caption='', help='', table_styles=''):
+    """ Converts dictionary data to html table string
 
         :param dict data: dictionary like object. must contain .items() method
+                          represents object info to be displayed in table
         :param str caption: table's caption
         :param str help: help message to be displayed near table
         :param str table_styles: string with styles for table
@@ -269,6 +270,7 @@ class HTMLTable(HTML):
                        of one argument (record instance) or *HField* instance or
                        tuple(field_path|callable, field_name)
         :type fields: list(str | callable | HField instance | tuple(field, name))
+        :param str caption: String to be used as table caption
         :param dict highlighters: dictionary in format::
 
                                       {color: callable(record)->bool}
@@ -276,19 +278,12 @@ class HTMLTable(HTML):
                                   where *color* any color suitable for HTML and
                                   callable is function of *Record instance* which decides,
                                   if record should be colored by this color
-        :param highlight_row: function to check if row to be highlighteda (**deprecated**)
-                              (old_style)
-        :type highlight_row: callable(record) -> bool
-        :param str caption: String to be used as table caption
     """
     def __init__(self, recordlist, fields, caption=None, highlighters=None, **kwargs):
         self._recordlist = recordlist
         self._caption = u"HTMLTable"
-
         self._fields = []
         self._highlighters = {}
-        if kwargs.get('highlight_row', False):
-            self._highlighters['#ffff99'] = kwargs['highlight_row']
 
         self.update(fields=fields, caption=caption, highlighters=highlighters, **kwargs)
 
@@ -483,17 +478,11 @@ class RecordListData(RecordList):
                      u"Here <i>_name</i> field is aliase for result of <i>name_get</i> method"
                      u"called on record")
 
-        data = u"".join((
-            tr(th("Object"), td(self.object)),
-            tr(th("Proxy"), td(self.object.proxy.get_url())),
-            tr(th("Record count"), td(len(self))),
-        ))
-
-        table = TMPL_TABLE % {'styles': '',
-                              'caption': _(self),
-                              'rows': data}
-
-        return TMPL_INFO_WITH_HELP % {'info': table, 'help': help_text}
+        return describe_object_html({
+            "Object": self.object,
+            "Client": self.object.proxy.get_url(),
+            "Record count": self.length(),
+        }, caption=_(self), help=help_text)
 
 
 class HTMLRecord(Record):
@@ -552,18 +541,12 @@ class HTMLRecord(Record):
                      u"for better information get doc on <i>as_html</i> method:<br/>"
                      u"&nbsp;<i>.as_html?</i><br/>")
 
-        data = u"".join((
-            tr(th("Object"), td(self._object)),
-            tr(th("Proxy"), td(self._proxy.get_url())),
-            tr(th("ID"), td(self.id)),
-            tr(th("Name"), td(self._name)),
-        ))
-
-        table = TMPL_TABLE % {'styles': '',
-                              'caption': _(self),
-                              'rows': data}
-
-        return TMPL_INFO_WITH_HELP % {'info': table, 'help': help_text}
+        return describe_object_html({
+            "Object": self._object,
+            "Client": self._object.proxy.get_url(),
+            "ID": self.id,
+            "Name": self._name,
+        }, caption=_(self), help=help_text)
 
 
 class ColInfo(AttrDict):
@@ -630,7 +613,6 @@ class ObjectHTML(Object):
     def _repr_html_(self):
         """ Builds HTML representation for IPython
         """
-        model = self.model
         help_text = (u"To get information about columns access property<br/>"
                      u"&nbsp;<i>.columns_info</i><br/>"
                      u"Also there are available standard server-side methods:<br/>"
@@ -641,18 +623,12 @@ class ObjectHTML(Object):
                      u"<li><i>read_records</i> - same as <i>read</i> but returns <i>Record</i> or <i>RecordList</i> instance</li>"
                      u"<ul><br/>")
 
-        data = u"".join((
-            tr(th("Name"), td(model.name)),
-            tr(th("Proxy"), td(self.proxy.get_url())),
-            tr(th("Model"), td(model.model)),
-            tr(th("Record count"), td(self.search([], count=True))),
-        ))
-
-        table = TMPL_TABLE % {'styles': '',
-                              'caption': u"Object '%s'" % _(model.name),
-                              'rows': data}
-
-        return TMPL_INFO_WITH_HELP % {'info': table, 'help': help_text}
+        return describe_object_html({
+            "Name": self.model.name,
+            "Client": self.proxy.get_url(),
+            "Model": self.model.model,
+            "Record count": self.search([], count=True),
+        }, caption=_(self.model.name), help=help_text)
 
 
 class ClientHTML(Client):
@@ -671,18 +647,13 @@ class ClientHTML(Client):
                      u"<br/>or use get item syntax instead:</br>"
                      u"&nbsp;<i>[name]</i>")
 
-        data = u"".join((
-            tr(th("Host"), td(self.host)),
-            tr(th("Port"), td(self.port)),
-            tr(th("Protocol"), td(self.protocol)),
-            tr(th("Database"), td(self.dbname)),
-            tr(th("login"), td(self.username)),
-        ))
-
-        table = TMPL_TABLE % {'styles': '',
-                              'caption': u'RPC Client',
-                              'rows': data}
-        return TMPL_INFO_WITH_HELP % {'info': table, 'help': help_text}
+        return describe_object_html({
+            "Host": self.host,
+            "Port": self.port,
+            "Protocol": self.protocol,
+            "Database": self.dbname,
+            "login": self.username,
+        }, caption=u"RPC Client", help=help_text)
 
 
 class AvailableReportsInfo(AttrDict):
@@ -764,16 +735,11 @@ class ReportExt(Report):
                      u"For more information look in "
                      u"<a href='http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.service.html#module-openerp_proxy.service.report'>documentation</a>")
 
-        data = u"".join((
-            tr(th("Name"), td(self.report_action.name)),
-            tr(th("Service name"), td(self.name)),
-            tr(th("Model"), td(self.report_action.model)),
-        ))
-
-        table = TMPL_TABLE % {'styles': '',
-                              'caption': u'Report %s' % _(self.report_action.name),
-                              'rows': data}
-        return TMPL_INFO_WITH_HELP % {'info': table, 'help': help_text}
+        return describe_object_html({
+            "Name": self.report_action.name,
+            "Service name": self.name,
+            "Model": self.report_action.model,
+        }, caption=u'Report %s' % _(self.report_action.name), help=help_text)
 
 
 class ReportResultExt(ReportResult):
@@ -795,8 +761,6 @@ class IPYSession(Session):
                 index = self._index_url(url)
                 aliases = (_(al) for al, aurl in self.aliases.items() if aurl == url)
                 yield (url, index, u", ".join(aliases))
-        trow = u"<tr>%s</tr>"
-        tdata = u"<td>%s</td>"
         hrow = u"<tr><th>DB URL</th><th>DB Index</th><th>DB Aliases</th></tr>"
         help_text = (u"To get connection just call<br/> <ul>"
                      u"<li>session.<b>aliase</b></li>"
@@ -807,7 +771,7 @@ class IPYSession(Session):
 
         data = u""
         for row in _get_data():
-            data += trow % (u''.join((tdata % i for i in row)))
+            data += tr(*[td(i) for i in row])
 
         table = TMPL_TABLE % {'styles': '',
                               'caption': u"Previous connections",
