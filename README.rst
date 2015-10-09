@@ -37,7 +37,7 @@ Odoo internal code to perform operations on **OpenERP** / **Odoo** objects hidin
 
 
     - Are You still using pgAdmin for quering Odoo database?
-    - Try this package (expecialy via IPython Notebook), and You will forget about pgAdmin!
+    - Try this package (especialy with IPython Notebook), and You will forget about pgAdmin!
 
 
 Features

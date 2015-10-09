@@ -1,9 +1,10 @@
-dev:
+0.6.1:
     - DB service little bit refactored.
       added methods:
         - dump_db: wrapper around ``db.dump`` server method.
         - restore_db: wrapper around ``db.restore`` server methods.
     - ``openerp_proxy.ext.repr.HField`` added ``F()`` method, which allows to create child field instance
+    - ``openerp_proxy.ext.repr`` improved styles for HTML representations
 
 0.6:
     - *Backward incompatible*: Changed session file format.
