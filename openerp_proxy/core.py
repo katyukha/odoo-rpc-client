@@ -295,7 +295,7 @@ class Client(Extensible):
         try:
             res = self.get_obj(name)
         except ValueError:
-            raise KeyError('Wrong object name')
+            raise KeyError('Wrong object/model name: %s' % name)
 
         return res
 
