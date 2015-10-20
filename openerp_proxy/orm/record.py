@@ -166,10 +166,9 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
             Should be overridden by extensions to provide better hadling for diferent field values
         """
         if name not in self._data:
-            lcache = self._lcache
-            read_data = self._object.read(lcache.get_ids_to_read(name), [name], context=self.context)
-            for data in read_data:
-                lcache.cache_field(data['id'], ftype, name, data[name])
+            cache_field = self._lcache.cache_field
+            for data in self._object.read(self._lcache.get_ids_to_read(name), [name], context=self.context):
+                cache_field(data['id'], ftype, name, data[name])
 
         return self._data[name]
 

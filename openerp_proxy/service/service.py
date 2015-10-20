@@ -48,6 +48,9 @@ class ServiceManager(Extensible, DirMixIn):
 
     def get_service(self, name):
         """ Returns instance of service with specified name
+
+            :param name: name of service
+            :return: specified service instance
         """
         service = self.__services.get(name, None)
         if service is None:

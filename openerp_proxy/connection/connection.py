@@ -26,11 +26,20 @@ class ConnectorBase(six.with_metaclass(ConnectorType)):
         self.host = host
         self.port = port
         self.verbose = verbose
+        self.__services = {}
 
     def _get_service(self, name):  # pragma: no cover
         raise NotImplementedError
 
     def get_service(self, name):
         """ Returns service for specified *name*
+
+            :param name: name of service
+            :return: specified service instance
         """
-        return self._get_service(name)
+        service = self.__services.get(name, None)
+        if service is None:
+            service = self._get_service(name)
+            self.__services[name] = service
+
+        return service
