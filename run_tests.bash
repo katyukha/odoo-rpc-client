@@ -9,16 +9,24 @@
 #   - PY_VERSIONS - string that contains space separated python versions to test app on
 
 
+
 SCRIPT=`readlink -f "$0"`
 SCRIPTPATH=`dirname "$SCRIPT"`  # directory that contains this script
 
 usage="
     Usage:
 
-        run_tests.bash [--py-version v1] [--py-version v2] [--with-extensions] [--with-db] [--recreate-db] [--test-module <module>]
+        run_tests.bash [options]
+    Available options:
+        --py-version v1         - use specific python version. may be present multiple times
+        --with-extensions       - test extensions also
+        --with-db               - perform database related tests (create, dump, drop, restore)
+        --recreate-db           - recreate test database at start
+        --test-module <module>  - run specific test suit (python module that contains test cases)
+        --reuse-venv            - do not delete/recreate virtual environment used for test
 
 "
-        
+
 
 # process cmdline options
 while [[ $# -gt 0 ]]
@@ -46,6 +54,10 @@ do
             TEST_MODULE="$2";
             shift;
         ;;
+        --reuse-venv)
+            REUSE_VENV=1;
+            shift;
+        ;;
         *)
             echo "Unknown option $key";
             exit 1;
@@ -53,6 +65,9 @@ do
     esac
     shift
 done
+
+
+set -e    # fail on any error
 
 
 # config defaults
@@ -66,15 +81,50 @@ fi
 # run_single_test <python version>
 function run_single_test {
     local py_version=$1;
-    (cd $SCRIPTPATH && \
-                virtualenv --no-site-packages -p python${py_version} venv_test&& \
-                source ./venv_test/bin/activate && \
-                pip install --upgrade pip setuptools pbr && \
-                pip install --upgrade coverage six extend_me requests mock pudb ipython[notebook] && \
-                coverage run -p setup.py test $TEST_MODULE_OPT && \
-                deactivate && \
-                rm -rf venv_test
-    )
+    local workdir=`pwd`;
+
+    echo "Saving current work directory $workdir and moving into $SCRIPTPATH";
+
+    cd $SCRIPTPATH;
+
+    local venv_name="venv_test_${py_version}";
+
+    # Check if we need to create virtual environment
+    if [ ! -d "$venv_name" ] || [ -z $REUSE_VENV ]; then
+        virtualenv --no-site-packages -p python${py_version} $venv_name
+
+        # mark that virtualenv was created and we need to install here packages
+        local venv_created=1;
+    fi
+
+    source ./$venv_name/bin/activate
+
+    # if virtualenv was [re]created then we need to install packages
+    if [ ! -z $venv_created ]; then
+        pip install --upgrade pip setuptools pbr
+        pip install --upgrade coverage six extend_me requests mock pudb ipython[notebook]
+    fi
+
+    set +e   # allow errors
+
+    # Run tests
+    coverage run -p setup.py test $TEST_MODULE_OPT
+    res=$?;  # save test results
+
+    set -e   # disallow errors
+
+    deactivate  # deactivate test environment
+
+    # and if not plan to reuse this environment, we have to delete it
+    if [ -z $REUSE_VENV ]; then
+        rm -rf $venv_name
+    fi
+
+    # go back to work directory
+    echo "Going back to work directory $workdir";
+    cd $workdir;
+
+    return $res;
 }
 
 function main {

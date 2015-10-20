@@ -36,7 +36,11 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
             sale_obj = Object(erp, 'sale.order')
             sale_obj.search([('state','not in',['done','cancel'])])
 
-        To create new instance - use *get_object* function
+        To create new instance - use *get_object* function, it implements
+        all extensions magic, whic is highly used in this project
+
+        It is posible to create extension only to specific object.
+        Example could be found in ``plugins/module_utils.py`` file.
 
     """
 

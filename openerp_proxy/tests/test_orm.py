@@ -5,6 +5,7 @@ from ..orm.record import (Record,
                           get_record_list)
 from ..orm.cache import (empty_cache,
                          ObjectCache)
+from ..orm.object import Object
 from ..exceptions import ConnectorError
 
 try:
@@ -141,6 +142,26 @@ class Test_20_Object(BaseTestCase):
         self.assertEqual(repr(self.object), str(self.object))
 
 
+    def test_object_specific_extension(self):
+        class MyProductObject(Object):
+            class Meta:
+                name = 'product.product'
+
+            def test_previously_unexistent_method(self):
+                return "Method Ok"
+
+        # reload client caches
+        self.client.clean_caches()
+
+        # Newly defined object method must be present in product object / model
+        res = self.client['product.product'].test_previously_unexistent_method()
+        self.assertEqual(res, "Method Ok")
+
+        # but must not be present in other objects / models
+        with self.assertRaises(ConnectorError):
+            self.client['res.partner'].test_previously_unexistent_method()
+
+
 class Test_21_Record(BaseTestCase):
 
     def setUp(self):
@@ -274,6 +295,25 @@ class Test_21_Record(BaseTestCase):
         self.assertIn('res.company', self.record._cache)
         self.assertEqual(len(list(self.record._cache['res.company'].values())[0]), 1)
         self.assertNotIn('name', list(self.record._cache['res.company'].values())[0])
+
+    def test_record_specific_extension(self):
+        class MyProductRecord(Record):
+            class Meta:
+                object_name = 'product.product'
+
+            def test_previously_unexistent_record_method(self):
+                return "Method Ok Record %s" % self.id
+
+        # Product records must have this method
+        product = self.client['product.product'].search_records([], limit=1)[0]
+        res = product.test_previously_unexistent_record_method()
+        self.assertEqual(res, "Method Ok Record %s" % product.id)
+
+        # other records must not have it
+        r = self.client['res.partner'].search_records([], limit=1)[0]
+        with self.assertRaises(ConnectorError):
+            r.test_previously_unexistent_record_method()
+
 
 
 class Test_22_RecordList(BaseTestCase):

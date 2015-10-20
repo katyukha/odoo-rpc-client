@@ -5,7 +5,8 @@ from ..utils import (wpartial,
                      ustr,
                      DirMixIn)
 from .object import Object
-from .cache import empty_cache
+from .cache import (empty_cache,
+                    Cache)
 
 
 import six
@@ -13,7 +14,8 @@ import abc
 import numbers
 import functools
 import collections
-from extend_me import ExtensibleType
+from extend_me import (ExtensibleType,
+                       ExtensibleByHashType)
 
 
 __all__ = (
@@ -26,7 +28,7 @@ __all__ = (
 )
 
 
-RecordMeta = ExtensibleType._('Record')
+RecordMeta = ExtensibleByHashType._('Record', hashattr='object_name')
 
 
 def get_record(obj, rid, cache=None, context=None):
@@ -43,12 +45,57 @@ def get_record(obj, rid, cache=None, context=None):
             :return: created Record instance
             :rtype: Record
     """
-    return RecordMeta.get_object(obj, rid, cache=cache, context=context)
+    cls = RecordMeta.get_class(obj.name, default=True)
+    return cls(obj, rid, cache=cache, context=context)
 
 
 @six.python_2_unicode_compatible
 class Record(six.with_metaclass(RecordMeta, DirMixIn)):
     """ Base class for all Records
+
+        Do not use it to create record instances manualy.
+        Use ``get_record`` function instead. It implements all extensions mangic
+
+        But class should be used for ``isinstance`` checks.
+
+        It is posible to create extensions of this class that will be binded
+        only to specific Odoo objects
+
+        For example, if You need to extend all recrods of products,
+        do something like this::
+
+            class MyProductRecord(Record):
+                class Meta:
+                    object_name = 'product.product'
+
+                def __init__(self, *args, **kwargs):
+                    super(MyProductRecord, self).__init__(*args, **kwargs)
+
+                    # to avoid double read, save once read value to record
+                    # instance
+                    self._sale_orders = None
+
+                @property
+                def sale_orders(self):
+                    ''' Sale orders related to curent product
+                    '''
+                    if self._sale_orders is None:
+                        so = self._proxy['sale.order']
+                        domain = [('order_line.product_id', '=', self.id)]
+                        self._sale_orders = so.search_records(domain, cache=self._cache)
+                    return self._sale_orders
+
+        And atfter this, next code is valid::
+
+            products = client['product.product'].search_records([])
+            products_with_so = products.filter(lambda p: bool(p.sale_orders))
+            products_with_so_gt_10 = products.filter(lambda p: len(p.sale_orders) > 10)
+
+            for product in products_with_so_gt_10:
+                print("Product: %s" % product.default_code)
+                for pso in product.sale_orders:
+                    print("\t%s" % pso.name)
+
 
         :param Object obj: instance of object this record is related to
         :param int rid: ID of database record to fetch data from
@@ -695,6 +742,7 @@ class ObjectRecords(Object):
             :param count: if set to True, then only amount of recrods found will be returned. (default: False)
             :param read_fields: optional. specifies list of fields to read. (Not used at the moment)
             :type read_fields: list of strings
+            :param Cache cache: cache to be used for records and recordlists
             :return: RecordList contains records found, or integer representing amount of records found (if count=True)
             :rtype: RecordList|int
 
@@ -706,17 +754,18 @@ class ObjectRecords(Object):
 
         read_fields = kwargs.pop('read_fields', None)
         context = kwargs.get('context', None)
+        cache = kwargs.pop('cache', None)
 
         if kwargs.get('count', False):
             return self.search(*args, **kwargs)
 
         res = self.search(*args, **kwargs)
         if not res:
-            return get_record_list(self, ids=[], fields=read_fields, context=context)
+            return get_record_list(self, ids=[], fields=read_fields, context=context, cache=cache)
 
         if read_fields:
-            return self.read_records(res, read_fields, context=context)
-        return self.read_records(res, context=context)
+            return self.read_records(res, read_fields, context=context, cache=cache)
+        return self.read_records(res, context=context, cache=cache)
 
     def read_records(self, ids, fields=None, context=None, cache=None):
         """ Return instance or RecordList class,

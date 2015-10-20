@@ -7,6 +7,7 @@ class ModuleObject(Object):
     """ Add shortcut method to upgrade module
     """
 
+    # Apply this extension only to 'ir.module.module' Object / Model
     class Meta:
         name = 'ir.module.module'
 
