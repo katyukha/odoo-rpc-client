@@ -511,7 +511,6 @@ class HTMLRecord(Record):
            :rtype: HTML
         """
         table_tmpl = u"<table><caption>Record %s</caption><tr><th>Column</th><th>Value</th></tr>%s</table>"
-        row_tmpl = u"<tr><th>%s</th><td>%s</td></tr>"
 
         if not fields:
             fields = sorted((HField(col_name, name=col_data['string'])
@@ -536,8 +535,7 @@ class HTMLRecord(Record):
 
         body = ""
         for field in parsed_fields:
-            row = row_tmpl % (_(field), field(self))
-            body += row
+            body += tr(th(field), td(self))
 
         return HTML(table_tmpl % (self._name, body))
 
@@ -766,12 +764,6 @@ class IPYSession(Session):
     def _repr_html_(self):
         """ Provides HTML representation of session (Used for IPython)
         """
-        def _get_data():
-            for url in self._databases.keys():
-                index = self._index_url(url)
-                aliases = (_(al) for al, aurl in self.aliases.items() if aurl == url)
-                yield (url, index, u", ".join(aliases))
-        hrow = u"<tr><th>DB URL</th><th>DB Index</th><th>DB Aliases</th></tr>"
         help_text = (u"To get connection just call<br/> <ul>"
                      u"<li>session.<b>aliase</b></li>"
                      u"<li>session[<b>index</b>]</li>"
@@ -779,13 +771,15 @@ class IPYSession(Session):
                      u"<li>session[<b>url</b>]</li>"
                      u"<li>session.get_db(<b>url</b>|<b>index</b>|<b>aliase</b>)</li></ul>")
 
-        data = u""
-        for row in _get_data():
-            data += tr(*[td(i) for i in row])
+        data = u"<tr><th>DB URL</th><th>DB Index</th><th>DB Aliases</th></tr>"
+        for url in self._databases.keys():
+            index = self._index_url(url)
+            aliases = u", ".join((_(al) for al, aurl in self.aliases.items() if aurl == url))
+            data += tr(td(url), td(index), td(aliases))
 
         table = TMPL_TABLE % {'styles': '',
                               'extra_classes': 'table-striped',
                               'caption': u"Previous connections",
-                              'rows': hrow + data}
+                              'rows': data}
 
         return TMPL_INFO_WITH_HELP % {'info': table, 'help': help_text}
