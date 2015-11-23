@@ -141,11 +141,10 @@ class Test_20_Object(BaseTestCase):
     def test_repr(self):
         self.assertEqual(repr(self.object), str(self.object))
 
-
     def test_object_specific_extension(self):
         class MyProductObject(Object):
             class Meta:
-                name = 'product.product'
+                name = 'res.users'
 
             def test_previously_unexistent_method(self):
                 return "Method Ok"
@@ -153,8 +152,8 @@ class Test_20_Object(BaseTestCase):
         # reload client caches
         self.client.clean_caches()
 
-        # Newly defined object method must be present in product object / model
-        res = self.client['product.product'].test_previously_unexistent_method()
+        # Newly defined object method must be present in res.users object / model
+        res = self.client['res.users'].test_previously_unexistent_method()
         self.assertEqual(res, "Method Ok")
 
         # but must not be present in other objects / models
@@ -299,15 +298,15 @@ class Test_21_Record(BaseTestCase):
     def test_record_specific_extension(self):
         class MyProductRecord(Record):
             class Meta:
-                object_name = 'product.product'
+                object_name = 'res.users'
 
             def test_previously_unexistent_record_method(self):
                 return "Method Ok Record %s" % self.id
 
         # Product records must have this method
-        product = self.client['product.product'].search_records([], limit=1)[0]
-        res = product.test_previously_unexistent_record_method()
-        self.assertEqual(res, "Method Ok Record %s" % product.id)
+        user = self.client['res.users'].search_records([], limit=1)[0]
+        res = user.test_previously_unexistent_record_method()
+        self.assertEqual(res, "Method Ok Record %s" % user.id)
 
         # other records must not have it
         r = self.client['res.partner'].search_records([], limit=1)[0]
