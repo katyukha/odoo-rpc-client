@@ -76,11 +76,12 @@ class Client(Extensible):
        :param int port: port number of server
        :param str protocol: protocol used to connect. To get list of available protcols call:
                             ``openerp_proxy.connection.get_connector_names()``
-       :param bool verbose: Be verbose?
+
+       any other keyword arguments will be directly passed to connector
 
        Example::
 
-           >>> db = Client('host', 'dbname', 'user', pwd = 'Password', verbose = False)
+           >>> db = Client('host', 'dbname', 'user', pwd = 'Password')
            >>> cl = Client('host')
            >>> db2 = cl.login('dbname', 'user', 'password')
 
@@ -90,12 +91,12 @@ class Client(Extensible):
                Object ('sale.order')
     """
 
-    def __init__(self, host, dbname=None, user=None, pwd=None, port=8069, protocol='xml-rpc', verbose=False):
+    def __init__(self, host, dbname=None, user=None, pwd=None, port=8069, protocol='xml-rpc', **extra_args):
         self._dbname = dbname
         self._username = user
         self._pwd = pwd
 
-        self._connection = get_connector(protocol)(host, port, verbose=verbose)
+        self._connection = get_connector(protocol)(host, port, extra_args)
         self._services = ServiceManager(self)
         self._plugins = PluginManager(self)
 
@@ -214,9 +215,6 @@ class Client(Extensible):
             self instance and update them with passed keyword arguments,
             and call Proxy class constructor passing result as arguments.
 
-            Note, that if You pass any keyword arguments, You also should pass
-            'pwd' keyword argument with user password
-
             :return: Id of user logged in or new Client instance (if kwargs passed)
             :rtype: int|Client
             :raises LoginException: if wrong login or password
@@ -224,6 +222,10 @@ class Client(Extensible):
         if kwargs:
             init_kwargs = self.get_init_args()
             init_kwargs.update(kwargs)
+
+
+            if self._pwd and 'pwd' not in init_kwargs and 'user' in init_kwargs:
+                init_kwargs['pwd'] = self._pwd
             return Client(**init_kwargs)
 
         # Get the uid
@@ -308,7 +310,7 @@ class Client(Extensible):
                     port=self.port,
                     dbname=self.dbname,
                     protocol=self.protocol,
-                    verbose=self.connection.verbose)
+                    **self.connection.extra_args)
 
     @classmethod
     def to_url(cls, inst, **kwargs):

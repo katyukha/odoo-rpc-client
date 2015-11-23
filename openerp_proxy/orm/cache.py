@@ -47,9 +47,9 @@ class ObjectCache(dict):
         """
         if new_context is not None:
             if self.context is None:
-                self.context = new_context
+                self._context = new_context
             else:
-                self.context.update(new_context)
+                self._context.update(new_context)
         return self.context
 
     def get_ids_to_read(self, field):

@@ -52,6 +52,8 @@ class XMLRPCProxy(xmlrpclib.ServerProxy):
 
 class ConnectorXMLRPC(ConnectorBase):
     """ XML-RPC connector
+
+        Note: extra_arguments may be same as parametrs of xmlrpclib.ServerProxy
     """
     class Meta:
         name = 'xml-rpc'
@@ -60,14 +62,18 @@ class ConnectorXMLRPC(ConnectorBase):
         return 'http://%s:%s/xmlrpc/%s' % (self.host, self.port, service_name)
 
     def _get_service(self, name):
-        return XMLRPCProxy(self.get_service_url(name), verbose=self.verbose)
+        return XMLRPCProxy(self.get_service_url(name), **self.extra_args)
 
 
 class ConnectorXMLRPCS(ConnectorXMLRPC):
     """ XML-RPCS Connector
+
+        Note: extra_arguments may be same as parametrs of xmlrpclib.ServerProxy
     """
     class Meta:
         name = 'xml-rpcs'
 
     def get_service_url(self, service_name):
-        return 'https://%s:%s/xmlrpc/%s' % (self.host, self.port, service_name)
+        return 'https://%s:%s/xmlrpc/%s' % (self.host,
+                                            '' if self.port == 80 else self.port,  # this is to make ssl work
+                                            service_name)

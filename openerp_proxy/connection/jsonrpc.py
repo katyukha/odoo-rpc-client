@@ -28,19 +28,22 @@ class JSONRPCError(exceptions.ConnectorError):
         return ustr(self.data)
 
 
+# TODO: think, may be it is a good idea to reimplement this via functions
 class JSONRPCMethod(object):
-    """ Class wrapper around XML-RPC method to wrap xmlrpclib.Fault
-        into XMLRPCProxy
+    """ Class that implements RPC call via json-rpc protocol
     """
+    __slots__ = ('__method', '__url', '__service', '__rpc_proxy')
 
-    def __init__(self, url, service, method):
+    def __init__(self, rpc_proxy, url, service, method):
         self.__method = method
         self.__url = url
         self.__service = service
+        self.__rpc_proxy = rpc_proxy
 
-    def __call__(self, *args):
-        # TODO: add ability to use sessions
-        data = {
+    def prepare_method_data(self, *args):
+        """ Prepare data for JSON request
+        """
+        return {
             "jsonrpc": "2.0",
             "method": 'call',
             "params": {
@@ -50,13 +53,19 @@ class JSONRPCMethod(object):
             },
             "id": random.randint(0, 1000000000),
         }
-        try:
-            res = requests.post(self.__url, data=json.dumps(data), headers={
-                "Content-Type": "application/json",
-            })
-        except requests.exceptions.RequestException:
-            raise JSONRPCError("Cannot connect to url %s" % self.__url)
 
+    def __call__(self, *args):
+        data = json.dumps(self.prepare_method_data(*args))
+        # Call rpc
+        try:
+            res = requests.post(self.__url, data=data, headers={
+                "Content-Type": "application/json",
+            }, verify=self.__rpc_proxy.ssl_verify)
+        except requests.exceptions.RequestException as exc:
+            raise JSONRPCError("Cannot connect to url %s\n"
+                               "Exception %s raised!" % (self.__url, exc))
+
+        # Process results
         try:
             result = json.loads(res.text)
         except ValueError:
@@ -80,26 +89,44 @@ class JSONRPCProxy(object):
     """ Wrapper class around XML-RPC's ServerProxy to wrap method's errors
         into XMLRPCError class
     """
-    def __init__(self, host, port, service, ssl=False):
+    def __init__(self, host, port, service, ssl=False, ssl_verify=True):
         self.host = host
         self.port = port
         self.service = service
-        addr = (host if port is None else "%s:%s" % (self.host, self.port))
+        addr = (host if port is None else "%s:%s" % (self.host, '' if self.port == 80 else self.port))
         self.url = '%s://%s/jsonrpc' % (ssl and 'https' or 'http', addr)
 
+        # request parametrs
+        self.ssl_verify = ssl_verify
+
+        # variable to cach methods
+        self._methods = {}
+
     def __getattr__(self, name):
-        return JSONRPCMethod(self.url, self.service, name)
+        meth = self._methods.get(name, None)
+        if meth is None:
+            self._methods[name] = meth = JSONRPCMethod(self, self.url, self.service, name)
+        return meth
 
 
 class ConnectorJSONRPC(ConnectorBase):
     """ JSON-RPC connector
+
+        available extra arguments:
+            - ssl_verify: (optional) if True, the SSL cert will be verified.
     """
     class Meta:
         name = 'json-rpc'
         use_ssl = False
 
+    # Need for backward compatability, because there 'verbose' keyword argument
+    # may be present in extra_args due to old sessions saved with this arg
+    def __init__(self, *args, **kwargs):
+        super(ConnectorJSONRPC, self).__init__(*args, **kwargs)
+        self.extra_args.pop('verbose', None)
+
     def _get_service(self, name):
-        return JSONRPCProxy(self.host, self.port, name, ssl=self.Meta.use_ssl)
+        return JSONRPCProxy(self.host, self.port, name, ssl=self.Meta.use_ssl, **self.extra_args)
 
 
 class ConnectorJSONRPCS(ConnectorJSONRPC):
