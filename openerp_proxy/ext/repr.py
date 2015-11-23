@@ -12,6 +12,7 @@ import csv
 import os.path
 import tempfile
 from IPython.display import HTML, FileLink
+import tabulate
 
 from .. import (Client,
                 Session)
@@ -267,45 +268,16 @@ class HField(object):
         return _(self._name) if self._name is not None else _(self._field)
 
 
-# TODO: also implement vertical table orientation, which could be usefult for
-# comparing few records or reuse same code for displaying single record.
-class HTMLTable(HTML):
-    """ HTML Table representation object for RecordList
-
-        :param recordlist: record list to create represetation for
-        :type recordlist: RecordList
-        :param fields: list of fields to display. each field should be string
-                       with dot splitted names of related object, or callable
-                       of one argument (record instance) or *HField* instance or
-                       tuple(field_path|callable, field_name)
-        :type fields: list(str | callable | HField instance | tuple(field, name))
-        :param str caption: String to be used as table caption
-        :param dict highlighters: dictionary in format::
-
-                                      {color: callable(record)->bool}
-
-                                  where *color* any color suitable for HTML and
-                                  callable is function of *Record instance* which decides,
-                                  if record should be colored by this color
+@six.python_2_unicode_compatible
+class BaseTable(object):
+    """ Base class for table representation
     """
-    def __init__(self, recordlist, fields, caption=None, highlighters=None, **kwargs):
-        self._recordlist = recordlist
-        self._caption = u"HTMLTable"
+    def __init__(self, data, fields):
+        self._data = data
         self._fields = []
-        self._highlighters = {}
+        self.update(fields=fields)
 
-        self.update(fields=fields, caption=caption, highlighters=highlighters, **kwargs)
-
-    def update(self, fields=None, caption=None, highlighters=None, **kwargs):
-        """ This method is used to change HTMLTable initial data, thus, changing representation
-            Can be used for example, when some function returns partly configured HTMLTable instance,
-            but user want's to display more fields for example, or add some custom highlighters
-
-            arguments same as for constructor, except 'recordlist' arg, which is absent in this method
-
-            :return: self
-        """
-        self._caption = _(self._recordlist) if caption is None else _(caption)
+    def update(self, fields=None):
         fields = [] if fields is None else fields
         for field in fields:
             if isinstance(field, HField):
@@ -319,17 +291,6 @@ class HTMLTable(HTML):
             else:
                 raise ValueError('Unsupported field type: %s' % repr(field))
 
-        if highlighters is not None:
-            self._highlighters.update(highlighters)
-
-        return self
-
-    @property
-    def caption(self):
-        """ Table caption
-        """
-        return self._caption
-
     @property
     def fields(self):
         """ List of fields of table.
@@ -337,68 +298,11 @@ class HTMLTable(HTML):
         """
         return self._fields
 
-    @property
-    def iheaders(self):
-        """ Iterator in headers
-            :type: list of unicode strings
+    def __iter__(self):
+        """ Iterateive structure similar to list of lists
         """
-        return (_(field) for field in self.fields)
-
-    @property
-    def irecords(self):
-        """ Returns iterator on records, where each record
-            is dictionary of two fields: 'row', 'color'.
-
-            'row' dictionary field is iterator in fields of this record
-
-            so result of this property colud be used to build representation
-        """
-        def preprocess_field(field):
-            """ Process some special cases of field to be correctly displayed
-            """
-            if isinstance(field, HTML):
-                return field._repr_html_()
-            return _(field)
-
-        for record in self._recordlist:
-            yield {
-                'color': self.highlight_record(record),
-                'row': (preprocess_field(field(record)) for field in self.fields),
-            }
-
-    def highlight_record(self, record):
-        """ Checks all highlighters related to this representation object
-            and return color of firest match highlighter
-        """
-        for color, highlighter in self._highlighters.items():
-            if highlighter(record):
-                return color
-        return False
-
-    def _repr_html_(self):
-        """ HTML representation
-        """
-        theaders = u"".join((th(header) for header in self.iheaders))
-        help = u"Note, that You may use <i>.to_csv()</i> method of this table to export it to CSV format"
-        table = (u"<div><div>{help}</div>"
-                 u"<table class='table table-bordered table-condensed table-striped'>"
-                 u"<caption>{self.caption}</caption>"
-                 u"<tr>{headers}</tr>"
-                 u"%s</table>"
-                 u"<div>").format(self=self,
-                                  headers=theaders,
-                                  help=help)
-        trow = u"<tr>%s</tr>"
-        throw = u'<tr style="background: %s">%s</tr>'
-        data = u""
-        for record in self.irecords:
-            hcolor = record['color']
-            tdata = u"".join((td(fval) for fval in record['row']))
-            if hcolor:
-                data += throw % (hcolor, tdata)
-            else:
-                data += trow % tdata
-        return table % data
+        for record in self._data:
+            yield (field(record) for field in self.fields)
 
     def to_csv(self):
         """ Write table to CSV file and return FileLink object for it
@@ -417,26 +321,115 @@ class HTMLTable(HTML):
         tmp_file = tempfile.NamedTemporaryFile(mode=fmode, dir=CSV_PATH, suffix='.csv', delete=False)
         with tmp_file as csv_file:
             csv_writer = csv.writer(csv_file)
-            csv_writer.writerow(tuple((adapt(h) for h in self.iheaders)))
-            for record in self.irecords:
-                csv_writer.writerow(tuple((adapt(r) for r in record['row'])))
+            csv_writer.writerow(tuple((adapt(h) for h in self.fields)))
+            for row in self:
+                csv_writer.writerow(tuple((adapt(val) for val in row)))
         return FileLink(os.path.join(CSV_PATH, os.path.split(tmp_file.name)[-1]))
+
+    def __str__(self):
+        return _(tabulate.tabulate(self, headers=self.fields))
+
+    def __repr__(self):
+        return _(self).encode('utf-8')
+
+
+# TODO: also implement vertical table orientation, which could be usefult for
+# comparing few records or reuse same code for displaying single record.
+class HTMLTable(BaseTable):
+    """ HTML Table representation object for RecordList
+
+        :param data: record list (or iterable of anything other) to create represetation for
+        :type data: RecordList|iterable
+        :param fields: list of fields to display. each field should be string
+                       with dot splitted names of related object, or callable
+                       of one argument (record instance) or *HField* instance or
+                       tuple(field_path|callable, field_name)
+        :type fields: list(str | callable | HField instance | tuple(field, name))
+        :param str caption: String to be used as table caption
+        :param dict highlighters: dictionary in format::
+
+                                      {color: callable(record)->bool}
+
+                                  where *color* any color suitable for HTML and
+                                  callable is function of *Record instance* which decides,
+                                  if record should be colored by this color
+    """
+    def __init__(self, data, fields, caption=None, highlighters=None, **kwargs):
+        super(HTMLTable, self).__init__(data, fields)
+        self._caption = u"HTMLTable"
+        self._highlighters = {}
+
+        # Note: Fields already updated by base class
+        self.update(caption=caption, highlighters=highlighters, **kwargs)
+
+    def update(self, fields=None, caption=None, highlighters=None, **kwargs):
+        """ This method is used to change HTMLTable initial data, thus, changing representation
+            Can be used for example, when some function returns partly configured HTMLTable instance,
+            but user want's to display more fields for example, or add some custom highlighters
+
+            arguments same as for constructor, except 'data' arg, which is absent in this method
+
+            :return: self
+        """
+        super(HTMLTable, self).update(fields=fields)
+        self._caption = _(self._data) if caption is None else _(caption)
+
+        if highlighters is not None:
+            self._highlighters.update(highlighters)
+
+        return self
+
+    @property
+    def caption(self):
+        """ Table caption
+        """
+        return self._caption
+
+    def highlight_record(self, record):
+        """ Checks all highlighters related to this representation object
+            and return color of firest match highlighter
+        """
+        for color, highlighter in self._highlighters.items():
+            if highlighter(record):
+                return color
+        return False
+
+    def _repr_html_(self):
+        """ HTML representation
+        """
+        theaders = u"".join((th(header) for header in self.fields))
+        help = u"Note, that You may use <i>.to_csv()</i> method of this table to export it to CSV format"
+        table = (u"<div><div>{help}</div>"
+                 u"<table class='table table-bordered table-condensed table-striped'>"
+                 u"<caption>{self.caption}</caption>"
+                 u"<tr>{headers}</tr>"
+                 u"%s</table>"
+                 u"<div>").format(self=self,
+                                  headers=theaders,
+                                  help=help)
+        trow = u"<tr>%s</tr>"
+        throw = u'<tr style="background: %s">%s</tr>'
+        data = u""
+        for record in self.data:
+            hcolor = self.highlight_record(record)
+            tdata = u"".join((td(fval) for fval in record['row']))
+            if hcolor:
+                data += throw % (hcolor, tdata)
+            else:
+                data += trow % tdata
+        return table % data
 
 
 class RecordListData(RecordList):
     """ Extend record list to add aditional methods related to RecordList representation
     """
 
-    def as_table(self, fields=None):
+    def as_table(self, *fields):
         """ Table representation of record list
 
             At this moment hust (ID | Name) table
         """
-        if fields is None:
-            res = "     ID | Name\n"
-            res += "\n".join(("%7s | %s" % (r.id, r._name) for r in self))
-            return res
-        raise NotImplementedError()
+        return BaseTable(self, fields)
 
     def as_html_list(self):
         """ HTML List representation of RecordList
