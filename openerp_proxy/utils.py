@@ -176,4 +176,3 @@ class AttrDict(dict, DirMixIn):
 
     def __dir__(self):
         return super(AttrDict, self).__dir__() + self.keys()
-

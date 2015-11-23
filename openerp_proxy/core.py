@@ -47,6 +47,8 @@
 """
 
 import six
+import logging
+from extend_me import Extensible
 
 # project imports
 from .connection import get_connector
@@ -56,8 +58,6 @@ from .plugin import PluginManager
 
 # Enable ORM features
 from . import orm
-
-from extend_me import Extensible
 
 
 __all__ = ('Client',)
@@ -215,6 +215,9 @@ class Client(Extensible):
             self instance and update them with passed keyword arguments,
             and call Proxy class constructor passing result as arguments.
 
+             Note, that if You pass any keyword arguments, You also should pass
+             'pwd' keyword argument with user password
+
             :return: Id of user logged in or new Client instance (if kwargs passed)
             :rtype: int|Client
             :raises LoginException: if wrong login or password
@@ -223,9 +226,6 @@ class Client(Extensible):
             init_kwargs = self.get_init_args()
             init_kwargs.update(kwargs)
 
-
-            if self._pwd and 'pwd' not in init_kwargs and 'user' in init_kwargs:
-                init_kwargs['pwd'] = self._pwd
             return Client(**init_kwargs)
 
         # Get the uid

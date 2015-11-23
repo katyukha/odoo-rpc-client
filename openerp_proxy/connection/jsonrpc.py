@@ -3,11 +3,15 @@ import six
 import json
 import random
 import requests
+import logging
 
 # project imports
 from .connection import ConnectorBase
 from .. import exceptions as exceptions
 from ..utils import ustr
+
+
+logger = logging.getLogger(__name__)
 
 
 @six.python_2_unicode_compatible
@@ -62,8 +66,10 @@ class JSONRPCMethod(object):
                 "Content-Type": "application/json",
             }, verify=self.__rpc_proxy.ssl_verify)
         except requests.exceptions.RequestException as exc:
-            raise JSONRPCError("Cannot connect to url %s\n"
-                               "Exception %s raised!" % (self.__url, exc))
+            msg = ("Cannot connect to url %s\n"
+                   "Exception %s raised!" % (self.__url, exc))
+            logger.error(msg)
+            raise JSONRPCError(msg)
 
         # Process results
         try:
@@ -75,6 +81,7 @@ class JSONRPCMethod(object):
                 "code": res.status_code,
                 "content": res.text,
             }
+            logger.error("Cannot decode JSON")
             raise JSONRPCError("Cannot decode JSON: %s" % info)
 
         if result.get("error", None):

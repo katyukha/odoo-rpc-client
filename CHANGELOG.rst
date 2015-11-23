@@ -1,3 +1,14 @@
+dev:
+    - Added ability to extend Record of specific models.
+      This allows records of diferent models (objects) to behave specificaly
+      This may be used for example to add virtual fields in client sripts
+    - Little refactored connection system. Bugs with connection via SSL (https)
+      seems to be fixed. As for JSON-RPC, there are some errors may be thrown,
+      telling that program cannot verify certificate. as workaround
+      You may pass to Client constructor kayword argument *ssl_verify=False*
+    - ``log_execute_console`` Added ``TimeTracker`` context manager,
+      which can be used for performance testing. It makes posible
+      to get total time ccode was running, and how much time was spent on RPC requests.
 0.6.1:
     - DB service little bit refactored.
       added methods:
