@@ -14,6 +14,22 @@ class Model(Extensible):
     """ Class that represents model in pydot.Graph
     """
 
+    MODEL_TEMPLATE = """<<table cellborder="0" cellpadding="0" cellspacing="0"
+        border="1">
+        <tr>
+            <td border="1" bgcolor="#99FF99" align="center" colspan="3">
+                {model.object.model_name}
+            </td>
+        </tr>
+        <tr>
+            <td align="center" colspan="3">
+                {model.name}
+            </td>
+        </tr>
+    </table>>"""
+
+    MODEL_FIELD_TEMPLATE = """{field.name} ({field.ttype})<br/>"""
+
     def __init__(self, proxy, obj):
         self._proxy = proxy
         self._object = obj if isinstance(obj, Object) else self._proxy[obj]
@@ -33,18 +49,24 @@ class Model(Extensible):
     def fields_info(self):
         return self._object.columns_info
 
+    @property
+    def fields(self):
+        return "".join((self.MODEL_FIELD_TEMPLATE.format(field=f)
+                        for f in self.object.model.field_id))
+
     def get_extra_node_args(self):
+        label = self.MODEL_TEMPLATE.format(model=self)
         return {
             'margin': '0',
-            'shape': 'record',
-            'label': self._object.model_name
+            'shape': 'none',
+            'label': label,
         }
 
     def to_node(self):
         """ Create pydot.Node instance for this relation
         """
-        return pydot.Node(self._object.name,
-                          **self.get_extra_node_args())
+        return pydot.Node(self.name,
+                              **self.get_extra_node_args())
 
     def add_to_graph(self, graph):
         """ Add this model to graph
@@ -255,6 +277,9 @@ class ModelGraph(Extensible):
             relation.add_to_graph(self._graph)
 
         return self._graph
+
+    def _repr_svg_(self):
+        return self.graph.create_svg()
 
 
 class Graph(Plugin):

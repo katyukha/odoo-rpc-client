@@ -102,7 +102,7 @@ function run_single_test {
     # if virtualenv was [re]created then we need to install packages
     if [ ! -z $venv_created ]; then
         pip install --upgrade pip setuptools pbr
-        pip install --upgrade coverage six extend_me requests mock pudb ipython[notebook]
+        pip install --upgrade coverage tabulate six extend_me requests mock pudb ipython[notebook]
     fi
 
     set +e   # allow errors

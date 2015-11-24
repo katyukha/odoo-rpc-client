@@ -47,7 +47,6 @@
 """
 
 import six
-import logging
 from extend_me import Extensible
 
 # project imports

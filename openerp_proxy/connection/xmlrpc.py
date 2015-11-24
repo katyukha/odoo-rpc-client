@@ -1,14 +1,10 @@
 # python imports
 from six.moves import xmlrpc_client as xmlrpclib
-import logging
 
 # project imports
 from .connection import ConnectorBase
 from ..utils import ustr
 from .. import exceptions as exceptions
-
-
-logger = logging.getLogger(__name__)
 
 
 class XMLRPCError(exceptions.ConnectorError):
@@ -39,7 +35,6 @@ class XMLRPCMethod(object):
         try:
             res = self.__method(*args)
         except xmlrpclib.Fault as fault:
-            logger.error("XML-RPC error")
             raise XMLRPCError(fault)
         return res
 
