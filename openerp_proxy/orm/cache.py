@@ -95,10 +95,12 @@ class ObjectCache(dict):
         for field in fields:
             field_path = field.split('.', 1)
             xfield = field_path.pop(0)
-            prefetch_fields.append(xfield)
-            relation = self._object.columns_info.get(xfield, {}).get('relation', False)
-            if field_path and relation:
-                rel_fields[relation].append(field_path[0])  # only one item left
+            xfield_info = self._object.columns_info.get(xfield, None)
+            if xfield_info is not None:
+                prefetch_fields.append(xfield)
+                relation = xfield_info.get('relation', False)
+                if field_path and relation:
+                    rel_fields[relation].append(field_path[0])  # only one item left
 
         return prefetch_fields, rel_fields
 

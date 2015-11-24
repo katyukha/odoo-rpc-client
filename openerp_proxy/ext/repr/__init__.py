@@ -9,6 +9,7 @@ used inside IPython notebook
 import os
 import six
 import os.path
+import tabulate
 from IPython.display import HTML, FileLink
 
 from ... import (Client,
@@ -41,7 +42,7 @@ class RecordListData(RecordList):
 
             All arguments passed are fields to be displayed
         """
-        return BaseTable(self, fields)
+        return self.as_html_table(*fields)
 
     def as_html_list(self):
         """ HTML List representation of RecordList
@@ -104,6 +105,29 @@ class HTMLRecord(Record):
     """ Adds HTML representation of record
     """
 
+    def get_table_data(self, *fields):
+        """ Returns list of lists representation of two-columns table (Field name, Field Value)
+
+            :return: list of lists
+        """
+        if not fields:
+            fields = sorted((HField(col_name, name=col_data['string'])
+                             for col_name, col_data in self._columns_info.items()
+                             if col_name in self._object.simple_fields),
+                            key=lambda x: _(x))
+
+        # Convert all fields to HField instances
+        parsed_fields = [toHField(field) for field in fields]
+
+        # Prefetch available fields
+        to_prefetch = [f._field
+                       for f in parsed_fields
+                       if isinstance(f._field, six.string_types)]
+        self._lcache.prefetch_fields(to_prefetch)
+
+        return [(field, field(self))
+                for field in parsed_fields]
+
     def as_html(self, *fields):
         """ Returns HTML representation of this Record.
             By default show all record fields.
@@ -117,27 +141,23 @@ class HTMLRecord(Record):
         """
         table_tmpl = u"<table><caption>Record %s</caption><tr><th>Column</th><th>Value</th></tr>%s</table>"
 
-        if not fields:
-            fields = sorted((HField(col_name, name=col_data['string'])
-                             for col_name, col_data in self._columns_info.items()
-                             if col_name in self._object.simple_fields),
-                            key=lambda x: _(x))
-            self.read()
-        else:
-            # TODO: implement in better way this prefetching
-            read_fields = (f.split('.')[0] for f in fields if isinstance(f, six.string_types) and f.split('.')[0] in self._columns_info)
-            prefetch_fields = [f for f in read_fields if f not in self._data]
-            self.read(prefetch_fields)
-
-        parsed_fields = []
-        for field in fields:
-            parsed_fields.append(toHField(field))
-
         body = ""
-        for field in parsed_fields:
-            body += tr(th(field), td(field(self)))
+        for field, val in self.get_table_data(*fields):
+            body += tr(th(field), td(val))
 
         return HTML(table_tmpl % (self._name, body))
+
+    def as_table(self, *fields):
+        """ Returns text table representation of this Record.
+            By default show all record fields.
+            all passed positional arguments are treated as field names to be displayed.
+            all positional arguments must be of types supported by toHField method
+            (it is used to convert them to HField instances)
+
+           :param list fields: list of fields to display in table representation
+        """
+        return PrettyTable(self.get_table_data(*fields),
+                           headers=[u'Field', u'Value'])
 
     def _repr_html_(self):
         """ Builds HTML representation for IPython
@@ -256,7 +276,7 @@ class ClientHTML(Client):
         """
         help_text = (u"To get list of registered objects for thist database<br/>"
                      u"access <i>registered_objects</i> property:<br/>"
-                     u"&nbsp;<i>.registered_objects</i>"
+                     u"&nbsp;<i>.registered_objects</i><br/>"
                      u"To get Object instance just call <i>get_obj</i> method<br/>"
                      u"&nbsp;<i>.get_obj(name)</i><br/>"
                      u"where <i>name</i> is name of Object You want to get"

@@ -15,6 +15,7 @@ from .utils import *
 __all__ = ('FieldNotFoundException',
            'HField',
            'toHField',
+           'PrettyTable',
            'BaseTable',
            'HTMLTable')
 
@@ -217,6 +218,23 @@ class HField(object):
         return u"HFiled: %s" % self
 
 
+class PrettyTable(object):
+    """ Just a simple warapper around tabulate.tabulate to show IPython displayable table
+
+        Only 'pretty' representation, yet.
+    """
+    def __init__(self, *args, **kwargs):
+        self._args = args
+        self._kwargs = kwargs
+
+    @property
+    def table(self):
+        return tabulate.tabulate(*self._args, **self._kwargs)
+
+    def _repr_pretty_(self, printer, cycle):
+        return printer.text(self.table)
+
+
 class BaseTable(object):
     """ Base class for table representation
 
@@ -294,7 +312,7 @@ class BaseTable(object):
         return FileLink(os.path.join(CSV_PATH, os.path.split(tmp_file.name)[-1]))
 
     def _repr_pretty_(self, printer, cycle):
-        return printer.text(tabulate.tabulate(self, headers=self.fields))
+        return printer.text(PrettyTable(self, headers=self.fields).table)
 
 
 # TODO: also implement vertical table orientation, which could be usefult for
