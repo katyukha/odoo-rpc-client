@@ -1,4 +1,10 @@
 dev:
+    - A bit of renaming (usualy used internaly) (may affect custom plugins and extensions)
+      Property ``proxy``, which points to related ``Client`` instance,
+      was renamed to ``client``
+    - Added ``tabulate`` integration. Now when app is running under IPython
+      shell, it is posible to print record list, and single record as normal readable
+      tables. Thanks to `Tabulate <https://pypi.python.org/pypi/tabulate>` project
     - Added ability to extend Record of specific models.
       This allows records of diferent models (objects) to behave specificaly
       This may be used for example to add virtual fields in client sripts

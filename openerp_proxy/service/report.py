@@ -164,7 +164,7 @@ class ReportService(ServiceBase):
     def _get_available_reports(self):
         """ Returns list of reports registered in system
         """
-        report_obj = self.proxy.get_obj('ir.actions.report.xml')
+        report_obj = self.client.get_obj('ir.actions.report.xml')
         return {r.report_name: Report(self, r) for r in report_obj.search_records([])}
 
     @property
@@ -216,9 +216,9 @@ class ReportService(ServiceBase):
         context = {} if context is None else context
         ids = [ids] if isinstance(ids, numbers.Integral) else ids
         data = self._prepare_report_data(model, ids, report_type)
-        return self._service.report(self.proxy.dbname,
-                                    self.proxy.uid,
-                                    self.proxy._pwd,
+        return self._service.report(self.client.dbname,
+                                    self.client.uid,
+                                    self.client._pwd,
                                     report_name,
                                     ids,
                                     data,
@@ -236,9 +236,9 @@ class ReportService(ServiceBase):
 
             :rtype: dict
         """
-        return self._service.report_get(self.proxy.dbname,
-                                        self.proxy.uid,
-                                        self.proxy._pwd,
+        return self._service.report_get(self.client.dbname,
+                                        self.client.uid,
+                                        self.client._pwd,
                                         report_id)
 
     def render_report(self, report_name, model, ids, report_type='pdf', context=None):
@@ -263,9 +263,9 @@ class ReportService(ServiceBase):
         ids = [ids] if isinstance(ids, numbers.Integral) else ids
         data = self._prepare_report_data(model, ids, report_type)
 
-        return self._service.render_report(self.proxy.dbname,
-                                           self.proxy.uid,
-                                           self.proxy._pwd,
+        return self._service.render_report(self.client.dbname,
+                                           self.client.uid,
+                                           self.client._pwd,
                                            report_name,
                                            ids,
                                            data,
@@ -295,7 +295,7 @@ class ReportService(ServiceBase):
 
         report_model = self[report_name].report_action.model
 
-        if self.proxy.server_version >= parse_version('6.1'):
+        if self.client.server_version >= parse_version('6.1'):
             report_result = self.render_report(report_name,
                                                report_model,
                                                obj_ids,

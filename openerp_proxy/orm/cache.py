@@ -134,21 +134,21 @@ class ObjectCache(dict):
 class Cache(dict):
     """ Cache to be used for Record's data
     """
-    __slots__ = ('_proxy',)
+    __slots__ = ('_client',)
 
-    def __init__(self, proxy, *args, **kwargs):
-        self._proxy = proxy
+    def __init__(self, client, *args, **kwargs):
+        self._client = client
         super(Cache, self).__init__(*args, **kwargs)
 
     @property
-    def proxy(self):
+    def client(self):
         """ Access to Client instance this cache is belongs to
         """
-        return self._proxy
+        return self._client
 
     def __missing__(self, key):
         try:
-            obj = self._proxy.get_obj(key)
+            obj = self._client.get_obj(key)
         except ValueError:
             raise KeyError("There is no object with such name: %s" % key)
         self[key] = ObjectCache(self, obj)

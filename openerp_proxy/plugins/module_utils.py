@@ -15,14 +15,14 @@ class ModuleObject(Object):
         """ Immediatly upgrades module
         """
         res = self.button_immediate_upgrade(ids)
-        self.proxy.clean_caches()  # because new models may appear in DB, so registered_objects shoud be refreshed
+        self.client.clean_caches()  # because new models may appear in DB, so registered_objects shoud be refreshed
         return res
 
     def install(self, ids):
         """ Immediatly install module
         """
         res = self.button_immediate_install(ids)
-        self.proxy.clean_caches()  # because new models may appear in DB, so registered_objects shoud be refreshed
+        self.client.clean_caches()  # because new models may appear in DB, so registered_objects shoud be refreshed
         return res
 
 
@@ -56,7 +56,7 @@ class ModuleUtils(Plugin):
             where *module_inst* is *Record* instance for this module
         """
         if self._modules is None:
-            self._modules = {m.name: m for m in self.proxy['ir.module.module'].search_records([])}
+            self._modules = {m.name: m for m in self.client['ir.module.module'].search_records([])}
         return self._modules
 
     def __dir__(self):

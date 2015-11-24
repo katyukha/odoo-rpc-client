@@ -34,7 +34,7 @@ class NBRunner(object):
 
         Tests each cell of type code
     """
-    def __init__(self, nb, timeout=20, debug=False, name=None):
+    def __init__(self, nb, timeout=30, debug=False, name=None):
         self.nb = nb
         self.km = None
         self.kc = None
@@ -164,7 +164,7 @@ class NBRunner(object):
             except Empty:
                 self.log("""Timeout waiting for execute reply (%is).
                 """ % self.timeout)
-                self.log("Interrupting kernel")
+                self.log("Interrupting kernel.\nCell:\n%s\n\n---\n\n)" % cell.source)
                 self.km.interrupt_kernel()
                 raise
 
@@ -258,7 +258,7 @@ class NBRunner(object):
 class NBMultiRunner(object):
     """ Class to test multiple notebooks at same time
     """
-    def __init__(self, notebook_paths, timeout=20, debug=False):
+    def __init__(self, notebook_paths, timeout=30, debug=False):
         self.notebook_paths = notebook_paths
         self.notebooks = []
         self.failures = 0

@@ -80,7 +80,7 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
                     ''' Sale orders related to curent product
                     '''
                     if self._sale_orders is None:
-                        so = self._proxy['sale.order']
+                        so = self._client['sale.order']
                         domain = [('order_line.product_id', '=', self.id)]
                         self._sale_orders = so.search_records(domain, cache=self._cache)
                     return self._sale_orders
@@ -114,7 +114,7 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
 
         self._id = rid
         self._object = obj
-        self._cache = empty_cache(obj.proxy) if cache is None else cache
+        self._cache = empty_cache(obj.client) if cache is None else cache
         self._lcache = self._cache[obj.name]
         if context is not None:
             self._lcache.update_context(context)
@@ -135,7 +135,7 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
     @property
     def _data(self):
         """ Data dictionary for this record.
-            (Just a proxy to cache)
+            (Just a client to cache)
         """
         return self._lcache[self._id]
 
@@ -152,10 +152,10 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
         return self._object.service
 
     @property
-    def _proxy(self):
+    def _client(self):
         """ Returns instance of related Client object
         """
-        return self._object.proxy
+        return self._object.client
 
     @property
     def _columns_info(self):
@@ -330,7 +330,7 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence,
         """
         """
         self._object = obj
-        self._cache = _cache = empty_cache(obj.proxy) if cache is None else cache
+        self._cache = _cache = empty_cache(obj.client) if cache is None else cache
         self._lcache = self._cache[obj.name]
 
         if context is not None:
@@ -538,7 +538,7 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence,
             :return: copy of this record list.
             :rtype: RecordList
         """
-        cache = empty_cache(self.object.proxy) if new_cache else self._cache
+        cache = empty_cache(self.object.client) if new_cache else self._cache
         return get_record_list(self.object,
                                ids=self.ids,
                                cache=cache,
@@ -705,7 +705,7 @@ class ObjectRecords(Object):
             Useful to get additional info on object, like is it transient or not.
         """
         if self._model is None:
-            res = self.proxy.get_obj('ir.model').search_records([('model', '=', self.name)], limit=2)
+            res = self.client.get_obj('ir.model').search_records([('model', '=', self.name)], limit=2)
             assert res.length == 1, "There must be only one model for this name"
             self._model = res[0]
 

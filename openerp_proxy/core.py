@@ -148,7 +148,7 @@ class Client(Extensible):
 
     @property
     def plugins(self):
-        """ Plugins associated with this proxy instance
+        """ Plugins associated with this Client instance
         """
         return self._plugins
 

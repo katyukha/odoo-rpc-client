@@ -183,10 +183,10 @@ class Test_21_Record(BaseTestCase):
         # test if normal mehtods avalilable in dir(object)
         self.assertIn('refresh', dir(self.record))
 
-    def test_proxy_property(self):
-        self.assertIs(self.record._proxy, self.client)
-        self.assertIs(self.record._object.proxy, self.client)
-        self.assertIs(self.object.proxy, self.client)
+    def test_client_property(self):
+        self.assertIs(self.record._client, self.client)
+        self.assertIs(self.record._object.client, self.client)
+        self.assertIs(self.object.client, self.client)
 
     def test_as_dict(self):
         rdict = self.record.as_dict
@@ -663,8 +663,8 @@ class Test_23_Cache(BaseTestCase):
                              port=self.env.port)
         self.cache = empty_cache(self.client)
 
-    def test_proxy(self):
-        self.assertIs(self.cache.proxy, self.client)
+    def test_client(self):
+        self.assertIs(self.cache.client, self.client)
 
     def test_missing(self):
         obj_cache = self.cache['res.partner']

@@ -60,8 +60,8 @@ class DBService(ServiceBase):
             while self.get_process(process_id)[0] < 1.0:
                 time.sleep(1)
 
-        client = Client(self.proxy.host, port=self.proxy.port,
-                        protocol=self.proxy.protocol, dbname=dbname,
+        client = Client(self.client.host, port=self.client.port,
+                        protocol=self.client.protocol, dbname=dbname,
                         user='admin', pwd=admin_password)
         return client
 

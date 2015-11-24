@@ -96,7 +96,7 @@ class RecordListData(RecordList):
 
         return describe_object_html({
             "Object": self.object,
-            "Client": self.object.proxy.get_url(),
+            "Client": self.object.client.get_url(),
             "Record count": self.length,
         }, caption=_(self), help=help_text)
 
@@ -171,7 +171,7 @@ class HTMLRecord(Record):
 
         return describe_object_html({
             "Object": self._object,
-            "Client": self._object.proxy.get_url(),
+            "Client": self._object.client.get_url(),
             "ID": self.id,
             "Name": self._name,
         }, caption=_(self), help=help_text)
@@ -261,7 +261,7 @@ class ObjectHTML(Object):
 
         return describe_object_html({
             "Name": self.model.name,
-            "Client": self.proxy.get_url(),
+            "Client": self.client.get_url(),
             "Model": self.model.model,
             "Record count": self.search([], count=True),
         }, caption=_(self.model.name), help=help_text)

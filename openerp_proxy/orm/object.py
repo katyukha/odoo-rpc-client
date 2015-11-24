@@ -11,18 +11,18 @@ __all__ = ('Object', 'get_object')
 ObjectType = ExtensibleByHashType._('Object', hashattr='name')
 
 
-def get_object(proxy, name):
+def get_object(client, name):
     """ Create new Object instance.
 
-        :param proxy: Client instance to bind this object to
-        :type proxy: Client
+        :param client: Client instance to bind this object to
+        :type client: Client
         :param name: name of object. Ex. 'sale.order'
         :type name: str
         :return: Created Object instance
         :rtype: Object
     """
     cls = ObjectType.get_class(name, default=True)
-    return cls(proxy, name)
+    return cls(client, name)
 
 
 # TODO: think about connecting it to service instead of Proxy
@@ -63,10 +63,10 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
         return self._service
 
     @property
-    def proxy(self):
+    def client(self):
         """ Client instance, this object is relatedto
         """
-        return self.service.proxy
+        return self.service.client
 
     # Overriden to add some standard method to be available in introspection
     # Useful for IPython auto completition
@@ -102,7 +102,7 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
         return str(self)
 
     def __eq__(self, other):
-        return self.name == other.name and self.proxy == other.proxy
+        return self.name == other.name and self.client == other.client
 
     def _get_columns_info(self):
         """ Calculates columns info

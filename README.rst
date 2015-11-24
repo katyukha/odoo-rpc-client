@@ -404,8 +404,8 @@ So let's start
 
             def get_sign_state(self):
                 # Note: folowing code works on version 6 of Openerp/Odoo
-                emp_obj = self.proxy['hr.employee']
-                emp_id = emp_obj.search([('user_id', '=', self.proxy.uid)])
+                emp_obj = self.client['hr.employee']
+                emp_id = emp_obj.search([('user_id', '=', self.client.uid)])
                 emp = emp_obj.read(emp_id, ['state'])
                 return emp[0]['state']
                 

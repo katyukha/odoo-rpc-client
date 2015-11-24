@@ -21,7 +21,7 @@ class ObjectService(ServiceBase):
         """
         if self.__use_execute_kw is None:
             try:
-                self._service.execute_kw(self.proxy.dbname, self.proxy.uid, self.proxy._pwd, 'ir.model', 'search', ([],), dict(limit=1))
+                self._service.execute_kw(self.client.dbname, self.client.uid, self.client._pwd, 'ir.model', 'search', ([],), dict(limit=1))
                 self.__use_execute_kw = True
             except ConnectorError:  # pragma: no cover
                 self.__use_execute_kw = False
@@ -38,9 +38,9 @@ class ObjectService(ServiceBase):
             del kwargs['context']
 
         if self.use_execute_kw:
-            result = self._service.execute_kw(self.proxy.dbname, self.proxy.uid, self.proxy._pwd, obj, method, args, kwargs)
+            result = self._service.execute_kw(self.client.dbname, self.client.uid, self.client._pwd, obj, method, args, kwargs)
         else:  # pragma: no cover
-            result = self._service.execute(self.proxy.dbname, self.proxy.uid, self.proxy._pwd, obj, method, *args, **kwargs)
+            result = self._service.execute(self.client.dbname, self.client.uid, self.client._pwd, obj, method, *args, **kwargs)
 
         return result
 
@@ -51,7 +51,7 @@ class ObjectService(ServiceBase):
             :param str signal: name of signal to send to workflow
             :param int object_id: ID of document (record) to send signal to
         """
-        result_wkf = self._service.exec_workflow(self.proxy.dbname, self.proxy.uid, self.proxy._pwd, object_name, signal, object_id)
+        result_wkf = self._service.exec_workflow(self.client.dbname, self.client.uid, self.client._pwd, object_name, signal, object_id)
         return result_wkf
 
     def get_registered_objects(self):

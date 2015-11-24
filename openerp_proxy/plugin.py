@@ -12,8 +12,8 @@ class Plugin(six.with_metaclass(PluginMeta)):
 
         (uses metaclass extend_me.ExtensibleByHashType)
 
-        :param erp_proxy: instance of Client to bind plugins to
-        :type erp_proxy: openerp_proxy.core.Client instance
+        :param client: instance of Client to bind plugins to
+        :type client: openerp_proxy.core.Client instance
 
         Example of simple plugin::
 
@@ -28,22 +28,22 @@ class Plugin(six.with_metaclass(PluginMeta)):
 
                 def get_sign_state(self):
                     # Note: folowing code works on version 6 of Openerp/Odoo
-                    emp_obj = self.proxy['hr.employee']
-                    emp_id = emp_obj.search([('user_id', '=', self.proxy.uid)])
+                    emp_obj = self.client['hr.employee']
+                    emp_id = emp_obj.search([('user_id', '=', self.client.uid)])
                     emp = emp_obj.read(emp_id, ['state'])
                     return emp[0]['state']
 
         This plugin will automaticaly register itself in system, when module which contains it will be imported.
     """
 
-    def __init__(self, erp_proxy):
-        self._erp_proxy = erp_proxy
+    def __init__(self, client):
+        self._client = client
 
     @property
-    def proxy(self):
+    def client(self):
         """ Related Client instance
         """
-        return self._erp_proxy
+        return self._client
 
     def __repr__(self):
         try:
@@ -64,25 +64,25 @@ class TestPlugin(Plugin):
         name = 'Test'
 
     def test(self):
-        return self.proxy.get_url()
+        return self.client.get_url()
 
 
 class PluginManager(extend_me.Extensible, DirMixIn):
     """ Class that holds information about all plugins
 
-        :param erp_proxy: instance of Client to bind plugins to
-        :type erp_proxy: openerp_proxy.core.Client instance
+        :param client: instance of Client to bind plugins to
+        :type client: openerp_proxy.core.Client instance
 
         Plugiins will be accessible via index or attribute syntax::
 
-            plugins = PluginManager(proxy)
+            plugins = PluginManager(client)
             plugins.Test   # acceps plugin 'Test' as attribute
             plugins['Test']  # access plugin 'Test' via indexing
     """
-    def __init__(self, erp_proxy):
+    def __init__(self, client):
         """
         """
-        self.__erp_proxy = erp_proxy
+        self.__client = client
         self.__plugins = {}
 
     def __getitem__(self, name):
@@ -93,7 +93,7 @@ class PluginManager(extend_me.Extensible, DirMixIn):
             except ValueError as e:
                 raise KeyError(str(e))
 
-            plugin = pluginCls(self.__erp_proxy)
+            plugin = pluginCls(self.__client)
             self.__plugins[name] = plugin
         return plugin
 

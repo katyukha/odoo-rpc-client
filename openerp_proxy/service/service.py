@@ -9,12 +9,12 @@ __all__ = ('get_service_class', 'ServiceBase', 'ServiceManager')
 
 
 class ServiceManager(Extensible, DirMixIn):
-    """ Class to hold services related to specific proxy and to
+    """ Class to hold services related to specific client and to
         automaticaly clean service cached on update of service classes
 
         Usage::
 
-            services = ServiceManager(erp_proxy)
+            services = ServiceManager(client)
             services.list                   # get list of registered services
             services.object                 # returns service with name 'object'
             services['common']              # returns service with name 'common'
@@ -28,8 +28,8 @@ class ServiceManager(Extensible, DirMixIn):
         cls.__managers.append(inst)
         return inst
 
-    def __init__(self, erp_proxy):
-        self._erp_proxy = erp_proxy
+    def __init__(self, client):
+        self._client = client
         self.__services = {}
 
     def __dir__(self):
@@ -55,8 +55,8 @@ class ServiceManager(Extensible, DirMixIn):
         service = self.__services.get(name, None)
         if service is None:
             cls = get_service_class(name)
-            srv = self._erp_proxy.connection.get_service(name)
-            service = cls(srv, self._erp_proxy)
+            srv = self._client.connection.get_service(name)
+            service = cls(srv, self._client)
             self.__services[name] = service
         return service
 
@@ -106,17 +106,23 @@ def get_service_class(name):
 
 class ServiceBase(six.with_metaclass(ServiceType, object)):
     """ Base class for all Services
+
+        :param service: instance of original service class.
+                        must support folowing syntax
+                        ``service.service_method(args)``
+                        to call remote methods
+        :param client: instance of Client, this service is binded to
     """
 
-    def __init__(self, service, erp_proxy):
-        self._erp_proxy = erp_proxy
+    def __init__(self, service, client):
+        self._client = client
         self._service = service
 
     @property
-    def proxy(self):
+    def client(self):
         """ Related Client instance
         """
-        return self._erp_proxy
+        return self._client
 
     def __getattr__(self, name):
         return getattr(self._service, name)

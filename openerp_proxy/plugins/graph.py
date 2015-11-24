@@ -30,9 +30,9 @@ class Model(Extensible):
 
     MODEL_FIELD_TEMPLATE = """{field.name} ({field.ttype})<br/>"""
 
-    def __init__(self, proxy, obj):
-        self._proxy = proxy
-        self._object = obj if isinstance(obj, Object) else self._proxy[obj]
+    def __init__(self, client, obj):
+        self._client = client
+        self._object = obj if isinstance(obj, Object) else self._client[obj]
 
     def __eq__(self, other):
         return self._object == other._object
@@ -77,9 +77,9 @@ class Model(Extensible):
 class ModelRelation(Extensible):
     """ Class that represents Relation in pydot graph
     """
-    def __init__(self, proxy, model, field_name, field_data):
+    def __init__(self, client, model, field_name, field_data):
         assert isinstance(model, Model)
-        self._proxy = proxy
+        self._client = client
         self._model = model
         self._field_name = field_name
         self._field_data = field_data
@@ -88,10 +88,10 @@ class ModelRelation(Extensible):
         self._related_model = None
 
     @property
-    def proxy(self):
+    def client(self):
         """ Related Client instance
         """
-        return self._proxy
+        return self._client
 
     @property
     def field_name(self):
@@ -127,14 +127,14 @@ class ModelRelation(Extensible):
     def related_object(self):
         """ Related object
         """
-        return self.proxy[self.field_data['relation']]
+        return self.client[self.field_data['relation']]
 
     @property
     def related_model(self):
         """ Related model
         """
         if self._related_model is None:
-            self._related_model = Model(self.proxy, self.related_object)
+            self._related_model = Model(self.client, self.related_object)
         return self._related_model
 
     @property
@@ -150,7 +150,7 @@ class ModelRelation(Extensible):
         return self.field_data.get('m2m_join_columns', False)
 
     def __eq__(self, other):
-        if self.proxy != other.proxy:
+        if self.client != other.client:
             return False
 
         if self.model.name == other.model.name and self.field_name == other.field_name:
@@ -194,13 +194,13 @@ class ModelGraph(Extensible):
     """ Contains single model graph
     """
 
-    def __init__(self, proxy, models, depth=1):
+    def __init__(self, client, models, depth=1):
         """
             :param models: list of Object instances of models to build graph for
         """
-        self._proxy = proxy
+        self._client = client
         self._depth = depth
-        self._models = [Model(proxy, m) for m in models]
+        self._models = [Model(client, m) for m in models]
 
         self._relations = []
         self._processed_models = []
@@ -238,15 +238,15 @@ class ModelGraph(Extensible):
             self._processed_models.append(model)
             for field_name, field in model.fields_info.iteritems():
                 if field['type'] in ('many2one', 'many2many'):
-                    relation = ModelRelation(self._proxy, model, field_name, field)
+                    relation = ModelRelation(self._client, model, field_name, field)
                 elif field['type'] == 'one2many':
-                    rel_model = Model(self._proxy, field['relation'])
+                    rel_model = Model(self._client, field['relation'])
                     rel_field = field['relation_field']
                     rel_field_data = rel_model.fields_info[rel_field]
                     if rel_field_data['type'] != 'many2one':
                         # skip non-standard relations
                         continue
-                    relation = ModelRelation(self._proxy, rel_model, rel_field, rel_field_data)
+                    relation = ModelRelation(self._client, rel_model, rel_field, rel_field_data)
                 else:
                     continue
 
@@ -295,4 +295,4 @@ class Graph(Plugin):
         super(Graph, self).__init__(*args, **kwargs)
 
     def model_graph(self, models, depth=1):
-        return ModelGraph(self.proxy, models, depth=depth)
+        return ModelGraph(self.client, models, depth=depth)
