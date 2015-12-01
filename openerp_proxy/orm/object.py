@@ -25,7 +25,6 @@ def get_object(client, name):
     return cls(client, name)
 
 
-# TODO: think about connecting it to service instead of Proxy
 @six.python_2_unicode_compatible
 class Object(six.with_metaclass(ObjectType, DirMixIn)):
     """ Base class for all Objects

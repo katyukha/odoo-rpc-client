@@ -4,7 +4,8 @@ from ..orm.record import (Record,
                           RecordList,
                           get_record_list)
 from ..orm.cache import (empty_cache,
-                         ObjectCache)
+                         ObjectCache,
+                         Cache)
 from ..orm.object import Object
 from ..exceptions import ConnectorError
 
@@ -519,6 +520,26 @@ class Test_22_RecordList(BaseTestCase):
                     self.assertItemsEqual(list(c_cache[country_id]), ['id', 'name', 'code', '__name_get_result'])
 
         self.assertTrue(country_checked, "Country must be checked. may be there are wrong data in test database")
+
+    def test_copy(self):
+        # test that cipied list and original list have same cache instance,
+        # when new_cache arg is set to default value False
+        clist = self.recordlist.copy()
+        self.assertIs(clist._cache, self.recordlist._cache)
+
+        # When new_cache arg set to True, then new_automaticaly generated cache
+        # will be used
+        clist = self.recordlist.copy(new_cache=True)
+        self.assertIsNot(clist._cache, self.recordlist._cache)
+
+        # test when Cache instance passed to new_cache argument
+        cache = Cache(self.recordlist.object.client)
+        clist = self.recordlist.copy(new_cache=cache)
+        self.assertIs(clist._cache, cache)
+
+        # Test that with wrong argument copy will raise
+        with self.assertRaises(ValueError):
+            self.recordlist.copy(new_cache=25)
 
     def test_sorting(self):
         def to_names(rlist):

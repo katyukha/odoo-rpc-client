@@ -275,6 +275,9 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
         if fields is not None:
             args.append(fields)
 
+        if context is not None:
+            ctx.update(context)
+
         if ctx:
             kwargs['context'] = ctx
 
@@ -331,7 +334,7 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence,
         """
         self._object = obj
         self._cache = _cache = empty_cache(obj.client) if cache is None else cache
-        self._lcache = self._cache[obj.name]
+        self._lcache = _cache[obj.name]
 
         if context is not None:
             self._lcache.update_context(context)
@@ -534,11 +537,22 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence,
 
             :param dict context: new context values to be used on new list
             :param true new_cache: if set to True, then new cache
-                                   instance will be created for copied list
+                                   instance will be created for resulting recordlist
+                                   if set to Cache instance, than it will be used
+                                   for resulting recordlist
             :return: copy of this record list.
             :rtype: RecordList
+            :raises ValueError: when incorrect value passed to new_cache argument
         """
-        cache = empty_cache(self.object.client) if new_cache else self._cache
+        if isinstance(new_cache, Cache):
+            cache = new_cache
+        elif not new_cache:
+            cache = self._cache
+        elif new_cache is True:
+            cache = empty_cache(self.object.client)
+        else:
+            raise ValueError("Wrong value for parametr 'new_cache': %r" % (new_cache,))
+
         return get_record_list(self.object,
                                ids=self.ids,
                                cache=cache,
@@ -596,7 +610,7 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence,
         return self.object.search([('id', 'in', self.ids)] + domain, *args, **kwargs)
 
     def search_records(self, domain, *args, **kwargs):
-        """ Performs normal search_records, but adds ``('id', 'in', seld.ids)`` to domain
+        """ Performs normal search_records, but adds ``('id', 'in', self.ids)`` to domain
 
             :returns: RecordList of records found
             :rtype: RecordList instance
@@ -615,7 +629,7 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence,
         kwargs = {}
         args = []
 
-        ctx = self._new_context(kwargs.get('context', None))
+        ctx = self._new_context(context)
 
         if ctx is not None:
             kwargs['context'] = ctx
