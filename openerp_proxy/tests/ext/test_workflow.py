@@ -15,6 +15,7 @@ from ...orm import (Record,
 
 
 @unittest.skipUnless(os.environ.get('TEST_WITH_EXTENSIONS', False), 'requires extensions enabled')
+@unittest.skipIf(os.environ.get('TEST_SKIP_WORKFLOW', False), 'workflow tests disabled')
 class Test_32_ExtWorkFlow(BaseTestCase):
     def setUp(self):
         super(Test_32_ExtWorkFlow, self).setUp()
