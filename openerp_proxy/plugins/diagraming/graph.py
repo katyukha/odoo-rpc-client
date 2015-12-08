@@ -2,9 +2,17 @@
 from extend_me import Extensible
 
 from ...plugin import Plugin
-from ...orm.object import Object
+#from ...orm.object import Object
 
 from . import graphml_yed
+
+
+SKIP_MODEL_FIELDS = [
+    'create_date',
+    'create_uid',
+    'write_date',
+    'write_uid',
+]
 
 
 class Model(graphml_yed.NodeBigEntity):
@@ -108,19 +116,20 @@ class ModelRelation(object):
 class ModelM2MRelation(ModelRelation):
     def __init__(self, source, target, field_name):
         super(ModelM2MRelation, self).__init__(source, target, field_name)
-        #print self.field_name, self.source._object, self.field_info
 
     @property
     def m2m_table(self):
-        if self.ir_field:
+        if self.ir_field and 'relation_table' in self.ir_field._object.columns_info:
             return self.ir_field.relation_table
-        return False  # self.field_info.get('m2m_join_table', None)
+        else:  # versions of odoo before 9.0
+            return self.field_info.get('m2m_join_table', None)
 
     @property
     def m2m_columns(self):
-        if self.ir_field:
+        if self.ir_field and 'column1' in self.ir_field._object.columns_info:
             return self.ir_field.column1, self.ir_field.column2
-        return False  # self.field_info.get('m2m_join_columns', None)
+        else:  # versions of odoo before
+            return self.field_info.get('m2m_join_columns', None)
 
     def __eq__(self, other):
         if isinstance(other, ModelM2MRelation) and super(ModelM2MRelation, self).__eq__(self, other):
@@ -203,6 +212,9 @@ class ModelGraph(Extensible):
                 if field['type'] not in ('many2one', 'many2many', 'one2many'):
                     continue
 
+                if field_name in SKIP_MODEL_FIELDS:
+                    continue
+
                 source = model
                 target = self._get_graph_model(field['relation'])
 
@@ -229,7 +241,6 @@ class ModelGraph(Extensible):
 
         for rel in list(relations):
             for g_obj in rel.to_graphml():
-                print "%s    ->    %s" % (g_obj, g_obj.label)
 
                 if isinstance(g_obj, graphml_yed.Node):
                     graph_nodes.append(g_obj)
@@ -240,14 +251,8 @@ class ModelGraph(Extensible):
 
         self._graph = graphml_yed.Graph(graph_nodes, graph_edges)
 
-        #for model in models:
-            ## todo add nodes
-            #model.add_to_graph(self._graph)
 
         return self._graph
-
-    #def _repr_svg_(self):
-        #return self.graph.create_svg()
 
 
 class Graph(Plugin):

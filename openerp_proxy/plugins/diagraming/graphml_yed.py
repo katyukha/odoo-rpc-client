@@ -196,6 +196,9 @@ class NodeRelationship(Node):
     _template = TEMPLATE_NODE_RELATIONSHIP
     _id_prefix = 'node_relationship_'
 
+    line_width_mod = CHAR_WIDTH + 1
+    line_height_mod = LINE_HEIGHT + 1
+
 
 class NodeBigEntity(Node):
 
