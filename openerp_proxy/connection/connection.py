@@ -27,11 +27,29 @@ class ConnectorBase(six.with_metaclass(ConnectorType)):
     """
 
     def __init__(self, host, port, extra_args=None):
-        self.host = host
-        self.port = port
-        self.extra_args = {} if extra_args is None else extra_args
+        self._host = host
+        self._port = port
+        self._extra_args = {} if extra_args is None else extra_args
 
         self.__services = {}
+
+    @property
+    def host(self):
+        """ Connector host
+        """
+        return self._host
+
+    @property
+    def port(self):
+        """ Connector port
+        """
+        return self._port
+
+    @property
+    def extra_args(self):
+        """ Connector extra arguments
+        """
+        return self._extra_args
 
     def update_extra_args(self, **kwargs):
         """ Update extra args and clean service cache

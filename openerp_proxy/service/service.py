@@ -8,6 +8,7 @@ from ..utils import DirMixIn
 __all__ = ('get_service_class', 'ServiceBase', 'ServiceManager')
 
 
+@six.python_2_unicode_compatible
 class ServiceManager(Extensible, DirMixIn):
     """ Class to hold services related to specific client and to
         automaticaly clean service cached on update of service classes
@@ -15,7 +16,7 @@ class ServiceManager(Extensible, DirMixIn):
         Usage::
 
             services = ServiceManager(client)
-            services.list                   # get list of registered services
+            services.service_list                   # get list of registered services
             services.object                 # returns service with name 'object'
             services['common']              # returns service with name 'common'
             services.get_service('report')  # returns service named 'report'
@@ -38,6 +39,12 @@ class ServiceManager(Extensible, DirMixIn):
         return list(res)
 
     @property
+    def client(self):
+        """ Client instance this ServiceManager is bounded to
+        """
+        return self._client
+
+    @property
     def service_list(self):
         """ Returns list of all registered services
         """
@@ -56,7 +63,7 @@ class ServiceManager(Extensible, DirMixIn):
         if service is None:
             cls = get_service_class(name)
             srv = self._client.connection.get_service(name)
-            service = cls(srv, self._client)
+            service = cls(srv, self._client, name)
             self.__services[name] = service
         return service
 
@@ -94,6 +101,9 @@ class ServiceManager(Extensible, DirMixIn):
         for service in self.__services.values():
             service.clean_cache()
 
+    def __str__(self):
+        return "<ServiceManager for %s>" % self.client
+
 
 ServiceType = ExtensibleByHashType._('Service', hashattr='name')
 
@@ -104,6 +114,7 @@ def get_service_class(name):
     return ServiceType.get_class(name, default=True)
 
 
+@six.python_2_unicode_compatible
 class ServiceBase(six.with_metaclass(ServiceType, object)):
     """ Base class for all Services
 
@@ -114,15 +125,22 @@ class ServiceBase(six.with_metaclass(ServiceType, object)):
         :param client: instance of Client, this service is binded to
     """
 
-    def __init__(self, service, client):
+    def __init__(self, service, client, name):
         self._client = client
         self._service = service
+        self._name = name
 
     @property
     def client(self):
         """ Related Client instance
         """
         return self._client
+
+    @property
+    def name(self):
+        """ Service name
+        """
+        return self._name
 
     def __getattr__(self, name):
         return getattr(self._service, name)
@@ -131,3 +149,6 @@ class ServiceBase(six.with_metaclass(ServiceType, object)):
         """ To be implemented by subclasses, if needed
         """
         pass
+
+    def __str__(self):
+        return "<Service '%s' of %s>" % (self.name, self.client)

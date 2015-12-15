@@ -558,7 +558,7 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence,
             val = rec
             while fields and val:
                 f = fields.pop(0)
-                val = rec[f]
+                val = val[f]
 
             return val
 
@@ -577,7 +577,7 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence,
 
             if isinstance(val, RecordList):
                 res.extend(val)
-            else:
+            elif val not in res:
                 res.append(val)
 
         return res

@@ -456,7 +456,7 @@ class Test_22_RecordList(BaseTestCase):
         res = self.recordlist.mapped('name')
         self.assertIsInstance(res, list)
         self.assertIsInstance(res[0], six.string_types)
-        self.assertEqual(len(res), len(self.recordlist))
+        self.assertEqual(len(res), len(set(p.name for p in self.recordlist)))
 
     def test_mapped_2_m2o_field(self):
         res = self.recordlist.mapped('parent_id')
@@ -464,7 +464,7 @@ class Test_22_RecordList(BaseTestCase):
         self.assertIsInstance(res[0], Record)
 
         # TODO: rewrite this to test that items was uniquifyed
-        self.assertEqual(len(res), len([r for r in self.recordlist if r.parent_id]))
+        self.assertEqual(len(res), len(set([r.parent_id for r in self.recordlist if r.parent_id])))
 
     def test_mapped_3_m2o_dot_char_field(self):
         res = self.recordlist.mapped('parent_id.name')
@@ -472,9 +472,17 @@ class Test_22_RecordList(BaseTestCase):
         self.assertIsInstance(res[0], six.string_types)
 
         # TODO: rewrite this to test that items was uniquifyed
-        self.assertEqual(len(res), len([r for r in self.recordlist if r.parent_id]))
+        self.assertEqual(len(res), len(set([r.parent_id.name for r in self.recordlist if r.parent_id])))
 
-    def test_mapped_4_m2o_dot_o2m_field(self):
+    def test_mapped_4_m2o_dot_char_field(self):
+        res = self.recordlist.mapped('country_id.code')
+        self.assertIsInstance(res, list)
+        self.assertIsInstance(res[0], six.string_types)
+
+        # TODO: rewrite this to test that items was uniquifyed
+        self.assertEqual(len(res), len(set([r.country_id.code for r in self.recordlist if r.country_id])))
+
+    def test_mapped_5_m2o_dot_o2m_field(self):
         res = self.recordlist.mapped('user_ids')
         self.assertIsInstance(res, RecordList)
         self.assertIsInstance(res[0], Record)

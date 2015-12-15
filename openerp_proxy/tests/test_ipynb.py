@@ -17,12 +17,6 @@ from jupyter_client.manager import start_new_kernel
 
 PROJECT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..',))
 
-# list of paths of notebooks to run
-notebooks_to_run = [
-    os.path.join(PROJECT_DIR, 'examples', 'Examples & HTML tests.ipynb'),
-]
-
-
 class CellExecuteError(Exception):
     """ Cell execution error
     """
@@ -301,11 +295,34 @@ class NBMultiRunner(object):
 @unittest.skipUnless(os.environ.get('TEST_WITH_EXTENSIONS', False), 'requires extensions enabled')
 class Test_40_IPYNB(unittest.TestCase):
 
+    # list of paths of notebooks to run
+    notebooks_to_run = [
+        os.path.join(PROJECT_DIR, 'examples', 'Examples & HTML tests.ipynb'),
+    ]
+
     def setUp(self):
         super(Test_40_IPYNB, self).setUp()
 
     def test_run_notebooks(self):
-        runner = NBMultiRunner(notebooks_to_run)
+        runner = NBMultiRunner(self.notebooks_to_run)
+        runner.run()
+
+        if runner.failed:
+            raise AssertionError("At leas one of tested notebooks have some errors")
+
+
+class Test_41_IPYNB(unittest.TestCase):
+
+    # list of paths of notebooks to run
+    notebooks_to_run = [
+        os.path.join(PROJECT_DIR, 'examples', 'Basics.ipynb'),
+    ]
+
+    def setUp(self):
+        super(Test_41_IPYNB, self).setUp()
+
+    def test_run_notebooks(self):
+        runner = NBMultiRunner(self.notebooks_to_run)
         runner.run()
 
         if runner.failed:
