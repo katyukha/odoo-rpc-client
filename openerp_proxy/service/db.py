@@ -90,7 +90,11 @@ class DBService(ServiceBase):
             :rtype: bytes
         """
         # format argument available only for odoo version 9.0
-        if self.server_version() >= parse_version('9.0'):
+        #
+        # Note, checking for 9.0rc because Odoo changed version naming.
+        # See issue https://github.com/odoo/odoo/issues/9799
+        #
+        if self.server_version() >= parse_version('9.0rc'):
             args = [kwargs.get('format', 'zip')]
         else:
             args = []
@@ -122,7 +126,12 @@ class DBService(ServiceBase):
 
             (Already parsed with pkg_resources.parse_version)
         """
-        return parse_version(self._service.server_version())
+        return parse_version(self.server_version_str())
+
+    def server_version_str(self):
+        """ Return server version (not wrapped by pkg.parse_version)
+        """
+        return self._service.server_version()
 
     # make able to check if there some databases on server exists
     def __contains__(self, name):
