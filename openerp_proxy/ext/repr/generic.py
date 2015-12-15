@@ -45,15 +45,14 @@ def toHField(field):
 class FieldNotFoundException(Exception):
     """ Exception raised when HField cannot find field in object been processed
     """
-    def __init__(self, obj, name, hfield, original_exc=None):
-        self.hfield = hfield
+    def __init__(self, obj, name, original_exc=None):
         self.name = name
         self.obj = obj
         self.orig_exc = original_exc
 
     @property
     def message(self):
-        return u"Field %s not found in obj %s while calculation hfield %s" % (_(self.field), _(self.obj), self.hfield)
+        return u"Field %s not found in obj %s" % (_(self.field), _(self.obj))
 
     # TODO: implement correct behavior. It fails in IPython notebook with
     # UnicodeEncodeError because of python's standard warnings module
@@ -192,7 +191,7 @@ class HField(object):
                                             # it is not last field then call
                                             # it without arguments
                     r = r()
-                elif callable(r) and not fields:  # last field and if is callable
+                elif callable(r) and not fields:  # it is last field and it is callable
                     r = r(*self._args, **self._kwargs)
             except:  # FieldNotFoundException:
                 if not self._silent:   # reraise exception if not silent
@@ -215,7 +214,7 @@ class HField(object):
         return _(self._name) if self._name is not None else _(self._field)
 
     def __repr__(self):
-        return u"HFiled: %s" % self
+        return u"<HFiled: %s>" % self
 
 
 class PrettyTable(object):

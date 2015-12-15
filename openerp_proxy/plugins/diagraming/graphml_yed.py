@@ -174,11 +174,11 @@ class Node(object):
     @property
     def width(self):
         lines = (self.label + '\n').split('\n')
-        return max((len(line) for line in lines)) * CHAR_WIDTH + self.line_width_mod
+        return max((len(line) for line in lines)) * self.line_width_mod + self.line_width_mod
 
     @property
     def height(self):
-        return (1.0 + self.label.count('\n')) * LINE_HEIGHT + self.line_height_mod
+        return (1.0 + self.label.count('\n')) * self.line_height_mod + self.line_height_mod
 
     def to_graphml(self):
         if self._template is None:

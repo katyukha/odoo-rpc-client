@@ -116,3 +116,35 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
             self._columns_info = self._get_columns_info()
 
         return self._columns_info
+
+    def resolve_field_path(self, field):
+        """ Resolves dot-separated field path to tuple list of tuples (model, field_name)
+
+            :param str field: dot-separated field path to resolve
+
+            For example::
+
+                sale_obj = client['sale.order']
+                sale_obj.resolve_field_path('partner_id.country_id.name')
+
+            will be resoved to::
+
+                [('sale.order', 'partner_id', 'res.partner'),
+                 ('res.partner', 'country_id', 'res.country'),
+                 ('res.country', 'name', False)]
+
+        """
+        field_path = field.split('.')
+        res = []
+
+        model = self.name
+        cinfo = self.client[model].columns_info
+        f = field_path.pop(0)
+        res.append((model, f, cinfo[f].get('relation', False)))
+
+        while field_path:
+            model = cinfo[f]['relation']
+            cinfo = self.client[model].columns_info
+            f = field_path.pop(0)
+            res.append((model, f, cinfo[f].get('relation', False)))
+        return res

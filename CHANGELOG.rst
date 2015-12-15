@@ -1,4 +1,21 @@
 dev:
+    - Added experimental version of ``.mapped(field)`` method to ``RecordList``
+    - Added ``openerp_proxy.anyfield``  module which provides ``SField`` class
+      which may simlify code and make more readable code that uses lambdas for filtering for example
+      thus code like::
+          
+          res = recordlist.filter(lambda r: r.partner_id.country_id.code == 'UA')
+
+      may be rewrited as::
+
+          from openerp_proxy.anyfield import SF
+          res = recordlist.filter(SF.partner_id.country_id.code == 'UA')
+
+      Also this may help in representation::
+
+          from openerp_proxy.anyfield import SF
+          recordlist.as_html_table('id', 'name', SF.price, SF.price*0.2, SF.quantity*SF.price)
+
     - A bit of renaming (usualy used internaly) (may affect custom plugins and extensions)
       Property ``proxy``, which points to related ``Client`` instance,
       was renamed to ``client``

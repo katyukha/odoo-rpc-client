@@ -531,6 +531,57 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence,
                                ids=[r.id for r in self.records if func(r)],
                                cache=self._cache)
 
+    def mapped(self, field):
+        """  **Experimental**, Provides similar functionality to Odoo's api mapped(),
+            but supports only dot-separated field name as argument,
+            no callables yet.
+
+            Returns list of values of field of each record in this recordlist.
+            If value of field is RecordList or Record instance, than RecordList instance will be returned
+
+            Thus folowing code will work::
+
+                # returns a list of names
+                records.mapped('name')
+
+                # returns a recordset of partners
+                record.mapped('partner_id')
+
+                # returns the union of all partner banks, with duplicates removed
+                record.mapped('partner_id.bank_ids')
+
+            :param str field: returns list of values of 'field' for each record in this RecordList
+            :rtype: list or RecordList
+        """
+        def get_field(rec):
+            fields = field.split('.')
+            val = rec
+            while fields and val:
+                f = fields.pop(0)
+                val = rec[f]
+
+            return val
+
+        # Choose type of result
+        res_model, res_field, res_rel_model = self._object.resolve_field_path(field)[-1]
+        if res_rel_model:
+            res_obj = self._object.client[res_rel_model]
+            res = get_record_list(res_obj, [], cache=self._cache, context=self.context)
+        else:
+            res = []
+
+        for record in self.records:
+            val = get_field(record)
+            if not val:
+                continue
+
+            if isinstance(val, RecordList):
+                res.extend(val)
+            else:
+                res.append(val)
+
+        return res
+
     def copy(self, context=None, new_cache=False):
         """ Returns copy of this list, possibly with modified context
             and new empty cache.

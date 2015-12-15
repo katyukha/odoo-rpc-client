@@ -1,3 +1,14 @@
+import six
+import numbers
+import collections
+
+
+try:
+    import unittest.mock as mock
+except ImportError:
+    import mock
+
+
 from . import BaseTestCase
 from ..core import Client
 from ..orm.record import (Record,
@@ -8,14 +19,6 @@ from ..orm.cache import (empty_cache,
                          Cache)
 from ..orm.object import Object
 from ..exceptions import ConnectorError
-
-try:
-    import unittest.mock as mock
-except ImportError:
-    import mock
-
-import numbers
-import collections
 
 
 class Test_20_Object(BaseTestCase):
@@ -315,7 +318,6 @@ class Test_21_Record(BaseTestCase):
             r.test_previously_unexistent_record_method()
 
 
-
 class Test_22_RecordList(BaseTestCase):
 
     def setUp(self):
@@ -449,6 +451,35 @@ class Test_22_RecordList(BaseTestCase):
 
         with self.assertRaises(AssertionError):
             self.recordlist.insert(1, "some strange type")
+
+    def test_mapped_1_simple_field(self):
+        res = self.recordlist.mapped('name')
+        self.assertIsInstance(res, list)
+        self.assertIsInstance(res[0], six.string_types)
+        self.assertEqual(len(res), len(self.recordlist))
+
+    def test_mapped_2_m2o_field(self):
+        res = self.recordlist.mapped('parent_id')
+        self.assertIsInstance(res, RecordList)
+        self.assertIsInstance(res[0], Record)
+
+        # TODO: rewrite this to test that items was uniquifyed
+        self.assertEqual(len(res), len([r for r in self.recordlist if r.parent_id]))
+
+    def test_mapped_3_m2o_dot_char_field(self):
+        res = self.recordlist.mapped('parent_id.name')
+        self.assertIsInstance(res, list)
+        self.assertIsInstance(res[0], six.string_types)
+
+        # TODO: rewrite this to test that items was uniquifyed
+        self.assertEqual(len(res), len([r for r in self.recordlist if r.parent_id]))
+
+    def test_mapped_4_m2o_dot_o2m_field(self):
+        res = self.recordlist.mapped('user_ids')
+        self.assertIsInstance(res, RecordList)
+        self.assertIsInstance(res[0], Record)
+        self.assertEqual(res[0]._object.name, 'res.users')
+        # TODO: implement some additional checks
 
     def test_prefetch(self):
         cache = self.recordlist._cache
