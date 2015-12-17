@@ -4,7 +4,17 @@ import six
 import json
 import functools
 
-__all__ = ('ustr', 'AttrDict', 'wpartial')
+__all__ = ('ustr',
+           'AttrDict',
+           'DirMixIn',
+           'UConverter',
+           'wpartial',
+           'makedirs',
+           'json_read',
+           'json_write',
+           'xinput',
+           )
+
 
 # Python 2/3 workaround in raw_input
 try:
@@ -39,7 +49,7 @@ def json_write(file_path, *args, **kwargs):
         and write only if conversion is successfule. This allows to avoid loss of data
         when rewriting file.
     """
-    # note, using dumps instead of dump, becouse we need to check if data will
+    # note, using dumps instead of dump, because we need to check if data will
     # be dumped correctly. using dump on incorect data, causes file to be half
     # written, and thus broken
     json_data = json.dumps(*args, **kwargs)
@@ -61,7 +71,7 @@ def wpartial(func, *args, **kwargs):
 class UConverter(object):
     """ Simple converter to unicode
 
-        Create instance with specified list of encodings to
+        Create instance with specified list of encodings to be used to
         try to convert value to unicode
 
         Example::
@@ -107,16 +117,12 @@ class UConverter(object):
 ustr = UConverter()
 
 
-if six.PY3:
-    # There are no need to implement any aditional logic for Python 3, becuase
-    # there base class 'object' already have implemented '__dir__' method,
-    # which could be accessed via super() by subclasses
-    class DirMixIn:
-        pass
-else:
+try:
+    object.__dir__
+except AttributeError:
     # implement basic __dir__ to make it assessible via super() by subclasses
     class DirMixIn(object):
-        """ Mix in to make implementing __dir__ method in subclasses simpler
+        """ Mix-in to make implementing __dir__ method in subclasses simpler
         """
         def __dir__(self):
             # code is based on
@@ -150,6 +156,12 @@ else:
                 return list(attrs)
 
             return dir2(self)
+else:
+    # There are no need to implement any aditional logic for Python 3.3+, because
+    # there base class 'object' already have implemented '__dir__' method,
+    # which could be accessed via super() by subclasses
+    class DirMixIn:
+        pass
 
 
 class AttrDict(dict, DirMixIn):

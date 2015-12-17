@@ -79,7 +79,7 @@ class JSONRPCMethod(object):
                 "original_url": self.__url,
                 "url": res.url,
                 "code": res.status_code,
-                "content": res.text,
+                "content": res.text[:2000],
             }
             logger.error("Cannot decode JSON")
             raise JSONRPCError("Cannot decode JSON: %s" % info)
