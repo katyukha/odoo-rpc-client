@@ -59,6 +59,15 @@ class ModuleUtils(Plugin):
             self._modules = {m.name: m for m in self.client['ir.module.module'].search_records([])}
         return self._modules
 
+    def update_module_list(self):
+        """ Update module list
+
+            If there are some modules added to server,
+            update list, to be able to installe them.
+        """
+        self._modules = None
+        return self.client['ir.module.module'].update_list()
+
     def __dir__(self):
         res = dir(super(ModuleUtils, self))
         res.extend(['m_' + i for i in self.modules.keys()])
