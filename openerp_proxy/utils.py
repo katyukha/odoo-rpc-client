@@ -22,6 +22,13 @@ try:
 except NameError:
     xinput = input
 
+# Check if anyfield is installed
+# and import function which converts SField instances to functions
+try:
+    from anyfield import toFn as normalizeSField
+except ImportError:
+    normalizeSField = lambda x: x
+
 
 def makedirs(path):
     """ os.makedirs wrapper. No errors raised if directory already exists

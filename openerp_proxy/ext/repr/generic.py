@@ -8,6 +8,7 @@ from IPython.display import FileLink
 
 
 from ...utils import ustr as _
+from ...utils import normalizeSField
 
 from .utils import *
 
@@ -35,7 +36,7 @@ def toHField(field):
     elif isinstance(field, six.string_types):
         return HField(field)
     elif callable(field):
-        return HField(field)
+        return HField(normalizeSField(field))
     elif isinstance(field, (tuple, list)) and len(field) == 2:
         return HField(field[0], name=field[1])
     else:

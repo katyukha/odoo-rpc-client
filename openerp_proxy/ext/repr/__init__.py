@@ -197,12 +197,11 @@ class ColInfo(AttrDict):
                                         for i in x['info'].get('selection', []) or []))
 
             self._fields = [
-                HField('name', silent=True),
-                HField('info.string', silent=True),
-                HField('info.type', silent=True),
-                HField('info.readonly', silent=True),
-                HField('info.required', silent=True),
-                HField('info.help', silent=True),
+                HField('name', name='Name', silent=True),
+                HField('info.string', name='Disp. Name', silent=True),
+                HField('info.type', name='Type', silent=True),
+                HField('info.required', name='Required', silent=True),
+                HField('info.help', name='Help', silent=True),
             ]
         return self._fields
 

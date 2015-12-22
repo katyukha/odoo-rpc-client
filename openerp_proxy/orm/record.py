@@ -2,6 +2,7 @@
 """
 
 from ..utils import (wpartial,
+                     normalizeSField,
                      ustr,
                      DirMixIn)
 from .object import Object
@@ -466,15 +467,18 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence,
             record.refresh()
         return self
 
-    def sort(self, *args, **kwargs):
-        """ sort(cmp=None, key=None, reverse=False) -- inplace sort
-            cmp(x, y) -> -1, 0, 1
+    def sort(self, key=None, reverse=False):
+        """ sort(key=None, reverse=False) -- inplace sort
 
-            Note, that 'cmp' argument, not available for python 3
+            anyfield.SField instances may be safely passed as 'key' arguments.
+            no need to convert them to function explicitly
 
             :return: self
         """
-        self._records.sort(*args, **kwargs)
+        if callable(key):
+            key = normalizeSField(key)
+
+        self._records.sort(key=key, reverse=reverse)
         return self
 
     def group_by(self, grouper):
@@ -484,7 +488,7 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence,
                             if callable is passed, it should receive only
                             one argument - record instance, and result of
                             calling grouper will be used as key to group records by.
-            :type grouper: string|callable(record)
+            :type grouper: string|callable(record)|anyfield.SField
             :return: dictionary
 
             for example we have list of sale orders and want to group it by state::
@@ -504,6 +508,9 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence,
                 for letter, rlist in group.iteritems():  # Iterate over resulting dictionary
                     print letter, rlist.length           # Print state and amount of items with such state
         """
+        if callable(grouper):
+            grouper = normalizeSField(grouper)
+
         cls_init = functools.partial(get_record_list,
                                      self.object,
                                      ids=[],
@@ -523,10 +530,11 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence,
 
             :param func: callable to check if record should be included in result.
                          also *openerp_proxy.utils.r_eval* may be used
-            :type func: callable(record)->bool
+            :type func: callable(record)->bool|anyfield.SField
             :return: RecordList which contains records that matches results
             :rtype: RecordList
         """
+        func = normalizeSField(func)
         return get_record_list(self.object,
                                ids=[r.id for r in self.records if func(r)],
                                cache=self._cache)

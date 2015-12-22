@@ -53,15 +53,15 @@ setup(name='openerp_proxy',
       keywords=['openerp', 'odoo', 'odoo-rpc', 'rpc', 'xmlrpc',
                 'xml-rpc', 'json-rpc', 'jsonrpc', 'odoo-client', 'ipython'],
       extras_require={
-          'all': ['ipython[all]'],
+          'all': ['ipython[all]', 'anyfield'],
       },
       install_requires=[
-          'tabulate>=0.7.5',
+          'tabulate>=0.7.5',  # repr extension
           'six>=1.10',
           'extend_me>=1.1.3',
           'setuptools>=18',
           'requests>=2.7',
-          'ipython>=4',
+          'ipython>=4',       # repr extension
       ],
       tests_require=[
           'mock',

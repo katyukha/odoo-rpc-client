@@ -66,6 +66,7 @@ Features
 -  Support of **JSON-RPC** for *version 8+* of Odoo
 -  Support of using **named parametrs** in RPC method calls (server version 6.1 and higher).
 -  *Sugar extension* which simplifys code a lot.
+-  *Experimental* integration with `AnyField <https://pypi.python.org/pypi/anyfield>`
 
 -  Missed feature? ask in `Project Issues <https://github.com/katyukha/openerp-proxy/issues>`_
 
