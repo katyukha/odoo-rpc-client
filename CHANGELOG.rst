@@ -1,11 +1,14 @@
 0.6.2:
-    - **experimental** Added integration with `AnyField <https://pypi.python.org/pypi/anyfield>`
+    - **experimental** Added integration with `AnyField <https://pypi.python.org/pypi/anyfield>`_
+    - Added ``RecordList.mapped`` method similar ot Odoo's ``RecordSet.mapped`` method.
+    - Partial fix related to changes in Odoo versioning. See `Issue #9799 <https://github.com/odoo/odoo/issues/9799>`_
+    - To ``module_utils`` plugin added ``update_module_list`` method.
     - A bit of renaming (usualy used internaly) (may affect custom plugins and extensions)
       Property ``proxy``, which points to related ``Client`` instance,
       was renamed to ``client``
     - Added ``tabulate`` integration. Now when app is running under IPython
       shell, it is posible to print record list, and single record as normal readable
-      tables. Thanks to `Tabulate <https://pypi.python.org/pypi/tabulate>` project
+      tables. Thanks to `Tabulate <https://pypi.python.org/pypi/tabulate>`_ project
     - Added ability to extend Record of specific models.
       This allows records of diferent models (objects) to behave specificaly
       This may be used for example to add virtual fields in client sripts

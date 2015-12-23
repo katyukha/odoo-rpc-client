@@ -66,6 +66,7 @@ Features
 -  Support of **JSON-RPC** for *version 8+* of Odoo
 -  Support of using **named parametrs** in RPC method calls (server version 6.1 and higher).
 -  *Sugar extension* which simplifys code a lot.
+-  *Experimental* integration with `AnyField <https://pypi.python.org/pypi/anyfield>`_
 
 -  Missed feature? ask in `Project Issues <https://github.com/katyukha/openerp-proxy/issues>`_
 
@@ -111,6 +112,7 @@ to server methods, such as using context in ``openerp_proxy.orm`` package
 Examples
 ~~~~~~~~
 
+-  `Basics <http://nbviewer.ipython.org/github/katyukha/openerp-proxy/blob/master/examples/Basics.ipynb>`_
 -  `Examples & HTML tests <http://nbviewer.ipython.org/github/katyukha/openerp-proxy/blob/master/examples/Examples%20&%20HTML%20tests.ipynb>`_
 
 
@@ -123,11 +125,15 @@ do it could be installed via PIP::
     pip install openerp_proxy
     
 this will make available package *openerp\_proxy* and also shell will be available by
-command ``$ openerp_proxy``
+command ``openerp_proxy``
 
 If You want to install development version of *OpenERP Proxy* you can do it via::
 
-    pip install -e git+https://github.com/katyukha/openerp-proxy.git#egg=openerp_proxy
+    pip install -e git+https://github.com/katyukha/openerp-proxy.git@dev#egg=openerp_proxy
+
+or (faster way)::
+
+    pip install https://github.com/katyukha/openerp-proxy/archive/dev.zip
 
 
 Also if You plan to use this project as shell client, it is **recommended to install IPython**
