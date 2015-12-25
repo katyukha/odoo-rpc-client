@@ -35,8 +35,6 @@ def toHField(field):
         return field
     elif isinstance(field, six.string_types):
         return HField(field)
-    elif callable(field):
-        return HField(normalizeSField(field))
     elif isinstance(field, (tuple, list)) and len(field) == 2:
         return HField(field[0], name=field[1])
     else:
@@ -107,6 +105,9 @@ class HField(object):
     """
 
     def __init__(self, field, name=None, silent=False, default=None, parent=None, args=None, kwargs=None):
+        if callable(field):
+            field = normalizeSField(field)
+
         self._field = field
         self._name = name
         self._silent = silent
@@ -337,10 +338,10 @@ class HTMLTable(BaseTable):
                                   if record should be colored by this color
     """
     def __init__(self, data, fields, caption=None, highlighters=None, **kwargs):
-        super(HTMLTable, self).__init__(data, fields)
         self._caption = u"HTMLTable"
         self._highlighters = {}
 
+        super(HTMLTable, self).__init__(data, fields)
         # Note: Fields already updated by base class
         self.update(caption=caption, highlighters=highlighters, **kwargs)
 
@@ -354,9 +355,16 @@ class HTMLTable(BaseTable):
             :return: self
         """
         super(HTMLTable, self).update(fields=fields)
-        self._caption = _(self.data) if caption is None else _(caption)
+
+        if caption is None and self._caption is None:
+            self._caption = _(self.data)
+
+        if caption is not None:
+            self._caption = _(caption)
 
         if highlighters is not None:
+            highlighters = {hname: normalizeSField(hfn)
+                            for hname, hfn in highlighters.items()}
             self._highlighters.update(highlighters)
 
         return self
