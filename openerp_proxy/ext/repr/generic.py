@@ -290,6 +290,9 @@ class BaseTable(object):
             # smthing like ``yield (f(record) for f in self.fields)`` failed
             yield [field(record) for field in self.fields]
 
+    def __len__(self):
+        return len(self.data)
+
     def to_csv(self):
         """ Write table to CSV file and return FileLink object for it
 
@@ -337,9 +340,10 @@ class HTMLTable(BaseTable):
                                   callable is function of *Record instance* which decides,
                                   if record should be colored by this color
     """
-    def __init__(self, data, fields, caption=None, highlighters=None, **kwargs):
+    def __init__(self, data, fields, caption=None, highlighters=None, display_help=True, **kwargs):
         self._caption = u"HTMLTable"
         self._highlighters = {}
+        self._display_help = display_help
 
         super(HTMLTable, self).__init__(data, fields)
         # Note: Fields already updated by base class
@@ -388,17 +392,25 @@ class HTMLTable(BaseTable):
         """ HTML representation
         """
         theaders = u"".join((th(header) for header in self.fields))
-        help = u"Note, that You may use <i>.to_csv()</i> method of this table to export it to CSV format"
-        table = (u"<div><div>{help}</div>"
+
+        if self._display_help:
+            help = u"Note, that You may use <i>.to_csv()</i> method of this table to export it to CSV format"
+        else:
+            help = ""
+
+        table = (u"<div class='panel panel-default'>"
+                 u"<div class='panel-heading'>{self.caption}</div>"
+                 u"<div class='panel-body'>{help}</div>"
                  u"<table class='table table-bordered table-condensed table-striped'>"
-                 u"<caption>{self.caption}</caption>"
-                 u"<tr>{headers}</tr>"
+                 u"<tr style='border: none'>{headers}</tr>"
                  u"%s</table>"
+                 u"<div class='panel-footer'>Total lines: {lines_count}</div>"
                  u"<div>").format(self=self,
                                   headers=theaders,
-                                  help=help)
-        trow = u"<tr>%s</tr>"
-        throw = u'<tr style="background: %s">%s</tr>'
+                                  help=help,
+                                  lines_count=len(self))
+        trow = u"<tr style='border:none'>%s</tr>"
+        throw = u'<tr style="border:none;background: %s">%s</tr>'
         data = u""
         for record in self.data:
             hcolor = self.highlight_record(record)

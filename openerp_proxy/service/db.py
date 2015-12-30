@@ -113,7 +113,7 @@ class DBService(ServiceBase):
             :return: True
             :rtype: bool
         """
-        assert isinstance(data, bytes), "data must be instance of bytes"
+        assert isinstance(data, bytes), "data must be instance of bytes. got: %s" % type(data)
         if self.server_version() >= parse_version('8.0') and 'copy' in kwargs:
             args = [kwargs['copy']]
         else:
