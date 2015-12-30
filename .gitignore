@@ -14,6 +14,7 @@
 /venv/
 .ropeproject
 .coverage
+.coverage.*
 /coverage/
 .ipynb_checkpoints/
 /examples/tmp

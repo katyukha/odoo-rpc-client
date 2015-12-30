@@ -54,14 +54,20 @@ class ObjectService(ServiceBase):
         result_wkf = self._service.exec_workflow(self.client.dbname, self.client.uid, self.client._pwd, object_name, signal, object_id)
         return result_wkf
 
+    def _get_registered_objects(self):
+        """ Implementation of get registered models (objects)
+            Could be overridden by extensions
+        """
+        ids = self.execute('ir.model', 'search', [])
+        read = self.execute('ir.model', 'read', ids, ['model'])
+        return [x['model'] for x in read]
+
     def get_registered_objects(self):
         """ Returns list of registered objects in database
         """
         if self.__registered_objects is not None:
             return self.__registered_objects
-        ids = self.execute('ir.model', 'search', [])
-        read = self.execute('ir.model', 'read', ids, ['model'])
-        self.__registered_objects = [x['model'] for x in read]
+        self.__registered_objects = self._get_registered_objects()
         return self.__registered_objects
 
     def clean_cache(self):

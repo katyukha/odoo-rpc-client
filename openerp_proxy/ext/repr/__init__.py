@@ -20,7 +20,7 @@ from ...orm import (RecordList,
 from ...service.report import (Report,
                                ReportResult,
                                ReportService)
-
+from ...service.object import ObjectService
 
 from ...utils import ustr as _
 from ...utils import AttrDict
@@ -139,13 +139,11 @@ class HTMLRecord(Record):
            :return: ipython's HTML object representing this record
            :rtype: HTML
         """
-        table_tmpl = u"<table><caption>Record %s</caption><tr><th>Column</th><th>Value</th></tr>%s</table>"
+        html_data = dict(self.get_table_data(*fields))
 
-        body = ""
-        for field, val in self.get_table_data(*fields):
-            body += tr(th(field), td(val))
-
-        return HTML(table_tmpl % (self._name, body))
+        return HTML(describe_object_html(html_data,
+                                         _("Record: %s") % self._name,
+                                         help=_("Data for %s") % self._name))
 
     def as_table(self, *fields):
         """ Returns text table representation of this Record.
@@ -174,7 +172,7 @@ class HTMLRecord(Record):
             "Client": self._object.client.get_url(),
             "ID": self.id,
             "Name": self._name,
-        }, caption=_(self), help=help_text)
+        }, caption=_(self._name), help=help_text)
 
 
 class ColInfo(AttrDict):
@@ -264,6 +262,38 @@ class ObjectHTML(Object):
             "Model": self.model.model,
             "Record count": self.search([], count=True),
         }, caption=_(self.model.name), help=help_text)
+
+
+class ClientRegistedObjects(list):
+    """ Simple class make registered objects be displayed as HTML table
+    """
+    def __init__(self, service, *args, **kwargs):
+        super(ClientRegistedObjects, self).__init__(*args, **kwargs)
+        self._service = service
+        self._html_table = None
+
+    @property
+    def html_table(self):
+        if self._html_table is None:
+            ids = self._service.execute('ir.model', 'search', [('model', 'in', list(self))])
+            read = self._service.execute('ir.model', 'read', ids, ['name', 'model', 'info'])
+            self._html_table = HTMLTable(read,
+                                         (('name', 'Name'),
+                                          ('model', 'System Name'),
+                                          ('info', 'Description')),
+                                         caption='Registered models')
+        return self._html_table
+
+    def _repr_html_(self):
+        return self.html_table._repr_html_()
+
+
+class ObjectServiceHtmlMod(ObjectService):
+    """ Simple class to add some HTML display features to ObjectService
+    """
+    def _get_registered_objects(self):
+        res = super(ObjectServiceHtmlMod, self)._get_registered_objects()
+        return ClientRegistedObjects(self, res)
 
 
 class ClientHTML(Client):
@@ -417,8 +447,9 @@ class IPYSession(Session):
 
         table = TMPL_TABLE % {'styles': '',
                               'extra_classes': 'table-striped',
-                              'caption': u"Previous connections",
                               'rows': data}
 
-        return TMPL_INFO_WITH_HELP % {'info': table, 'help': help_text}
+        return TMPL_INFO_WITH_HELP % {'info': table,
+                                      'caption': u"Previous connections",
+                                      'help': help_text}
 

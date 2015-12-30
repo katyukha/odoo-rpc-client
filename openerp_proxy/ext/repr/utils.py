@@ -24,7 +24,10 @@ makedirs(REPORTS_PATH)
 TMPL_INFO_WITH_HELP = u"""
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-7 col-lg-7">%(info)s</div>
+        <div class="panel panel-default col-md-7 col-lg-7">
+            <div class="panel-heading">%(caption)s</div>
+            <div class="panel-body">%(info)s</div>
+        </div>
         <div style="display:inline-block" class="panel panel-default col-md-5 col-lg-5">
             <div class="panel-heading">Info</div>
             <div class="panel-body">%(help)s</div>
@@ -35,7 +38,6 @@ TMPL_INFO_WITH_HELP = u"""
 
 TMPL_TABLE = u"""
 <table class="table table-bordered table-condensed %(extra_classes)s" style="margin-left:0;%(styles)s">
-<caption>%(caption)s</caption>
 %(rows)s
 </table>
 """
@@ -69,9 +71,8 @@ def describe_object_html(data, caption='', help='', table_styles=''):
     html_data = u"".join((tr(th(k), td(v)) for k, v in data.items()))
 
     table = TMPL_TABLE % {'styles': table_styles,
-                          'caption': caption,
                           'rows': html_data,
                           'extra_classes': ''}
-    return TMPL_INFO_WITH_HELP % {'info': table, 'help': help}
+    return TMPL_INFO_WITH_HELP % {'info': table, 'help': help, 'caption': caption}
 
 
