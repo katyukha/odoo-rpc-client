@@ -82,6 +82,17 @@ class Test_90_Session(BaseTestCase):
         self.assertIs(session[cl.get_url()], cl)
         self.assertIs(session[1], cl)
 
+        # test that when connecting again with same args via session, new
+        # Client instances will NOT be created
+        cl2 = session.connect(self.env.host,
+                              dbname=self.env.dbname,
+                              user=self.env.user,
+                              pwd=self.env.password,
+                              protocol=self.env.protocol,
+                              port=self.env.port,
+                              interactive=False)
+        self.assertIs(cl, cl2)
+
         # save the session
         session.save()
         del session

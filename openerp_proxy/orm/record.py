@@ -289,6 +289,33 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
                 res = rdata
         return res
 
+    def copy(self, default=None, context=None):
+        """ copy this record.
+
+            :param dict default: dictionary default values for new record (optional)
+            :param dict context: dictionary with context used to copy this record. (optional)
+            :return: Record instance for created record
+            :rtype: Record
+
+            Note about context: by default cache's context will be used, and if some context
+            will be passed to this method, new dict, which is combination of default context and passed context,
+            will be passed to server.
+        """
+        ctx = {} if self.context is None else self.context.copy()
+        kwargs = {}
+
+        if context is not None:
+            ctx.update(context)
+
+        if ctx:
+            kwargs['context'] = ctx
+
+        if default is not None:
+            kwargs['default'] = default
+
+        new_id = self._object.copy(self.id, **kwargs)
+        return get_record(self._object, new_id, cache=self._cache, context=self.context)
+
 
 RecordListMeta = ExtensibleType._('RecordList', with_meta=abc.ABCMeta)
 

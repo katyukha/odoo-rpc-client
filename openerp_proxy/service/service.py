@@ -63,7 +63,7 @@ class ServiceManager(Extensible, DirMixIn):
         if service is None:
             cls = get_service_class(name)
             srv = self._client.connection.get_service(name)
-            service = cls(srv, self._client, name)
+            service = cls(srv, self.client, name)
             self.__services[name] = service
         return service
 

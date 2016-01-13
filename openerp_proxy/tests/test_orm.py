@@ -317,6 +317,18 @@ class Test_21_Record(BaseTestCase):
         with self.assertRaises(ConnectorError):
             r.test_previously_unexistent_record_method()
 
+    def test_copy(self):
+        res = self.record.copy()
+
+        self.assertIsInstance(res, Record)
+        self.assertNotEqual(res.id, self.record.id)
+
+        res = self.record.copy(default={'ref': 'My Test Copy Partner Ref'})
+        self.assertIsInstance(res, Record)
+        self.assertNotEqual(res.id, self.record.id)
+        self.assertNotEqual(res.ref, self.record.ref)
+        self.assertEqual(res.ref, 'My Test Copy Partner Ref')
+
 
 class Test_22_RecordList(BaseTestCase):
 

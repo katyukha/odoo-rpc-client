@@ -1,3 +1,5 @@
+dev:
+    - Added ``Record.copy()`` method override.
 0.6.2:
     - **experimental** Added integration with `AnyField <https://pypi.python.org/pypi/anyfield>`_
     - Added ``RecordList.mapped`` method similar ot Odoo's ``RecordSet.mapped`` method.

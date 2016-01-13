@@ -36,7 +36,7 @@ class ObjectWorkflow(ObjectRecords):
             # TODO: implement correct behavior for situations with few
             # workflows for same model.
             wkf_records = wkf_obj.search_records([('osv', '=', self.name)])
-            if wkf_records and len(wkf_records) > 1:
+            if wkf_records and len(wkf_records) > 1:   # pragma: no cover
                 raise ObjectException("More then one workflow per model not supported "
                                       "be current version of openerp_proxy!")
             self._workflow = wkf_records and wkf_records[0] or False

@@ -55,8 +55,8 @@ class FieldNotFoundException(Exception):
 
     # TODO: implement correct behavior. It fails in IPython notebook with
     # UnicodeEncodeError because of python's standard warnings module
-    #def __unicode__(self):
-        #return message
+    # def __unicode__(self):
+        # return message
 
     def __str__(self):
         # converting to ascii because of python's warnings module fails in
