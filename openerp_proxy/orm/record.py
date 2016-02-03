@@ -211,11 +211,18 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
             :param str ftype: type of field to det value for
             :param str name: name of field to read
 
-            Should be overridden by extensions to provide better hadling for diferent field values
+            Should be overridden by extensions to provide better hadling
+            for diferent field values
         """
         if name not in self._data:
+            # save 'cache_field' function before for loop
             cache_field = self._lcache.cache_field
-            for data in self._object.read(self._lcache.get_ids_to_read(name), [name], context=self.context):
+
+            # get list of ids in cache, that have not read requested field
+            for data in self._object.read(self._lcache.get_ids_to_read(name),
+                                          [name],
+                                          context=self.context):
+                # write each row of data to cache
                 cache_field(data['id'], ftype, name, data[name])
 
         return self._data[name]
@@ -369,6 +376,10 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence,
 
         ids = [] if ids is None else ids
 
+        # We need to add these ids to cache to make prefetching and data
+        # reading work correctly. if some of ids will not be present in cache,
+        # then, on acces to field of record with such id, data will not been read
+        # from database. Look into *Record._get_field* method for more info
         self._lcache.update_keys(ids)
 
         self._records = [get_record(obj, id_, cache=_cache)

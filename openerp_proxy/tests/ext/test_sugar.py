@@ -66,6 +66,9 @@ class Test_31_ExtSugar(BaseTestCase):
             self.object(name='admin')
             fake_search_records.assert_called_with([('name', '=', 'admin')])
 
+            self.object()
+            fake_search_records.assert_called_with([])
+
     def test_client_dir(self):
         # test if models a in dir
         self.assertIn('_res_partner', dir(self.client))
