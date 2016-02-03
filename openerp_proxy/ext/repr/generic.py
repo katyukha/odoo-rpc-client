@@ -4,13 +4,14 @@ import csv
 import os.path
 import tempfile
 import tabulate
+from jinja2 import Template
 from IPython.display import FileLink
 
 
 from ...utils import ustr as _
 from ...utils import normalizeSField
 
-from .utils import *
+from .utils import CSV_PATH
 
 
 __all__ = ('FieldNotFoundException',
@@ -37,6 +38,8 @@ def toHField(field):
         return HField(field)
     elif isinstance(field, (tuple, list)) and len(field) == 2:
         return HField(field[0], name=field[1])
+    elif callable(field):
+        return HField(field)
     else:
         raise ValueError('Unsupported field type: %s' % repr(field))
 
@@ -183,6 +186,7 @@ class HField(object):
         if callable(self._field):
             return self._field(record, *self._args, **self._kwargs)
 
+        # field seems to be string
         fields = self._field.split('.')
         r = record
         while fields:
@@ -201,6 +205,12 @@ class HField(object):
                 else:                  # or return default value
                     r = self._default
                     break
+
+        # Support nested HTML Tables
+        if isinstance(r, HTMLTable):
+            r.nested = True
+            r = r.render()
+
         return r
 
     def __call__(self, record):
@@ -230,6 +240,7 @@ class PrettyTable(object):
 
     @property
     def table(self):
+        # TODO: think about saving rendered table in instance
         return tabulate.tabulate(*self._args, **self._kwargs)
 
     def _repr_pretty_(self, printer, cycle):
@@ -339,15 +350,66 @@ class HTMLTable(BaseTable):
                                   where *color* any color suitable for HTML and
                                   callable is function of *Record instance* which decides,
                                   if record should be colored by this color
+        :param bool display_help: if set to False, then no help message will be displayed
     """
+
+    _template = Template("""
+        <div class='panel panel-default'>
+            {% if table.caption and not table.nested %}
+                <div class='panel-heading'>{{ table.caption }}</div>
+            {% endif %}
+            {% if table._display_help and not table.nested %}
+                <div class='panel-body'>
+                    Note, that You may use <i>.to_csv()</i> method of this table to export it to CSV format
+                </div>
+            {% endif %}
+            <table class='table table-bordered table-condensed table-striped'>
+                <tr style='border: none'>
+                    {% for header in table.fields %}
+                         <th>{{ header }}</th>
+                    {% endfor %}
+                </tr>
+                {% for record in table.data %}
+                    {% set hcolor = table.highlight_record(record) %}
+
+                    {% if hcolor %}
+                         <tr style='border:none;background: {{ hcolor }}'>
+                    {% else %}
+                         <tr style='border:none'>
+                    {% endif %}
+
+                    {% for field in table.fields %}
+                         <td>{{ field(record) }}</td>
+                    {% endfor %}
+
+                    </tr>
+                {% endfor %}
+            </table>
+            <div class='panel-footer'>Total lines: {{ table|length }}</div>
+        <div>
+    """)
+
     def __init__(self, data, fields, caption=None, highlighters=None, display_help=True, **kwargs):
         self._caption = u"HTMLTable"
         self._highlighters = {}
         self._display_help = display_help
+        self._nested = False
 
         super(HTMLTable, self).__init__(data, fields)
         # Note: Fields already updated by base class
         self.update(caption=caption, highlighters=highlighters, **kwargs)
+
+    @property
+    def nested(self):
+        """ system property. Which is automaticaly set if HTML table
+            should be diplayed in other html table. If set to True,
+            then caption and help message will not be displayed
+        """
+        return self._nested
+
+    @nested.setter
+    def nested(self, value):
+        self._nested = value
 
     def update(self, fields=None, caption=None, highlighters=None, **kwargs):
         """ This method is used to change HTMLTable initial data, thus, changing representation
@@ -388,37 +450,12 @@ class HTMLTable(BaseTable):
                 return color
         return False
 
+    def render(self):
+        """ render html table to string
+        """
+        return self._template.render(table=self)
+
     def _repr_html_(self):
         """ HTML representation
         """
-        theaders = u"".join((th(header) for header in self.fields))
-
-        if self._display_help:
-            help = u"Note, that You may use <i>.to_csv()</i> method of this table to export it to CSV format"
-        else:
-            help = ""
-
-        table = (u"<div class='panel panel-default'>"
-                 u"<div class='panel-heading'>{self.caption}</div>"
-                 u"<div class='panel-body'>{help}</div>"
-                 u"<table class='table table-bordered table-condensed table-striped'>"
-                 u"<tr style='border: none'>{headers}</tr>"
-                 u"%s</table>"
-                 u"<div class='panel-footer'>Total lines: {lines_count}</div>"
-                 u"<div>").format(self=self,
-                                  headers=theaders,
-                                  help=help,
-                                  lines_count=len(self))
-        trow = u"<tr style='border:none'>%s</tr>"
-        throw = u'<tr style="border:none;background: %s">%s</tr>'
-        data = u""
-        for record in self.data:
-            hcolor = self.highlight_record(record)
-            tdata = u"".join(
-                (td(field(record)) for field in self.fields)
-            )
-            if hcolor:
-                data += throw % (hcolor, tdata)
-            else:
-                data += trow % tdata
-        return table % data
+        return self.render()
