@@ -13,7 +13,7 @@ def get_connector(name):
 
 
 def get_connector_names():
-    """ Returns lisnt of connector names registered in system
+    """ Returns list of connector names registered in system
     """
     return ConnectorType.get_registered_names()
 

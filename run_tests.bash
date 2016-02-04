@@ -56,7 +56,6 @@ do
         ;;
         --reuse-venv)
             REUSE_VENV=1;
-            shift;
         ;;
         *)
             echo "Unknown option $key";
@@ -102,7 +101,7 @@ function run_single_test {
     # if virtualenv was [re]created then we need to install packages
     if [ ! -z $venv_created ]; then
         pip install --upgrade pip setuptools pbr
-        pip install --upgrade coverage tabulate six extend_me requests mock pudb ipython[notebook]
+        pip install --upgrade coverage tabulate six extend_me requests mock pudb jupyter ipython[notebook] anyfield
     fi
 
     set +e   # allow errors

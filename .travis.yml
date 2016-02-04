@@ -25,7 +25,7 @@ install:
   - "sudo apt-get install aptitude"
   - "sudo aptitude install -y $(dpkg -I odoo.deb | grep -o -P 'Depends: \\K(.*)' | tr ',' ' ') || true"
   - "sudo dpkg --force-depends -i odoo.deb || true"
-  - "pip install --upgrade coveralls ipython[notebook] setuptools>=18 pip pbr"
+  - "pip install --upgrade coveralls ipython[notebook] setuptools>=18 pip pbr anyfield>=0.1.2"
   - "python setup.py develop"
 
 before_script:

@@ -74,7 +74,7 @@ Features
 Quick example
 ~~~~~~~~~~~~~
 
-::
+.. code:: python
 
     from openerp_proxy import Client
 
@@ -94,7 +94,7 @@ Quick example
         print(order.name)
         for line in order.order_line:
             print("\t%s" % line.name)
-        print("-"*5)
+        print("-" * 5)
         print()
 
 
@@ -162,7 +162,7 @@ will be used, else usual python shell will be used. There is in context exists
 
 Next You have to get connection to some Odoo database.
 
-::
+.. code:: python
 
     >>> db = session.connect()
 
@@ -182,7 +182,7 @@ like config file or something else.
 
 So here is a way to create connection
 
-::
+.. code:: python
 
     from openerp_proxy.core import Client
     db = Client(host='my_host.int',
@@ -198,7 +198,9 @@ Use in IPython's notebook
 
 To better suit for HTML capable notebook You would like to use IPython's version of *session*
 object and *openerp_proxy.ext.repr* extension.
-So in first cell of notebook import session and extensions/plugins You want::
+So in first cell of notebook import session and extensions/plugins You want:
+
+.. code:: python
 
     # also You may import all standard extensions in one line:
     from openerp_proxy.ext.all import *
@@ -214,17 +216,23 @@ Now most things same as for shell usage, but...
 In some versions of IPython's notebook not patched version of *getpass* func/module,
 so if You not provide password when getting database (*connect*, *get_db* methods, You would be asked
 for it, but this prompt will be displayed in shell where notebook server is running, not on webpage.
-To solve this, it is recommended to uses *store_passwords* option::
+To solve this, it is recommended to uses *store_passwords* option
+
+.. code:: python
     
     session.option('store_passwords', True)
     session.save()
 
-Next use it like shell, but *do not forget to save session, after new connection*::
+Next use it like shell, but *do not forget to save session, after new connection*
+
+.. code:: python
 
     db = session.connect()
     session.save()
     
-or like lib::
+or like lib
+
+.. code:: python
 
     db = Client(host='my_host.int',
                 dbname='my_db',
@@ -241,7 +249,7 @@ General usage
 For example lets try to find how many sale orders in 'done' state we have in
 our database. (Look above sections to get help on how to connect to Odoo database)
 
-::
+.. code:: python
 
     >>> sale_order_obj = db['sale.order']  # or You may use 'db.get_obj('sale.order')' if You like
     >>>
@@ -256,7 +264,7 @@ with *search* method which return's list of IDs of records, then read
 data using *read* method. Both methods mostly same as Odoo internal
 ones:
 
-::
+.. code:: python
 
     >>> sale_order_ids = sale_order_obj.search([('state', '=', 'done')])
     >>> sale_order_datas = sale_order_obj.read(sale_order_ids, ['name'])  # Last argument is optional.
@@ -280,7 +288,7 @@ read. Record class provides some orm-like abilities for records,
 allowing for example access fields as attributes and provide mechanisms
 to lazily fetch related fields.
 
-::
+.. code:: python
 
     >>> sale_orders = sale_order_obj.search_records([('state', '=', 'done')])
     >>> sale_orders[0]
@@ -310,14 +318,14 @@ Session: db aliases
 Session provides ability to add aliases to databases, which will simplify access to them.
 To add aliase to our db do the folowing:
 
-::
+.. code:: python
 
     >>> session.aliase('my_db', db)
     
 And now to access this database in future (even after restart)
 You can use next code
 
-::
+.. code:: python
 
     >>> db = session.my_db
 
@@ -331,13 +339,13 @@ This extension provides some syntax sugar to ease access to objects
 
 So to start use it just import this extension **just after start**
 
-::
+.. code:: python
 
     import openerp_proxy.ext.sugar
 
 And after that You will have folowing features working
 
-::
+.. code:: python
 
     db['sale.order'][5]       # fetches sale order with ID=5
     db['sale_order']('0050')  # result in name_search for '0050' on sale order
@@ -364,7 +372,7 @@ list that holds names of modules to be imported at session creation time.
 For example, if You want *Sugar extension* to be automaticaly imported, just
 add it to ``session.start_up_imports`` list
 
-::
+.. code:: python
 
     session.start_up_imports.append('openerp_proxy.ext.sugar')
 

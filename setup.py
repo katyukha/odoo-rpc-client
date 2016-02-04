@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 
 import os.path
-from setuptools import setup, compat
+import sys
+from setuptools import setup
 
 # workaround for: https://github.com/travis-ci/travis-ci/issues/1778
 import multiprocessing
 
 # load version info
 version_file = os.path.join(os.path.dirname(__file__), 'openerp_proxy', 'version.py')
-if compat.PY2:
+if sys.version_info < (3,):
     execfile(version_file)
-elif compat.PY3:
+else:
     with open(version_file, 'rb') as f:
         exec(compile(f.read(), version_file, 'exec'))
 
@@ -67,6 +68,7 @@ setup(name='openerp_proxy',
           'mock',
           'ipython[notebook]',
           'coverage',
+          'anyfield',
       ],
       test_suite='openerp_proxy.tests.all',
 )

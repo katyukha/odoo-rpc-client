@@ -63,6 +63,8 @@ function make_venv {
 
     virtualenv -p $py_version $dest_dir;
     $dest_dir/bin/easy_install --upgrade setuptools pip;
+
+    $dest_dir/bin/pip install --upgrade ipython;
 }
 
 function build_docs {
@@ -117,6 +119,9 @@ function release_python_3 {
 }
 
 function do_release {
+    if [ ! -z $DRY_RUN ]; then
+        echo "Running in 'dry-run' mode.";
+    fi
     if [ "$USE_PY_VERSION" == "python3" ]; then
         release_python_3;
     elif [ "$USE_PY_VERSION" == "python2" ]; then

@@ -2,6 +2,10 @@ import six
 import unittest
 from openerp_proxy.utils import AttrDict
 
+import logging
+_logger = logging.getLogger(__name__)
+_logger.setLevel(logging.INFO)
+
 
 class BaseTestCase(unittest.TestCase):
     """Instanciates an ``odoorpc.ODOO`` object, nothing more."""

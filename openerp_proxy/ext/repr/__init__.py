@@ -9,7 +9,6 @@ used inside IPython notebook
 import os
 import six
 import os.path
-import tabulate
 from IPython.display import HTML, FileLink
 
 from ... import (Client,
@@ -214,7 +213,10 @@ class ColInfo(AttrDict):
         info_struct = [{'name': key,
                         'info': val} for key, val in self.items()]
         info_struct.sort(key=lambda x: x['name'])
-        return HTMLTable(info_struct, fields, caption=u'Fields for %s' % _(self._object.name))
+        return HTMLTable(info_struct,
+                         fields,
+                         caption=u'Fields for %s' % _(self._object.name),
+                         display_help=False)
 
     @property
     def html_table(self):
@@ -281,7 +283,8 @@ class ClientRegistedObjects(list):
                                          (('name', 'Name'),
                                           ('model', 'System Name'),
                                           ('info', 'Description')),
-                                         caption='Registered models')
+                                         caption='Registered models',
+                                         display_help=False)
         return self._html_table
 
     def _repr_html_(self):
@@ -361,7 +364,8 @@ class AvailableReportsInfo(AttrDict):
         fields = self.default_fields if fields is None else fields
         return HTMLTable(sorted(self.values(), key=lambda x: x.name),
                          fields,
-                         caption=u'Available reports')
+                         caption=u'Available reports',
+                         display_help=False)
 
     @property
     def html_table(self):

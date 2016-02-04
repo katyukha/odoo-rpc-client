@@ -28,7 +28,7 @@ TMPL_INFO_WITH_HELP = u"""
             <div class="panel-heading">%(caption)s</div>
             <div class="panel-body">%(info)s</div>
         </div>
-        <div style="display:inline-block" class="panel panel-default col-md-5 col-lg-5">
+        <div class="panel panel-default col-md-5 col-lg-5">
             <div class="panel-heading">Info</div>
             <div class="panel-body">%(help)s</div>
         </div>
