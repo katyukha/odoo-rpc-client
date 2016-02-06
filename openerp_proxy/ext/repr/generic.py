@@ -429,8 +429,11 @@ class HTMLTable(BaseTable):
             self._caption = _(caption)
 
         if highlighters is not None:
+            # Normalize highlighter functiona to be able to use anyfield.SField
+            # for highlighters
             highlighters = {hname: normalizeSField(hfn)
                             for hname, hfn in highlighters.items()}
+
             self._highlighters.update(highlighters)
 
         return self

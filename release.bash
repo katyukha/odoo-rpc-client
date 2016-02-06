@@ -69,7 +69,9 @@ function make_venv {
 
 function build_docs {
     pip install --upgrade sphinx[all];
-    (cp -f $SCRIPTPATH/README.rst $SCRIPTPATH/docs/source/intro.rst && cd $SCRIPTPATH/docs && make html)
+    (cp -f $SCRIPTPATH/README.rst $SCRIPTPATH/docs/source/intro.rst)
+    python $SCRIPTPATH/setup.py build_sphinx;
+
 }
 
 function release_implementation {
@@ -88,7 +90,7 @@ function release_implementation {
     build_docs;
 
     if [ -z $DRY_RUN ]; then
-        python setup.py upload_docs --upload-dir $SCRIPTPATH/docs/build/html/;
+        python setup.py upload_docs;
     fi
 }
 
