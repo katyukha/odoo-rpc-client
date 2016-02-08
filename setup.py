@@ -63,6 +63,7 @@ setup(name='openerp_proxy',
           'setuptools>=18',
           'requests>=2.7',
           'ipython>=4',       # repr extension
+          'Jinja2',
       ],
       tests_require=[
           'mock',
