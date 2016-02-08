@@ -106,6 +106,12 @@ class PluginManager(extend_me.Extensible, DirMixIn):
     def __contains__(self, name):
         return name in self.registered_plugins
 
+    def __iter__(self):
+        return iter(self.registered_plugins)
+
+    def __len__(self):
+        return len(self.registered_plugins)
+
     def __dir__(self):
         res = super(PluginManager, self).__dir__()
         res.extend(self.registered_plugins)

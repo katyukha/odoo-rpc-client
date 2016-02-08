@@ -397,12 +397,15 @@ class ReportServiceExt(ReportService):
             super(ReportServiceExt, self)._get_available_reports())
 
     def _repr_html_(self):
-        return ("<div>This is report service. <br/>"
-                "To get list of available reports<br/>"
-                "You can access <i>available_reports</i><br/>"
-                "property of this service: "
-                "<pre>.available_reports</pre>"
-                "</div>")
+        return (u"<div class='panel panel-default'>"
+                u"<div class='panel-heading'>Report Service</div>"
+                u"<div class='panel-body'>"
+                u"To get list of available reports<br/>"
+                u"You can access <i>available_reports</i><br/>"
+                u"property of this service: "
+                u"<pre>.available_reports</pre>"
+                u"</div>"
+                u"</div>")
 
 
 class ReportExt(Report):

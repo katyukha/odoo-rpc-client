@@ -184,27 +184,27 @@ class HField(object):
 
         # check if field is callable
         if callable(self._field):
-            return self._field(record, *self._args, **self._kwargs)
-
-        # field seems to be string
-        fields = self._field.split('.')
-        r = record
-        while fields:
-            field = fields.pop(0)
-            try:
-                r = self._get_field(r, field)
-                if callable(r) and fields:  # and if attribute is callable and
-                                            # it is not last field then call
-                                            # it without arguments
-                    r = r()
-                elif callable(r) and not fields:  # it is last field and it is callable
-                    r = r(*self._args, **self._kwargs)
-            except:  # FieldNotFoundException:
-                if not self._silent:   # reraise exception if not silent
-                    raise
-                else:                  # or return default value
-                    r = self._default
-                    break
+            r = self._field(record, *self._args, **self._kwargs)
+        else:
+            # field seems to be string
+            fields = self._field.split('.')
+            r = record
+            while fields:
+                field = fields.pop(0)
+                try:
+                    r = self._get_field(r, field)
+                    if callable(r) and fields:  # and if attribute is callable and
+                                                # it is not last field then call
+                                                # it without arguments
+                        r = r()
+                    elif callable(r) and not fields:  # it is last field and it is callable
+                        r = r(*self._args, **self._kwargs)
+                except:  # FieldNotFoundException:
+                    if not self._silent:   # reraise exception if not silent
+                        raise
+                    else:                  # or return default value
+                        r = self._default
+                        break
 
         # Support nested HTML Tables
         if isinstance(r, HTMLTable):

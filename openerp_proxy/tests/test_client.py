@@ -24,11 +24,14 @@ class Test_10_Client(BaseTestCase):
         self.assertIsInstance(self.client.user, Record)
         self.assertEqual(self.client.user.login, self.env.user)
 
+    def test_22_user_context(self):
+        uctx = self.client.user_context
+        self.assertDictEqual(uctx, self.client.get_obj('res.users').context_get())
+
     def test_25_server_version(self):
-        # Check that server version is wrapped in parse_version. thi allows to
+        # Check that server version is wrapped in parse_version. thus allows to
         # compare versions
         self.assertIsInstance(self.client.server_version, type(parse_version('1.0.0')))
-
 
     def test_30_get_obj(self):
         self.assertIn('res.partner', self.client.registered_objects)
@@ -67,6 +70,7 @@ class Test_10_Client(BaseTestCase):
         self.assertIn('Test', self.client.plugins.registered_plugins)
         self.assertIn('Test', self.client.plugins)
         self.assertIn('Test', dir(self.client.plugins))  # for introspection
+        self.assertIn('Test', [p for p in self.client.plugins])  # iteration over plugins names
         self.assertIsInstance(self.client.plugins.Test, Plugin)
         self.assertIsInstance(self.client.plugins['Test'], Plugin)
         self.assertIs(self.client.plugins['Test'], self.client.plugins.Test)
@@ -114,5 +118,16 @@ class Test_10_Client(BaseTestCase):
         self.assertIsInstance(res[0], dict)
         self.assertEqual(res[0]['id'], 1)
 
-    def test_not_equal(self):
+    def test_90_not_equal(self):
         self.assertNotEqual(self.client, 42)
+
+    def test_100_clean_caches(self):
+        self.assertIsNotNone(self.client.user_context)
+        self.assertIn('lang', self.client.user_context)
+
+        self.client.clean_caches()
+
+        self.assertIsNone(self.client._user)
+        self.assertIsNone(self.client._username)
+        self.assertIsNone(self.client._user_context)
+

@@ -23,10 +23,13 @@ class Test_25_Plugin_ModuleUtils(BaseTestCase):
 
     def test_10_init_module_utils(self):
         self.assertNotIn('module_utils', self.client.plugins)
+        self.assertEqual(len(self.client.plugins), 1)
+        self.assertIn('Test', self.client.plugins)
 
         import openerp_proxy.plugins.module_utils
 
         self.assertIn('module_utils', self.client.plugins)
+        self.assertEqual(len(self.client.plugins), 2)
 
     def test_15_modules(self):
         self.assertIn('sale', self.client.plugins.module_utils.modules)

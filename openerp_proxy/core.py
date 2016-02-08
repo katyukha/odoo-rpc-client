@@ -101,6 +101,7 @@ class Client(Extensible):
 
         self._uid = None
         self._user = None
+        self._user_context = None
 
     @property
     def dbname(self):
@@ -178,6 +179,16 @@ class Client(Extensible):
         if self._user is None:
             self._user = self.get_obj('res.users').read_records(self.uid)
         return self._user
+
+    @property
+    def user_context(self):
+        """ Get current user context
+
+            :rtype: dict
+        """
+        if self._user_context is None:
+            self._user_context = self.get_obj('res.users').context_get()
+        return self._user_context
 
     @property
     def server_version(self):
@@ -342,6 +353,10 @@ class Client(Extensible):
         """ Clean client related caches
         """
         self.services.clean_service_caches()
+        self.plugins.refresh()
+        self._user_context = None
+        self._user = None
+        self._username = None
 
     def __str__(self):
         return u"Client: %s" % self.get_url()

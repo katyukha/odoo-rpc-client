@@ -1,3 +1,6 @@
+0.6.4:
+    - Added ``Client.user_context`` property
+    - Bugfix in ``openerp_proxy.ext.repr`` with nested tables when, filed is a function
 0.6.3:
     - Added ``Record.copy()`` method override.
     - HTML representation fixes and improvements
