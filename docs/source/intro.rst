@@ -56,8 +56,8 @@ Features
    (By default password is not saved, and will be asked, but if You need to save it, just do this:
    ``session.option('store_passwords', True); session.save()``)
 -  Provides *browse\_record* like interface, allowing to browse related
-   models too. Supports `browse <ihttp://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html#openerp_proxy.orm.record.ObjectRecords.browse>`__ method.
-   Also adds method `search_records <ihttp://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html#openerp_proxy.orm.record.ObjectRecords.search_records>`__ to simplify
+   models too. Supports `browse <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html#openerp_proxy.orm.record.ObjectRecords.browse>`__ method.
+   Also adds method `search_records <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html#openerp_proxy.orm.record.ObjectRecords.search_records>`__ to simplify
    search-and-read operations.
 -  *Extension support*. You can easily modify most of components of this app/lib
    creating Your own extensions and plugins. It is realy simple. See for examples in
