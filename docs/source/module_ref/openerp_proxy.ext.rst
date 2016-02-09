@@ -40,3 +40,12 @@
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: openerp_proxy.ext.repr.generic
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`all` Module
+-----------------
+
+.. automodule:: openerp_proxy.ext.all

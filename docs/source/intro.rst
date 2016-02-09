@@ -120,12 +120,12 @@ Install
 -------
 
 This project is present on `PyPI <https://pypi.python.org/pypi/openerp_proxy/>`_
-do it could be installed via PIP::
+so it could be installed via PIP::
 
     pip install openerp_proxy
     
-this will make available package *openerp\_proxy* and also shell will be available by
-command ``openerp_proxy``
+this will make available python package *openerp\_proxy* and shell command ``openerp_proxy``
+See `Usage`_ for more details
 
 If You want to install development version of *OpenERP Proxy* you can do it via::
 
@@ -135,13 +135,11 @@ or (faster way)::
 
     pip install https://github.com/katyukha/openerp-proxy/archive/dev.zip
 
+Also it is recommened to install at `Jupyter <https://jupyter.org/>`_ (formely `IPython <http://ipython.org/>`_ notebook)
+to get all benefits of `Jupyter <https://jupyter.org/>`_ integration, provided by this project.
+To install it just type::
 
-Also if You plan to use this project as shell client, it is **recommended to install IPython**
-and If You  would like to have ability to play with Odoo data in IPython notebook,
-it is recommended to also install IPython's Notebook support. To install IPython and IPython Notebook
-just type::
-
-    pip install ipython ipython[notebook]
+    pip install jupyter
 
 
 Usage
@@ -157,16 +155,20 @@ After instalation run in shell:
        openerp_proxy
 
 And You will get the openerp_proxy shell. If *IPython* is installed then IPython shell
-will be used, else usual python shell will be used. There is in context exists
-*session* variable that represents current session to work with
+will be used, else usual python shell will be used. There is
+*session* variable present in locals. It is instance of `Session <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session>`_ class and
+represents current session and usualy is starting point of any shell work.
+See `documentation <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session>`_ for more details
 
 Next You have to get connection to some Odoo database.
+It is realy easy, just use `connect <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session.connect>`_ method of session
 
 .. code:: python
 
     >>> db = session.connect()
 
-This will ask You for host, port, database, etc to connect to and return Client instance
+This will ask You for host, port, database, etc to connect to
+and return `Client <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.core.Client>`_ instance
 which represents database connection.
 
 
@@ -193,9 +195,15 @@ So here is a way to create connection
 And next all there same, no more differences betwen shell and lib usage.
 
 
-Use in IPython's notebook
+Use in Jupyter notebook
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
+`Jupyter <https://jupyter.org/>`_ integration is implemented as extension
+`openerp_proxy.ext.repr <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html#module-openerp_proxy.ext.repr>`_,
+so to use it, first, this extension should be enabled (just by importing extension).
+As a shortcut, there is `openerp_proxy.ext.all <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html#module-openerp_proxy.ext.all>`_ module,
+which imports default set of extensions including
+`openerp_proxy.ext.repr <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html#module-openerp_proxy.ext.repr>`_ extension.
 To better suit for HTML capable notebook You would like to use IPython's version of *session*
 object and *openerp_proxy.ext.repr* extension.
 So in first cell of notebook import session and extensions/plugins You want:
