@@ -16,6 +16,8 @@ SKIP_MODEL_FIELDS = [
 
 
 class Model(graphml_yed.NodeBigEntity):
+    """ Odoo model abstraction layer
+    """
     def __init__(self, obj):
         self._object = obj
         super(Model, self).__init__(self._object.model_name, '\n'.join(self.fields))
@@ -41,6 +43,9 @@ class Model(graphml_yed.NodeBigEntity):
 
 
 class ModelRelation(object):
+    """ Model relation abstraction layer.
+        Represents relation betwen models
+    """
     def __init__(self, source, target, field_name):
         self.source = source
         self.target = target
@@ -114,6 +119,10 @@ class ModelRelation(object):
 
 
 class ModelM2MRelation(ModelRelation):
+    """ Many-to-many relation abstraction.
+
+        Represents many-to-many relation betwen two models
+    """
     def __init__(self, source, target, field_name):
         super(ModelM2MRelation, self).__init__(source, target, field_name)
 
@@ -268,4 +277,6 @@ class Graph(Plugin):
         super(Graph, self).__init__(*args, **kwargs)
 
     def model_graph(self, models, depth=1):
+        """ Build model graph
+        """
         return ModelGraph(self.client, models, depth=depth)

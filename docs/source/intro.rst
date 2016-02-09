@@ -46,29 +46,31 @@ Features
 -  *Python 3.3+* support
 -  You can call any public method on any OpenERP / Odoo object including:
    *read*, *search*, *write*, *unlink* and others
--  Have *a lot of speed optimizations* (caching, read only fields accessed,
-   read data for all records in current set, by one RPC call, etc)
+-  Have *a lot of speed optimizations* (caching, read only requested fields,
+   read data for all records in current set (cache), by one RPC call, etc)
 -  Desinged to take as more benefits of **IPython autocomplete** as posible
--  Works nice in **IPython Notebook** providing **HTML
+-  Works nice in `Jupyter Notebook <https://jupyter.org/>`__ providing **HTML
    representation** for a most of objects.
 -  Ability to export HTML table recordlist representation to *CSV file*
 -  Ability to save connections to different databases in session.
    (By default password is not saved, and will be asked, but if You need to save it, just do this:
    ``session.option('store_passwords', True); session.save()``)
 -  Provides *browse\_record* like interface, allowing to browse related
-   models too. Supports *browse* method. Also adds method *search\_records* to simplify
+   models too. Supports `browse <ihttp://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html#openerp_proxy.orm.record.ObjectRecords.browse>`__ method.
+   Also adds method `search_records <ihttp://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html#openerp_proxy.orm.record.ObjectRecords.search_records>`__ to simplify
    search-and-read operations.
 -  *Extension support*. You can easily modify most of components of this app/lib
    creating Your own extensions and plugins. It is realy simple. See for examples in
-   openerp_proxy/ext/ directory.
+   `openerp_proxy/ext/ <https://github.com/katyukha/openerp-proxy/tree/master/openerp_proxy/ext>`__ directory.
 -  *Plugin Support*. Plugins are same as extensions, but aimed to implement additional logic.
-   For example look at *openerp_proxy/plugins* and *openerp_proxy/plugin.py* 
+   For example look at `openerp_proxy/plugins <https://github.com/katyukha/openerp-proxy/tree/master/openerp_proxy/plugins>`__
+   and `openerp_proxy/plugin.py <https://github.com/katyukha/openerp-proxy/blob/master/openerp_proxy/plugin.py>`__ 
 -  Support of **JSON-RPC** for *version 8+* of Odoo
 -  Support of using **named parametrs** in RPC method calls (server version 6.1 and higher).
--  *Sugar extension* which simplifys code a lot.
--  *Experimental* integration with `AnyField <https://pypi.python.org/pypi/anyfield>`_
+-  `Sugar extension <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html#module-openerp_proxy.ext.sugar>`__ which simplifys code a lot.
+-  *Experimental* integration with `AnyField <https://pypi.python.org/pypi/anyfield>`__
 
--  Missed feature? ask in `Project Issues <https://github.com/katyukha/openerp-proxy/issues>`_
+-  Missed feature? ask in `Project Issues <https://github.com/katyukha/openerp-proxy/issues>`__
 
 
 Quick example
@@ -106,7 +108,7 @@ Tested with Odoo 7.0, 8.0, 9.0
 Also shoud work with Odoo 6.1
 
 Also it should work with Odoo version 6.0, except the things related to passing named parametrs
-to server methods, such as using context in ``openerp_proxy.orm`` package
+to server methods, such as using context in `openerp_proxy.orm <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html>`_ package
 
 
 Examples
@@ -158,7 +160,7 @@ And You will get the openerp_proxy shell. If *IPython* is installed then IPython
 will be used, else usual python shell will be used. There is
 *session* variable present in locals. It is instance of `Session <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session>`_ class and
 represents current session and usualy is starting point of any shell work.
-See `documentation <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session>`_ for more details
+See `documentation <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session>`__ for more details
 
 Next You have to get connection to some Odoo database.
 It is realy easy, just use `connect <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session.connect>`_ method of session
@@ -202,7 +204,7 @@ Use in Jupyter notebook
 `openerp_proxy.ext.repr <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html#module-openerp_proxy.ext.repr>`_,
 so to use it, first, this extension should be enabled (just by importing extension).
 As a shortcut, there is `openerp_proxy.ext.all <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html#module-openerp_proxy.ext.all>`_ module,
-which imports default set of extensions including
+which imports default set of extensions, including
 `openerp_proxy.ext.repr <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html#module-openerp_proxy.ext.repr>`_ extension.
 To better suit for HTML capable notebook You would like to use IPython's version of *session*
 object and *openerp_proxy.ext.repr* extension.
@@ -221,7 +223,7 @@ So in first cell of notebook import session and extensions/plugins You want:
     session = Session()
 
 Now most things same as for shell usage, but...
-In some versions of IPython's notebook not patched version of *getpass* func/module,
+In some old versions of IPython's notebook heve no patched version of *getpass* func/module,
 so if You not provide password when getting database (*connect*, *get_db* methods, You would be asked
 for it, but this prompt will be displayed in shell where notebook server is running, not on webpage.
 To solve this, it is recommended to uses *store_passwords* option
@@ -287,12 +289,15 @@ ones:
 As we see reading data in such way allows us to get list of dictionaries
 where each contain fields have been read
 
-Another way to read data is to use *search\_records* or *read\_records*
-method. Each of these methods receives same aguments as *search* or
-*read* method respectively. But passing *count* argument for
-*search\_records* will cause error. Main difference betwen these methods
-in using *Record* class instead of *dict* for each record had been
-read. Record class provides some orm-like abilities for records,
+Another way to read data is to use
+`search_records <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html#openerp_proxy.orm.record.ObjectRecords.search_records>`_
+or
+`read_records <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html#openerp_proxy.orm.record.ObjectRecords.read_records>`_
+method. Each of these methods receives same aguments as ``search`` or
+``read`` method respectively. But passing ``count`` argument for
+``search\_records`` will cause error. Main difference betwen these methods
+in using `Record <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html#openerp_proxy.orm.record.Record>`_ class
+instead of *dict* for each record had been read. Record class provides some orm-like abilities for records,
 allowing for example access fields as attributes and provide mechanisms
 to lazily fetch related fields.
 
@@ -324,6 +329,10 @@ Session: db aliases
 ~~~~~~~~~~~~~~~~~~~
 
 Session provides ability to add aliases to databases, which will simplify access to them.
+For this feature `Session <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session>`_ class
+provides method `aliase <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session.aliase>`_ and
+property `aliases <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session.aliases>`_
+which allows to get all registered aliases in session.
 To add aliase to our db do the folowing:
 
 .. code:: python
@@ -344,6 +353,8 @@ Sugar extension
 ~~~~~~~~~~~~~~~
 
 This extension provides some syntax sugar to ease access to objects
+To enable it, just import `openerp_proxy.ext.sugar <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html#module-openerp_proxy.ext.sugar>`_ module.
+By default this extension will also be enabled on import of `openerp_proxy.ext.all <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html#module-openerp_proxy.ext.all>`_
 
 So to start use it just import this extension **just after start**
 
@@ -367,15 +378,16 @@ And after that You will have folowing features working
     db._sale_order == db['sale.order'] == db['sale_order']   # => True
 
 
-For other extensions look at *openerp_proxy/ext* subdirectory
+For other extensions look at `openerp_proxy/ext code <https://github.com/katyukha/openerp-proxy/tree/master/openerp_proxy/ext>`_
+or `documentation <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html>`__
 
 
 Session: Start-up imports
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If You want some modules (extensions/plugins) to be automatiacly loaded/imported
-at start-up, there are ``session.start_up_imports`` property, that points to 
-list that holds names of modules to be imported at session creation time.
+at start-up, there are `session.start_up_imports <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session.start_up_imports>`_
+property, that points to list that holds names of modules to be imported at session creation time.
 
 For example, if You want *Sugar extension* to be automaticaly imported, just
 add it to ``session.start_up_imports`` list
@@ -462,4 +474,4 @@ As You see above, to use plugin (or extension), just import it's module (better 
 
 For more information see `source
 code <https://github.com/katyukha/openerp-proxy>`_ or
-`documentation <http://pythonhosted.org//openerp_proxy/>`_.
+`documentation <http://pythonhosted.org/openerp_proxy/>`__.

@@ -16,6 +16,14 @@
     :undoc-members:
     :show-inheritance:
 
+:mod:`session` Module
+---------------------
+
+.. automodule:: openerp_proxy.session
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`exceptions` Module
 ------------------------
 
@@ -28,14 +36,6 @@
 --------------------
 
 .. automodule:: openerp_proxy.plugin
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`session` Module
----------------------
-
-.. automodule:: openerp_proxy.session
     :members:
     :undoc-members:
     :show-inheritance:

@@ -70,7 +70,7 @@ set -e    # fail on any error
 
 
 # config defaults
-PY_VERSIONS=${PY_VERSIONS:-"2.7 3.4"};
+PY_VERSIONS=${PY_VERSIONS:-"2.7 3.5"};
 
 
 if [ ! -z $TEST_MODULE ]; then

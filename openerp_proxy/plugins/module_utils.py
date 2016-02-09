@@ -4,24 +4,29 @@ from ..orm.object import Object
 
 # Overriden to add shortcut for module update
 class ModuleObject(Object):
-    """ Add shortcut method to upgrade module
+    """ Add shortcut methods to 'ir.module.module' object / model
+        to install or upgrade modules
+
+        Also this methods will be available for Record instances too
     """
 
     # Apply this extension only to 'ir.module.module' Object / Model
     class Meta:
         name = 'ir.module.module'
 
-    def upgrade(self, ids):
+    def upgrade(self, ids, context=None):
         """ Immediatly upgrades module
         """
-        res = self.button_immediate_upgrade(ids)
+        kwargs = {} if context is None else {'context': context}
+        res = self.button_immediate_upgrade(ids, **kwargs)
         self.client.clean_caches()  # because new models may appear in DB, so registered_objects shoud be refreshed
         return res
 
-    def install(self, ids):
+    def install(self, ids, context=None):
         """ Immediatly install module
         """
-        res = self.button_immediate_install(ids)
+        kwargs = {} if context is None else {'context': context}
+        res = self.button_immediate_install(ids, **kwargs)
         self.client.clean_caches()  # because new models may appear in DB, so registered_objects shoud be refreshed
         return res
 
@@ -29,11 +34,21 @@ class ModuleObject(Object):
 class ModuleUtils(Plugin):
     """ Utility plugin to simplify module management
 
-        Allows to acces module objects like::
+        Allows to access Odoo module objects as attributes of this plugin:
 
-            db.plugins.module_utils.m_stock
+        .. code:: python
 
-        which is equivalent to::
+            db.plugins.module_utils.m_stock  # this method supports IPython autocomplete
+
+        or dictionary style access to modules:
+
+        .. code:: python
+
+            db.plugins.moduld_utils['stock']
+
+        which is equivalent to
+
+        .. code:: python
 
             db.get_obj('ir.module.module').search_records([('name','=','stock')])[0]
 
