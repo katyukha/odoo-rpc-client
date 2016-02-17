@@ -1,5 +1,5 @@
 """ Extensions package.
 
-Here some extensons provided.
+This package provides some *out-of-the-box* extensions.
 
 """

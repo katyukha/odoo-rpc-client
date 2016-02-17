@@ -1,3 +1,9 @@
+""" This module contains generic classes and functions, which allows to add
+additional ipython-style representation capabilities for classes,
+such as table representations via `HTMLTable <#HTMLTable>`__ or
+`PrettyTable <#PrettyTable>`__ classes
+"""
+
 import os
 import six
 import csv
@@ -25,12 +31,28 @@ __all__ = ('FieldNotFoundException',
 def toHField(field):
     """ Convert value to HField instance
 
-        :param field: value to convert to HField instance. Could be string
-                      with dot splitted names of related object, or callable
-                      of one argument (record instance) or *HField* instance or
-                      tuple(field_path|callable, field_name)
+        :param field: value to convert to HField instance.
         :return: HField instance based on passed value
         :rtype: HField
+        :raises ValueError: if ``field`` value cannot be automaticaly
+                            convereted to ``HField`` instance
+
+        ``field`` argument may be one of following types:
+
+        - ``HField``: in this case ``field`` will be returned unchanged
+        - ``str``: in this case ``field`` assumend to be field path, so
+          ``HField`` instance will be created for it as ``HField(field)``
+        - ``tuple(str, str)``: In this case ``field`` assumed to be
+          pair of (field_path, field_name), so new ``HField`` instance
+          will be constructed with following arguments:
+          ``HField(field[0], name=field[1])``
+        - ``callable``: if ``field`` is callable, then it is assumed to be
+          custom getter function, so new ``HField`` instance
+          will be created as ``HField(field)``
+
+        For more information look at
+        `HField <#openerp_proxy.ext.repr.generic.HField>`__
+        documentation
     """
     if isinstance(field, HField):
         return field
@@ -272,7 +294,7 @@ class BaseTable(object):
                        with dot splitted names of related object, or callable
                        of one argument (record instance) or *HField* instance or
                        tuple(field_path|callable, field_name)
-        :type fields: list(str | callable | HField instance | tuple(field, name))
+        :type fields: list(str) | callable | HField instance | tuple(field, name))
         :return: self
         """
         fields = [] if fields is None else fields

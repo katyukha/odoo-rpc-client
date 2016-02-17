@@ -1,8 +1,8 @@
 """ This module provides additional representation capabilities
-of RecordList class, like representation as HTML table with
-ability to highlight specific rows, which is useful when
-used inside IPython notebook
+for most of standard classes like *Record* or *RecordList*.
 
+This allows them to be represented as HTML tables in Jupyter notebook,
+or for example show RecordList data as table in IPython console.
 """
 
 # TODO: rename to IPython or something like that
@@ -189,10 +189,6 @@ class ColInfo(AttrDict):
         """ Default fields displayed in resulting HTML table
         """
         if self._fields is None:
-            def _get_selection(x):
-                return u'<br/>\n'.join((u"%s - %s" % (_(repr(i[0])), _(i[1]))
-                                        for i in x['info'].get('selection', []) or []))
-
             self._fields = [
                 HField('name', name='Name', silent=True),
                 HField('info.string', name='Disp. Name', silent=True),

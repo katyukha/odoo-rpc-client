@@ -8,44 +8,62 @@
     :undoc-members:
     :show-inheritance:
 
-:mod:`sugar` Module
--------------------
+:mod:`sugar` Extension
+----------------------
 
 .. automodule:: openerp_proxy.ext.sugar
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`workflow` Module
-----------------------
+:mod:`workflow` Extension
+-------------------------
 
 .. automodule:: openerp_proxy.ext.workflow
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`field_datetime` Module
-----------------------------
+:mod:`field_datetime` Extension
+-------------------------------
 
 .. automodule:: openerp_proxy.ext.field_datetime
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`repr` Module
-------------------
+:mod:`repr` Extension
+---------------------
 
-.. automodule:: openerp_proxy.ext.repr
-    :members:
-    :undoc-members:
-    :show-inheritance:
+Generic classes and functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: openerp_proxy.ext.repr.generic
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`all` Module
------------------
+Extensions for standard objects
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: openerp_proxy.ext.repr
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+:mod:`all` Extension pack
+-------------------------
 
 .. automodule:: openerp_proxy.ext.all
+
+
+
+:mod:`log_execute_console` Extension
+------------------------------------
+
+.. automodule:: openerp_proxy.ext.log_execute_console
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
