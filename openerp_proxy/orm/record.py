@@ -3,6 +3,7 @@
 
 from ..utils import (wpartial,
                      normalizeSField,
+                     preprocess_args,
                      ustr,
                      DirMixIn)
 from .object import Object
@@ -121,11 +122,10 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
             self._lcache.update_context(context)
 
     def __dir__(self):
-        # TODO: expose also object's methods
         res = super(Record, self).__dir__()
         res.extend(self._columns_info.keys())
-        res.extend(['read', 'search', 'write', 'unlink'])
-        return res
+        res.extend(self._object.stdcall_methods)
+        return list(set(res))
 
     @property
     def id(self):
@@ -276,18 +276,11 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
             :rtype: dict
         """
         ctx = {} if self.context is None else self.context.copy()
-        args = [list(self._lcache)] if multi else [[self.id]]
-
-        kwargs = {}
-
-        if fields is not None:
-            args.append(fields)
-
         if context is not None:
             ctx.update(context)
 
-        if ctx:
-            kwargs['context'] = ctx
+        ids = list(self._lcache) if multi else [self.id]
+        args, kwargs = preprocess_args(ids, fields, context=ctx or None)
 
         res = {}
         for rdata in self._object.read(*args, **kwargs):
@@ -309,18 +302,14 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
             will be passed to server.
         """
         ctx = {} if self.context is None else self.context.copy()
-        kwargs = {}
 
         if context is not None:
             ctx.update(context)
 
-        if ctx:
-            kwargs['context'] = ctx
+        # None values should not be passed via xml-rpc
+        args, kwargs = preprocess_args(self.id, default=default, context=ctx or None)
 
-        if default is not None:
-            kwargs['default'] = default
-
-        new_id = self._object.copy(self.id, **kwargs)
+        new_id = self._object.copy(*args, **kwargs)
         return get_record(self._object, new_id, cache=self._cache, context=self.context)
 
 
@@ -388,6 +377,11 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence,
         # if there some fields prefetching was requested, do it
         if fields is not None:
             self.prefetch(*fields)
+
+    def __dir__(self):
+        res = super(RecordList, self).__dir__()
+        res.extend(self._object.stdcall_methods)
+        return list(set(res))
 
     @property
     def object(self):
@@ -721,19 +715,10 @@ class RecordList(six.with_metaclass(RecordListMeta, collections.MutableSequence,
 
     def read(self, fields=None, context=None):
         """ Read wrapper. Takes care about adding RecordList's context to
-            object's read method
+            object's read method. **Warning**: do not update cache by data been read
         """
-        kwargs = {}
-        args = []
-
         ctx = self._new_context(context)
-
-        if ctx is not None:
-            kwargs['context'] = ctx
-
-        if fields is not None:
-            args.append(fields)
-
+        args, kwargs = preprocess_args(fields, context=ctx)
         return self.object.read(self.ids, *args, **kwargs)
 
 

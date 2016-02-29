@@ -455,4 +455,3 @@ class IPYSession(Session):
         return TMPL_INFO_WITH_HELP % {'info': table,
                                       'caption': u"Previous connections",
                                       'help': help_text}
-

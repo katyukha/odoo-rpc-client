@@ -59,7 +59,13 @@ class Test_25_Plugin_ModuleUtils(BaseTestCase):
         with self.assertRaises(AttributeError):
             self.client.plugins.module_utils.m_unexistent_module
 
-    def test_35_module_install(self):
+    def test_35_module_contains(self):
+        self.assertIsNone(self.client.plugins.module_utils._modules)
+        self.assertIn('sale', self.client.plugins.module_utils)
+        self.assertNotIn('some strange unexistent module', self.client.plugins.module_utils)
+        self.assertIsNotNone(self.client.plugins.module_utils._modules)
+
+    def test_40_module_install(self):
         smod = self.client.plugins.module_utils.m_sale
 
         if smod.state == 'installed':
@@ -70,7 +76,15 @@ class Test_25_Plugin_ModuleUtils(BaseTestCase):
         smod.refresh()  # reread data from database
         self.assertEqual(smod.state, 'installed')
 
-    def test_40_module_upgrade(self):
+    def test_45_update_module_list(self):
+        # touch modules proerty to load module info
+        self.client.plugins.module_utils.modules
+
+        self.assertIsNotNone(self.client.plugins.module_utils._modules)
+        self.client.plugins.module_utils.update_module_list()
+        self.assertIsNone(self.client.plugins.module_utils._modules)
+
+    def test_50_module_upgrade(self):
         smod = self.client.plugins.module_utils.m_sale
 
         self.assertEqual(smod.state, 'installed')

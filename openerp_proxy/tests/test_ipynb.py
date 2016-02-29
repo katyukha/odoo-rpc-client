@@ -98,7 +98,7 @@ class NBRunner(object):
             just prints '.' to stdout
         """
         self.cells_processed += 1
-        sys.stdout.write('.')
+        sys.stdout.write(' * ')
 
     def handle_iopub_for_msg(self, cell, msg_id):
         """ Process additional data sent by kernel
@@ -252,7 +252,7 @@ class NBRunner(object):
 class NBMultiRunner(object):
     """ Class to test multiple notebooks at same time
     """
-    def __init__(self, notebook_paths, timeout=30, debug=False):
+    def __init__(self, notebook_paths, timeout=40, debug=False):
         self.notebook_paths = notebook_paths
         self.notebooks = []
         self.failures = 0

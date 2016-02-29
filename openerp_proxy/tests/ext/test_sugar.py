@@ -70,11 +70,14 @@ class Test_31_ExtSugar(BaseTestCase):
             fake_search_records.assert_called_with([])
 
     def test_client_dir(self):
-        # test if models a in dir
+        # test if models are in dir
         self.assertIn('_res_partner', dir(self.client))
 
         # test if normal methods are listed in dir(client)
         self.assertIn('execute', dir(self.client))
+
+        # test if plugins are listed in dir(client)
+        self.assertIn('Test', dir(self.client))
 
     def test_client_getattr(self):
         res = self.client._res_partner
@@ -83,4 +86,7 @@ class Test_31_ExtSugar(BaseTestCase):
 
         with self.assertRaises(AttributeError):
             self.client._some_bad_model
+
+    def test_client_getattr_pluigns(self):
+        self.assertEqual(self.client.Test, self.client.plugins.Test)
 

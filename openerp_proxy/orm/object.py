@@ -2,7 +2,9 @@ import six
 from extend_me import ExtensibleByHashType
 
 from ..utils import (AttrDict,
-                     DirMixIn)
+                     DirMixIn,
+                     preprocess_args,
+                     stdcall)
 
 
 __all__ = ('Object', 'get_object')
@@ -71,7 +73,7 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
     # Useful for IPython auto completition
     def __dir__(self):
         res = super(Object, self).__dir__()
-        res.extend(['read', 'search', 'write', 'unlink', 'create'])
+        res.extend(['search'])
         return res
 
     def __getattr__(self, name):
@@ -81,6 +83,7 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
                 for internal use.
                 It is used in Object class.
             """
+            @stdcall
             def wrapper(*args, **kwargs):
                 return self.service.execute(object_name, method_name, *args, **kwargs)
             name = str('%s:%s' % (object_name, method_name))
@@ -148,3 +151,83 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
             f = field_path.pop(0)
             res.append((model, f, cinfo[f].get('relation', False)))
         return res
+
+    @property
+    def stdcall_methods(self):
+        """ Property that returns all methods of this object, that supports standard call
+
+            :return: list with names of *stdcall* methods
+            :rtype: list(str)
+        """
+        return [n for n in dir(self)
+                if not n.startswith('_') and \
+                   n != 'stdcall_methods' and \
+                   getattr(getattr(self, n, None), '__x_stdcall__', False)]
+
+    @stdcall
+    def read(self, ids, fields=None, context=None):
+        """ Read *fields* for records with id in *ids*
+
+            Also look at `Odoo documentation <https://www.odoo.com/documentation/9.0/reference/orm.html#openerp.models.Model.read>`__
+            for this method
+
+            :param int|list ids: ID or list of IDs of records to read data for
+            :param list fields: list of field names to read. if not passed all fields will be read.
+            :param dict context: dictionary with extra context
+            :return: list of dictionaries with data had been read
+            :rtype: list
+        """
+        args, kwargs = preprocess_args(ids, fields, context=context)
+        return self.service.execute(self.name, 'read', *args, **kwargs)
+
+    @stdcall
+    def write(self, ids, vals, context=None):
+        """ Write data in *vals* dictionary to records with ID in *ids*
+
+            For more info, look at `odoo documentation <https://www.odoo.com/documentation/9.0/reference/orm.html#openerp.models.Model.write>`__
+            for this method
+
+            :param int|list ids: ID or list of IDs of records to write data for
+            :param dict vals: dictinary with values to be written to database for
+                              records specified by ids
+            :param dict context: context dictionary
+        """
+        args, kwargs = preprocess_args(ids, vals, context=context)
+        return self.service.execute(self.name, 'write', *args, **kwargs)
+
+    def create(self, vals, context=None):
+        """ Create new record with *vals*
+
+            Also look at `Odoo documentation <https://www.odoo.com/documentation/9.0/reference/orm.html#openerp.models.Model.create>`__
+            for this method
+
+            :param dict vals: dictionary with values to be written
+                              to newly created record
+            :param dict context: context dictionary
+            :return: ID of newly created record
+            :rtype: int
+        """
+        args, kwargs = preprocess_args(vals, context=context)
+        return self.service.execute(self.name, 'create', *args, **kwargs)
+
+    @stdcall
+    def unlink(self, ids, context=None):
+        """ Unlink records specified by *ids*
+
+            Also look at `Odoo documentation <https://www.odoo.com/documentation/9.0/reference/orm.html#openerp.models.Model.unlink>`__
+            for this method
+
+            :param list ids: list of IDs of records to be deleted
+        """
+        args, kwargs = preprocess_args(ids, context=context)
+        return self.service.execute(self.name, 'unlink', *args, **kwargs)
+
+    def search(self, *args, **kwargs):
+        """search(args[, offset=0][, limit=None][, order=None][, count=False])
+
+            Search records by criteria.
+
+            Also look at `Odoo documentation <https://www.odoo.com/documentation/9.0/reference/orm.html#openerp.models.Model.search>`__
+            for this method
+        """
+        return self.service.execute(self.name, 'search', *args, **kwargs)

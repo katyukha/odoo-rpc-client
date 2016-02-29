@@ -102,10 +102,22 @@ class ServiceManager(Extensible, DirMixIn):
             service.clean_cache()
 
     def __str__(self):
-        return "<ServiceManager for %s>" % self.client
+        return u"ServiceManager for %s" % self.client
+
+    def __repr__(self):
+        return u"<%s>" % str(self)
 
 
-ServiceType = ExtensibleByHashType._('Service', hashattr='name')
+class ServiceMetaMixIn(type):
+    """ Smimple meta mixin class, that cleans all service caches,
+        when new service class created / imported
+    """
+    def __new__(mcs, *args, **kwargs):
+        ServiceManager.clean_caches()
+        return super(ServiceMetaMixIn, mcs).__new__(mcs, *args, **kwargs)
+
+
+ServiceType = ExtensibleByHashType._('Service', hashattr='name', with_meta=ServiceMetaMixIn)
 
 
 def get_service_class(name):
@@ -151,4 +163,7 @@ class ServiceBase(six.with_metaclass(ServiceType, object)):
         pass
 
     def __str__(self):
-        return "<Service '%s' of %s>" % (self.name, self.client)
+        return "Service '%s' of %s" % (self.name, self.client)
+
+    def __repr__(self):
+        return u"<%s>" % str(self)

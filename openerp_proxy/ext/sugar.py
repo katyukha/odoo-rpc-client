@@ -116,16 +116,26 @@ class ClientSugar(Client, DirMixIn):
     """ Provides some syntax sugar for Client class
 
         As one of it's features is ability to access objects as
-        attributes via *object aliaces*. Each aliase is object name
+        attributes via *object aliases*. Each aliase is object name
         with underscores replaced by double underscores and dots replaced by
         single underscores and prefixed by underscore.
 
-        For example all folowing lines will return same result::
+        For example all folowing lines will return same result
+
+        .. code:: python
 
             sm = client._stock_move
             sm = client['stock.move']
             sm = client.get_obj('stock.move')
 
+        One more features of this extension class, is ability
+        to access plugins directly from client as it's attributes.
+        So folowing lines are equal
+
+        .. code:: python
+
+            test_plugin = client.plugins.Test
+            test_plugin = client.Test
     """
 
     def __init__(self, *args, **kwargs):
@@ -147,13 +157,18 @@ class ClientSugar(Client, DirMixIn):
     def __dir__(self):
         res = super(ClientSugar, self).__dir__()
         res += self.object_aliases.keys()
+        res += self.plugins.registered_plugins
         return res
 
     def __getattr__(self, name):
         objname = self.object_aliases.get(name, None)
-        if objname is None:
-            raise AttributeError("'Client' object has no atribute %s" % name)
-        return self.get_obj(objname)
+        if objname is not None:
+            return self.get_obj(objname)
+
+        if name in self.plugins:
+            return self.plugins[name]
+
+        raise AttributeError("'Client' object has no atribute %s" % name)
 
     def clean_caches(self):
         """ Clean client related caches

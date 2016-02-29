@@ -53,7 +53,6 @@ def main():
     header_aliases = "\n"
     max_aliase_len = max((len(i) for i in session.aliases))
     aliase_tmpl = "%%%ds" % max_aliase_len
-    print aliase_tmpl
     for aliase, url in session.aliases.items():
         header_aliases += "        - %s: %s\n" % (aliase_tmpl % aliase, url)
 

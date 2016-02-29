@@ -95,3 +95,6 @@ class ModuleUtils(Plugin):
         if name.startswith('m_') and name[2:] in self.modules:
             return self.modules[name[2:]]
         raise AttributeError("No attribute %s in object %s" % (name, self))
+
+    def __contains__(self, name):
+        return name in self.modules

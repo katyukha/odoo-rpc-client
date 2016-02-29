@@ -303,7 +303,7 @@ class Session(Extensible, DirMixIn):
             return res
         elif isinstance(database, dict):
             return database
-        else:
+        else:  # pragma: no cover
             raise ValueError("Bad database instance. It should be dict or Client object")
 
     def save(self):

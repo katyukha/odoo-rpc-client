@@ -75,6 +75,31 @@ def wpartial(func, *args, **kwargs):
     return functools.wraps(func)(partial)
 
 
+def preprocess_args(*args, **kwargs):
+    """ Skip all args, and kwargs that set to None
+
+        Mostly for internal usage.
+
+        Used to workaround xmlrpc None restrictions
+    """
+    kwargs = {key: val for key, val in kwargs.items() if val is not None}
+
+    xargs = list(args[:])
+    while xargs and xargs[-1] is None:
+        xargs.pop()
+    return xargs, kwargs
+
+def stdcall(fn):
+    """ Simple decorator for server methods, that supports standard call
+
+        If method supports call like ``method(ids, <additional args>, context=context, <additional kwargs>)``,
+        then it may be decrated by this decorator, to appear in dir(record) and dir(recordlist) calls,
+        thus making it available for autocompletitions in ipython or other python shells
+    """
+    fn.__x_stdcall__ = True
+    return fn
+
+
 class UConverter(object):
     """ Simple converter to unicode
 

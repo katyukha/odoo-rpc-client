@@ -11,7 +11,7 @@ import os.path
 import tempfile
 import tabulate
 from jinja2 import Template
-from IPython.display import FileLink
+from IPython.display import HTML, FileLink
 
 
 from ...utils import ustr as _
@@ -68,6 +68,10 @@ def toHField(field):
 
 class FieldNotFoundException(Exception):
     """ Exception raised when HField cannot find field in object been processed
+
+        :param obj: object to field not found in
+        :param name: field that is not found in object *obj*
+        :param original_exc: Exception that was raised on attempt to get field
     """
     def __init__(self, obj, name, original_exc=None):
         self.name = name
@@ -76,7 +80,7 @@ class FieldNotFoundException(Exception):
 
     @property
     def message(self):
-        return u"Field %s not found in obj %s" % (_(self.field), _(self.obj))
+        return u"Field %s not found in obj %s" % (_(self.name), _(self.obj))
 
     # TODO: implement correct behavior. It fails in IPython notebook with
     # UnicodeEncodeError because of python's standard warnings module
@@ -177,8 +181,7 @@ class HField(object):
         self._kwargs = kwargs
         return self
 
-    @classmethod
-    def _get_field(cls, obj, name):
+    def _get_field(self, obj, name):
         """ Try to get field named *name* from object *obj*
         """
         try:
@@ -221,17 +224,21 @@ class HField(object):
                         r = r()
                     elif callable(r) and not fields:  # it is last field and it is callable
                         r = r(*self._args, **self._kwargs)
-                except:  # FieldNotFoundException:
+                except Exception as exc:
                     if not self._silent:   # reraise exception if not silent
-                        raise
+                        raise (exc if isinstance(exc, FieldNotFoundException)
+                                   else FieldNotFoundException(r, field, exc))
                     else:                  # or return default value
                         r = self._default
                         break
 
-        # Support nested HTML Tables
         if isinstance(r, HTMLTable):
+            # Support nested HTML Tables
             r.nested = True
             r = r.render()
+        elif isinstance(r, HTML):
+            # Support IPython HTML compatible objects
+            r = r._repr_html_()
 
         return r
 

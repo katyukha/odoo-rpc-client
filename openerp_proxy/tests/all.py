@@ -1,8 +1,8 @@
 import os
-import logging
-logging.basicConfig()
-_logger = logging.getLogger(__name__)
-_logger.info("Test Environment: %s", os.environ)
+# import logging
+# logging.basicConfig()
+# _logger = logging.getLogger(__name__)
+# _logger.info("Test Environment: %s", os.environ)
 
 
 from .test_connection import *

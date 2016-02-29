@@ -53,7 +53,8 @@ class DBService(ServiceBase):
         # requires server version >= 6.1
         if self.server_version() >= parse_version('6.1'):
             self.create_database(password, dbname, demo, lang, admin_password)
-        else:  # for other server versions
+        else:  # pragma: no cover
+            # for other server versions
             process_id = self.create(password, dbname, demo, lang, admin_password)
 
             # wait while database will be created

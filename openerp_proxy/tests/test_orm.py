@@ -180,7 +180,6 @@ class Test_21_Record(BaseTestCase):
 
     def test_dir(self):
         self.assertIn('read', dir(self.record))
-        self.assertIn('search', dir(self.record))
         self.assertIn('write', dir(self.record))
         self.assertIn('unlink', dir(self.record))
 
@@ -343,6 +342,14 @@ class Test_22_RecordList(BaseTestCase):
         self.object = self.client.get_obj('res.partner')
         self.obj_ids = self.object.search([], limit=10)
         self.recordlist = self.object.read_records(self.obj_ids)
+
+    def test_dir(self):
+        self.assertIn('read', dir(self.recordlist))
+        self.assertIn('write', dir(self.recordlist))
+        self.assertIn('unlink', dir(self.recordlist))
+
+        # test if normal mehtods avalilable in dir(object)
+        self.assertIn('refresh', dir(self.recordlist))
 
     def test_ids(self):
         self.assertSequenceEqual(self.recordlist.ids, self.obj_ids)

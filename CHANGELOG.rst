@@ -1,11 +1,32 @@
+0.6.5:
+    - ``openerp_proxy.ext.repr``: better support of ``IPython.display.HTML`` objects representation
+    - ``openerp_proxy.ext.sugar``: Added ability to access plugins directly from ``client`` instance
+      For example, instead of writing ``client.plugins.Test``, you may write ``client.Test``
+    - ``stdcall`` decorator and ``stdcall``-methods. All methods of ``orm.object.Object`` instances,
+      decorated with this decorator will be visible as methods of ``orm.record.Record`` and ``orm.record.RecordList``
+      instances, which means that these methods could be called in ``meth([ids], *, context=context, **)`` format.
+      all automaticaly generated proxy method are marked as ``stdcall``
+      This is implemented to be able to use ``dir``-based auto-completition for such method for
+      ``Record`` and ``RecordList`` instances
+    - ``openerp_proxy.plugin.Plugins``, ``openerp_proxy.plugin.PluginManager``,
+      ``openerp_proxy.service.service.ServiceManager``, ``openepr_proxy.service.service.ServiceBase`` representation
+      improvements (better ``__str__`` and ``__repr__`` overrides)
+    - Bugfix. Automaticaly clean service caches when new service class is defined
+    - Added ``__contains__`` override for ``module_utils`` plugin. Thus it is posible to check
+      if some addon is available on odoo easier: ``'project_sla' in client.plugins.module_utils``
+      or ``'project_sla' in client.module_utils``
+    - Improved documentation
+
 0.6.4:
     - Added ``Client.user_context`` property
     - Bugfix in ``openerp_proxy.ext.repr`` with nested tables when, filed is a function
     - Fix for PR #3
     - Documentation improvements
+
 0.6.3:
     - Added ``Record.copy()`` method override.
     - HTML representation fixes and improvements
+
 0.6.2:
     - **experimental** Added integration with `AnyField <https://pypi.python.org/pypi/anyfield>`_
     - Added ``RecordList.mapped`` method similar ot Odoo's ``RecordSet.mapped`` method.
@@ -27,6 +48,7 @@
     - ``log_execute_console`` Added ``TimeTracker`` context manager,
       which can be used for performance testing. It makes posible
       to get total time ccode was running, and how much time was spent on RPC requests.
+
 0.6.1:
     - DB service little bit refactored.
       added methods:

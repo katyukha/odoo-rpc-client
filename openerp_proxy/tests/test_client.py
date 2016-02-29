@@ -76,8 +76,13 @@ class Test_10_Client(BaseTestCase):
         self.assertIs(self.client.plugins['Test'], self.client.plugins.Test)
 
         # check plugin's method result
-        self.assertEqual(self.client.get_url(), self.client.plugins.Test.test())
-        self.assertEqual(repr(self.client.plugins.Test), 'openerp_proxy.plugin.Plugin:Test')
+        self.assertEqual(self.client.plugins.Test.test(), self.client.get_url())
+
+        # Check plugin representation
+        self.assertEqual(str(self.client.plugins), "openerp_proxy.plugin.PluginManager [%d]" % len(self.client.plugins))
+        self.assertEqual(repr(self.client.plugins), "<openerp_proxy.plugin.PluginManager [%d]>" % len(self.client.plugins))
+        self.assertEqual(str(self.client.plugins.Test), "openerp_proxy.plugin.Plugin:Test")
+        self.assertEqual(repr(self.client.plugins.Test), "<openerp_proxy.plugin.Plugin:Test>")
 
     def test_62_plugins_wrong_name(self):
         self.assertNotIn('Test_Bad', self.client.plugins.registered_plugins)
@@ -103,6 +108,12 @@ class Test_10_Client(BaseTestCase):
         self.assertIn('db', dir(self.client.services))
         self.assertIn('object', dir(self.client.services))
         self.assertIn('report', dir(self.client.services))
+
+        # Test representations:
+        self.assertEqual(str(self.client.services), u"ServiceManager for %s" % self.client)
+        self.assertEqual(repr(self.client.services), u"<ServiceManager for %s>" % self.client)
+        self.assertEqual(str(self.client.services.db), u"Service 'db' of %s" % self.client)
+        self.assertEqual(repr(self.client.services.db), u"<Service 'db' of %s>" % self.client)
 
         with self.assertRaises(AttributeError):
             self.client.services._private_service

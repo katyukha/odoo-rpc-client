@@ -7,6 +7,7 @@ from .utils import DirMixIn
 PluginMeta = extend_me.ExtensibleByHashType._('Plugin', hashattr='name')
 
 
+@six.python_2_unicode_compatible
 class Plugin(six.with_metaclass(PluginMeta)):
     """ Base class for all plugins, extensible by name
 
@@ -45,15 +46,11 @@ class Plugin(six.with_metaclass(PluginMeta)):
         """
         return self._client
 
-    def __repr__(self):
-        try:
-            name = self.Meta.name
-        except AttributeError:
-            name = None
+    def __str__(self):
+        return u"openerp_proxy.plugin.Plugin:%s" % self.Meta.name
 
-        if name is not None:
-            return 'openerp_proxy.plugin.Plugin:%s' % name
-        return super(Plugin, self).__repr__()
+    def __repr__(self):
+        return u"<%s>" % (str(self))
 
 
 class TestPlugin(Plugin):
@@ -67,6 +64,7 @@ class TestPlugin(Plugin):
         return self.client.get_url()
 
 
+@six.python_2_unicode_compatible
 class PluginManager(extend_me.Extensible, DirMixIn):
     """ Class that holds information about all plugins
 
@@ -129,5 +127,11 @@ class PluginManager(extend_me.Extensible, DirMixIn):
         """
         self.__plugins = {}
         return self
+
+    def __str__(self):
+        return u"openerp_proxy.plugin.PluginManager [%d]" % len(self)
+
+    def __repr__(self):
+        return u"<%s>" % str(self)
 
 
