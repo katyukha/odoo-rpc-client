@@ -45,7 +45,10 @@ class Test_20_Object(BaseTestCase):
         self.assertIn('browse', dir(self.object))
 
     def test_getttr(self):
-        self.assertEqual(self.object.search.__name__, 'res.partner:search')
+        self.assertEqual(self.object.search.__name__, 'search')
+
+        self.assertEqual(self.object.some_partner_method.__name__, '%s:some_partner_method' % self.object.name)
+        self.assertTrue(self.object.some_partner_method.__x_stdcall__)
 
         # Test that attibute error is raised on access on private methods
         with self.assertRaises(AttributeError):
@@ -163,6 +166,21 @@ class Test_20_Object(BaseTestCase):
         # but must not be present in other objects / models
         with self.assertRaises(ConnectorError):
             self.client['res.partner'].test_previously_unexistent_method()
+
+    def test_create_write_unlink(self):
+        new_partner_id = self.object.create({'name': 'New Partner'})
+
+        self.assertIsInstance(new_partner_id, int)
+
+        self.object.write([new_partner_id], {'name': 'New Partner Name'})
+
+        new_name = self.object.read(new_partner_id, ['name'])['name']
+
+        self.assertEqual(new_name, 'New Partner Name')
+
+        self.assertEqual(self.object.search([('id', '=', new_partner_id)], count=True), 1)
+        self.object.unlink([new_partner_id])
+        self.assertEqual(self.object.search([('id', '=', new_partner_id)], count=True), 0)
 
 
 class Test_21_Record(BaseTestCase):

@@ -70,7 +70,7 @@ class ObjectCache(dict):
         if value and ftype == 'many2one':
             rcache = self._root_cache[self._object.columns_info[field_name]['relation']]
 
-            if isinstance(value, numbers.Integral):
+            if isinstance(value, numbers.Integral):  # pragma: no cover
                 rcache[value]  # internal dict {'id': key} will be created by default (see ObjectCache)
             elif isinstance(value, collections.Iterable):
                 rcache[value[0]]['__name_get_result'] = value[1]

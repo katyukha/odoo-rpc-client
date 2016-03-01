@@ -139,6 +139,6 @@ class Test_10_Client(BaseTestCase):
         self.client.clean_caches()
 
         self.assertIsNone(self.client._user)
-        self.assertIsNone(self.client._username)
+        self.assertIsNotNone(self.client._username)
         self.assertIsNone(self.client._user_context)
 

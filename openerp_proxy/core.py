@@ -356,7 +356,6 @@ class Client(Extensible):
         self.plugins.refresh()
         self._user_context = None
         self._user = None
-        self._username = None
 
     def __str__(self):
         return u"Client: %s" % self.get_url()
