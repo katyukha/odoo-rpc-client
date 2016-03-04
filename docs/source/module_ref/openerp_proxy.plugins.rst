@@ -16,11 +16,24 @@
     :undoc-members:
     :show-inheritance:
 
+
+:mod:`external_ids` Plugin
+--------------------------
+
+.. automodule:: openerp_proxy.plugins.external_ids
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+----
+
+
 :mod:`diagraming` Plugin
 ------------------------
 
 **Warning!!!**
-This plugins is in experimental stage!!!
+This plugin is in experimental stage!!!
 
 .. automodule:: openerp_proxy.plugins.diagraming
     :members:

@@ -104,6 +104,7 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
         return str(self)
 
     def __eq__(self, other):
+        assert isinstance(other, Object), "Comparable only with instances of Object class"
         return self.name == other.name and self.client == other.client
 
     def _get_columns_info(self):

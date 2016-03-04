@@ -1,4 +1,5 @@
 0.6.5:
+    - Added ``openerp_proxy.plugins.external_ids`` plugin
     - ``openerp_proxy.ext.repr``: better support of ``IPython.display.HTML`` objects representation
     - ``openerp_proxy.ext.sugar``: Added ability to access plugins directly from ``client`` instance
       For example, instead of writing ``client.plugins.Test``, you may write ``client.Test``

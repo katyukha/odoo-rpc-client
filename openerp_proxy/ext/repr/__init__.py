@@ -442,11 +442,11 @@ class IPYSession(Session):
                      u"<li>session[<b>url</b>]</li>"
                      u"<li>session.get_db(<b>url</b>|<b>index</b>|<b>aliase</b>)</li></ul>")
 
-        data = u"<tr><th>DB URL</th><th>DB Index</th><th>DB Aliases</th></tr>"
+        data = u"<tr><th>DB Index</th><th>DB URL</th><th>DB Aliases</th></tr>"
         for url in self._databases.keys():
             index = self._index_url(url)
             aliases = u", ".join((_(al) for al, aurl in self.aliases.items() if aurl == url))
-            data += tr(td(url), td(index), td(aliases))
+            data += tr(td(index), td(url), td(aliases))
 
         table = TMPL_TABLE % {'styles': '',
                               'extra_classes': 'table-striped',
