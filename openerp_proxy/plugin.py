@@ -34,7 +34,8 @@ class Plugin(six.with_metaclass(PluginMeta)):
                     emp = emp_obj.read(emp_id, ['state'])
                     return emp[0]['state']
 
-        This plugin will automaticaly register itself in system, when module which contains it will be imported.
+        This plugin will automaticaly register itself in system,
+        when module which contains it will be imported.
     """
 
     def __init__(self, client):

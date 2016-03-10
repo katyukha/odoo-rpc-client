@@ -16,11 +16,18 @@ SKIP_MODEL_FIELDS = [
 
 
 class Model(graphml_yed.NodeBigEntity):
+
     """ Odoo model abstraction layer
     """
+
     def __init__(self, obj):
         self._object = obj
-        super(Model, self).__init__(self._object.model_name, '\n'.join(self.fields))
+        super(
+            Model,
+            self).__init__(
+            self._object.model_name,
+            '\n'.join(
+                self.fields))
 
     def __eq__(self, other):
         return self._object == other._object
@@ -43,9 +50,11 @@ class Model(graphml_yed.NodeBigEntity):
 
 
 class ModelRelation(object):
+
     """ Model relation abstraction layer.
         Represents relation betwen models
     """
+
     def __init__(self, source, target, field_name):
         self.source = source
         self.target = target
@@ -53,7 +62,8 @@ class ModelRelation(object):
 
         self._ir_field = None
 
-        assert (self.source.client == self.target.client), "Source and targed binded to different clients"
+        assert (self.source.client ==
+                self.target.client), "Source and targed binded to different clients"
 
     @property
     def client(self):
@@ -66,8 +76,9 @@ class ModelRelation(object):
     @property
     def ir_field(self):
         if self._ir_field is None:
-            r = self.client['ir.model.fields'].search_records([('model', '=', self.source.object.name),
-                                                               ('name', '=', self.field_name)])
+            r = self.client['ir.model.fields'].search_records(
+                [('model', '=', self.source.object.name),
+                 ('name', '=', self.field_name)])
             if r and len(r) == 1:
                 self._ir_field = r[0]
             else:
@@ -119,10 +130,12 @@ class ModelRelation(object):
 
 
 class ModelM2MRelation(ModelRelation):
+
     """ Many-to-many relation abstraction.
 
         Represents many-to-many relation betwen two models
     """
+
     def __init__(self, source, target, field_name):
         super(ModelM2MRelation, self).__init__(source, target, field_name)
 
@@ -165,6 +178,7 @@ class ModelM2MRelation(ModelRelation):
 
 
 class ModelGraph(Extensible):
+
     """ Contains single model graph
     """
 
@@ -256,15 +270,17 @@ class ModelGraph(Extensible):
                 elif isinstance(g_obj, graphml_yed.Edge):
                     graph_edges.append(g_obj)
                 else:
-                    raise ValueError("Wrong type of g_obj: %r\n(rel: %r)" % (g_obj, rel))
+                    raise ValueError(
+                        "Wrong type of g_obj: %r\n(rel: %r)" %
+                        (g_obj, rel))
 
         self._graph = graphml_yed.Graph(graph_nodes, graph_edges)
-
 
         return self._graph
 
 
 class Graph(Plugin):
+
     """ Plugin that allow to build graphs.
 
         At this point it is in experimental stage

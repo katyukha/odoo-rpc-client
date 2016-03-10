@@ -56,7 +56,8 @@ def main():
     for aliase, url in session.aliases.items():
         header_aliases += "        - %s: %s\n" % (aliase_tmpl % aliase, url)
 
-    header = HELP_HEADER % {'databases': header_databases, 'aliases': header_aliases}
+    header = HELP_HEADER % {'databases': header_databases,
+                            'aliases': header_aliases}
 
     _locals = {
         'Client': Client,

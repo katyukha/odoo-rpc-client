@@ -19,7 +19,9 @@ class ModuleObject(Object):
         """
         kwargs = {} if context is None else {'context': context}
         res = self.button_immediate_upgrade(ids, **kwargs)
-        self.client.clean_caches()  # because new models may appear in DB, so registered_objects shoud be refreshed
+        # because new models may appear in DB,
+        # so registered_objects shoud be refreshed
+        self.client.clean_caches()
         return res
 
     def install(self, ids, context=None):
@@ -27,7 +29,9 @@ class ModuleObject(Object):
         """
         kwargs = {} if context is None else {'context': context}
         res = self.button_immediate_install(ids, **kwargs)
-        self.client.clean_caches()  # because new models may appear in DB, so registered_objects shoud be refreshed
+        # because new models may appear in DB,
+        # so registered_objects shoud be refreshed
+        self.client.clean_caches()
         return res
 
 
@@ -38,7 +42,8 @@ class ModuleUtils(Plugin):
 
         .. code:: python
 
-            db.plugins.module_utils.m_stock  # this method supports IPython autocomplete
+            # this method supports IPython autocomplete
+            db.plugins.module_utils.m_stock
 
         or dictionary style access to modules:
 
@@ -50,7 +55,8 @@ class ModuleUtils(Plugin):
 
         .. code:: python
 
-            db.get_obj('ir.module.module').search_records([('name','=','stock')])[0]
+            db.get_obj('ir.module.module').search_records(
+                [('name','=','stock')])[0]
 
         Also autocomplete in IPython supported for this syntax
     """
@@ -71,7 +77,9 @@ class ModuleUtils(Plugin):
             where *module_inst* is *Record* instance for this module
         """
         if self._modules is None:
-            self._modules = {m.name: m for m in self.client['ir.module.module'].search_records([])}
+            modules = self.client['ir.module.module'].search_records([])
+            self._modules = {m.name: m
+                             for m in modules}
         return self._modules
 
     def update_module_list(self):

@@ -85,14 +85,18 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
             """
             @stdcall
             def wrapper(*args, **kwargs):
-                return self.service.execute(object_name, method_name, *args, **kwargs)
+                return self.service.execute(object_name,
+                                            method_name,
+                                            *args,
+                                            **kwargs)
             name = str('%s:%s' % (object_name, method_name))
             wrapper.__name__ = name
             return wrapper
 
         # Private methods are not available to be called via RPC
         if name.startswith('_'):
-            raise AttributeError("Private methods are not exposed to RPC. (attr: %s)" % name)
+            raise AttributeError("Private methods are not exposed to RPC. "
+                                 "(attr: %s)" % name)
 
         setattr(self, name,  method_wrapper(self.name, name))
         return getattr(self, name)
@@ -104,7 +108,8 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
         return str(self)
 
     def __eq__(self, other):
-        assert isinstance(other, Object), "Comparable only with instances of Object class"
+        assert isinstance(other, Object), \
+                "Comparable only with instances of Object class"
         return self.name == other.name and self.client == other.client
 
     def _get_columns_info(self):
@@ -122,7 +127,8 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
         return self._columns_info
 
     def resolve_field_path(self, field):
-        """ Resolves dot-separated field path to tuple list of tuples (model, field_name)
+        """ Resolves dot-separated field path
+            to list of tuples (model, field_name)
 
             :param str field: dot-separated field path to resolve
 
@@ -155,25 +161,28 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
 
     @property
     def stdcall_methods(self):
-        """ Property that returns all methods of this object, that supports standard call
+        """ Property that returns all methods of this object,
+            that supports standard call
 
             :return: list with names of *stdcall* methods
             :rtype: list(str)
         """
         return [n for n in dir(self)
-                if not n.startswith('_') and \
-                   n != 'stdcall_methods' and \
-                   getattr(getattr(self, n, None), '__x_stdcall__', False)]
+                if not n.startswith('_') and
+                n != 'stdcall_methods' and
+                getattr(getattr(self, n, None), '__x_stdcall__', False)]
 
     @stdcall
     def read(self, ids, fields=None, context=None):
         """ Read *fields* for records with id in *ids*
 
-            Also look at `Odoo documentation <https://www.odoo.com/documentation/9.0/reference/orm.html#openerp.models.Model.read>`__
+            Also look at `Odoo documentation
+            <https://www.odoo.com/documentation/9.0/reference/orm.html#openerp.models.Model.read>`__
             for this method
 
             :param int|list ids: ID or list of IDs of records to read data for
-            :param list fields: list of field names to read. if not passed all fields will be read.
+            :param list fields: list of field names to read.
+                                if not passed all fields will be read.
             :param dict context: dictionary with extra context
             :return: list of dictionaries with data had been read
             :rtype: list
@@ -189,8 +198,8 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
             for this method
 
             :param int|list ids: ID or list of IDs of records to write data for
-            :param dict vals: dictinary with values to be written to database for
-                              records specified by ids
+            :param dict vals: dictinary with values to be written to database
+                              for records specified by ids
             :param dict context: context dictionary
         """
         args, kwargs = preprocess_args(ids, vals, context=context)

@@ -15,7 +15,8 @@ from nbformat.v4 import output_from_msg
 from jupyter_client.manager import start_new_kernel
 
 
-PROJECT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..',))
+PROJECT_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..', '..',))
 
 class CellExecuteError(Exception):
     """ Cell execution error
@@ -158,13 +159,15 @@ class NBRunner(object):
             except Empty:
                 self.log("""Timeout waiting for execute reply (%is).
                 """ % self.timeout)
-                self.log("Interrupting kernel.\nCell:\n%s\n\n---\n\n)" % cell.source)
+                self.log("Interrupting kernel.\nCell:\n%s\n\n---\n\n)"
+                         "" % cell.source)
                 self.km.interrupt_kernel()
                 raise
 
             if msg['parent_header'].get('msg_id') == msg_id:
                 if msg['metadata']['status'] == 'error':
-                    raise CellExecuteError('\n\n'.join(msg['content']['traceback']))
+                    raise CellExecuteError(
+                        '\n\n'.join(msg['content']['traceback']))
                 else:
                     break
             else:
@@ -181,7 +184,8 @@ class NBRunner(object):
         # enable coverage:
         msg_id = self.kc.execute(
             "import sys, os, coverage;\n"
-            "_coverage = coverage.coverage(data_suffix='%s-ipython' % os.getpid());\n"
+            "_coverage = coverage.coverage("
+            "    data_suffix='%s-ipython' % os.getpid());\n"
             "_coverage.start();\n"
         )
 
@@ -191,7 +195,8 @@ class NBRunner(object):
             print('-----')
             print("raised:")
             print('\n'.join(reply['traceback']))
-            raise Exception("Cannot run coverage support", reply['traceback'])
+            raise Exception("Cannot run coverage support",
+                            reply['traceback'])
 
         self.failures = 0
         self.cells_processed = 0
@@ -206,7 +211,8 @@ class NBRunner(object):
             print('-----')
             print("raised:")
             print('\n'.join(reply['traceback']))
-            raise Exception("Cannot finish coverage support", reply['traceback'])
+            raise Exception("Cannot finish coverage support",
+                            reply['traceback'])
 
     def run_notebook(self):
         """ Run tests for all cells
@@ -292,7 +298,8 @@ class NBMultiRunner(object):
         return self
 
 
-@unittest.skipUnless(os.environ.get('TEST_WITH_EXTENSIONS', False), 'requires extensions enabled')
+@unittest.skipUnless(os.environ.get('TEST_WITH_EXTENSIONS', False),
+                     'requires extensions enabled')
 class Test_40_IPYNB(unittest.TestCase):
 
     # list of paths of notebooks to run
@@ -308,7 +315,8 @@ class Test_40_IPYNB(unittest.TestCase):
         runner.run()
 
         if runner.failed:
-            raise AssertionError("At leas one of tested notebooks have some errors")
+            raise AssertionError("At least one of tested notebooks "
+                                 "have some errors")
 
 
 class Test_41_IPYNB(unittest.TestCase):
@@ -326,4 +334,5 @@ class Test_41_IPYNB(unittest.TestCase):
         runner.run()
 
         if runner.failed:
-            raise AssertionError("At leas one of tested notebooks have some errors")
+            raise AssertionError("At leas one of tested notebooks "
+                                 "have some errors")

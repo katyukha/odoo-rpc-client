@@ -67,12 +67,14 @@ def toHField(field):
 
 
 class FieldNotFoundException(Exception):
+
     """ Exception raised when HField cannot find field in object been processed
 
         :param obj: object to field not found in
         :param name: field that is not found in object *obj*
         :param original_exc: Exception that was raised on attempt to get field
     """
+
     def __init__(self, obj, name, original_exc=None):
         self.name = name
         self.obj = obj
@@ -98,6 +100,7 @@ class FieldNotFoundException(Exception):
 
 @six.python_2_unicode_compatible
 class HField(object):
+
     """ Describes how to get a field.
         Primaraly used in html representation logic.
 
@@ -133,7 +136,15 @@ class HField(object):
         :param dict kwargs: same as *args* but for keyword arguments
     """
 
-    def __init__(self, field, name=None, silent=False, default=None, parent=None, args=None, kwargs=None):
+    def __init__(
+            self,
+            field,
+            name=None,
+            silent=False,
+            default=None,
+            parent=None,
+            args=None,
+            kwargs=None):
         if callable(field):
             field = normalizeSField(field)
 
@@ -199,7 +210,8 @@ class HField(object):
     def get_field(self, record):
         """ Returns requested value from specified record (object)
 
-            :param record: Record instance to get field from (also should work on any other object)
+            :param record: Record instance to get field from
+                           (also should work on any other object)
             :type record: Record
             :return: requested value
         """
@@ -218,16 +230,17 @@ class HField(object):
                 field = fields.pop(0)
                 try:
                     r = self._get_field(r, field)
-                    if callable(r) and fields:  # and if attribute is callable and
+                    # and if attribute is callable and
+                    if callable(r) and fields:
                                                 # it is not last field then call
                                                 # it without arguments
                         r = r()
-                    elif callable(r) and not fields:  # it is last field and it is callable
+                    # it is last field and it is callable
+                    elif callable(r) and not fields:
                         r = r(*self._args, **self._kwargs)
                 except Exception as exc:
                     if not self._silent:   # reraise exception if not silent
-                        raise (exc if isinstance(exc, FieldNotFoundException)
-                                   else FieldNotFoundException(r, field, exc))
+                        raise exc
                     else:                  # or return default value
                         r = self._default
                         break
@@ -259,10 +272,12 @@ class HField(object):
 
 
 class PrettyTable(object):
+
     """ Just a simple warapper around tabulate.tabulate to show IPython displayable table
 
         Only 'pretty' representation, yet.
     """
+
     def __init__(self, *args, **kwargs):
         self._args = args
         self._kwargs = kwargs
@@ -277,6 +292,7 @@ class PrettyTable(object):
 
 
 class BaseTable(object):
+
     """ Base class for table representation
 
         :param data: record list (or iterable of anything other) to create represetation for
@@ -287,6 +303,7 @@ class BaseTable(object):
                        tuple(field_path|callable, field_name)
         :type fields: list(str | callable | HField instance | tuple(field, name))
     """
+
     def __init__(self, data, fields):
         self._data = data
         self._fields = []
@@ -347,13 +364,18 @@ class BaseTable(object):
             fmode = 'wb'
             adapt = lambda s: _(s).encode('utf-8')
 
-        tmp_file = tempfile.NamedTemporaryFile(mode=fmode, dir=CSV_PATH, suffix='.csv', delete=False)
+        tmp_file = tempfile.NamedTemporaryFile(
+            mode=fmode,
+            dir=CSV_PATH,
+            suffix='.csv',
+            delete=False)
         with tmp_file as csv_file:
             csv_writer = csv.writer(csv_file)
             csv_writer.writerow(tuple((adapt(h) for h in self.fields)))
             for row in self:
                 csv_writer.writerow(tuple((adapt(val) for val in row)))
-        return FileLink(os.path.join(CSV_PATH, os.path.split(tmp_file.name)[-1]))
+        return FileLink(
+            os.path.join(CSV_PATH, os.path.split(tmp_file.name)[-1]))
 
     def _repr_pretty_(self, printer, cycle):
         return printer.text(PrettyTable(self, headers=self.fields).table)
@@ -362,6 +384,7 @@ class BaseTable(object):
 # TODO: also implement vertical table orientation, which could be usefult for
 # comparing few records or reuse same code for displaying single record.
 class HTMLTable(BaseTable):
+
     """ HTML Table representation object for RecordList
 
         :param data: record list (or iterable of anything other) to create represetation for
@@ -418,7 +441,14 @@ class HTMLTable(BaseTable):
         <div>
     """)
 
-    def __init__(self, data, fields, caption=None, highlighters=None, display_help=True, **kwargs):
+    def __init__(
+            self,
+            data,
+            fields,
+            caption=None,
+            highlighters=None,
+            display_help=True,
+            **kwargs):
         self._caption = u"HTMLTable"
         self._highlighters = {}
         self._display_help = display_help

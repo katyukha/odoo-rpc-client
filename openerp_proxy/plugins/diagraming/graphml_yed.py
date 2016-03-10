@@ -165,7 +165,9 @@ class Node(object):
     @classmethod
     def get_id(cls):
         cls.__last_id += 1
-        return "{id_prefix}{id}".format(id_prefix=cls._id_prefix, id=cls.__last_id)
+        return "{id_prefix}{id}".format(
+            id_prefix=cls._id_prefix,
+            id=cls.__last_id)
 
     def __init__(self, label):
         self.label = str(label)
@@ -174,11 +176,13 @@ class Node(object):
     @property
     def width(self):
         lines = (self.label + '\n').split('\n')
-        return max((len(line) for line in lines)) * self.line_width_mod + self.line_width_mod
+        return max((len(line) for line in lines)) * \
+            self.line_width_mod + self.line_width_mod
 
     @property
     def height(self):
-        return (1.0 + self.label.count('\n')) * self.line_height_mod + self.line_height_mod
+        return (1.0 + self.label.count('\n')) * \
+            self.line_height_mod + self.line_height_mod
 
     def to_graphml(self):
         if self._template is None:
@@ -212,11 +216,13 @@ class NodeBigEntity(Node):
     @property
     def width(self):
         lines = (self.label + '\n' + self.attributes).split('\n')
-        return max((len(line) for line in lines)) * CHAR_WIDTH + self.line_width_mod
+        return max((len(line)
+                   for line in lines)) * CHAR_WIDTH + self.line_width_mod
 
     @property
     def height(self):
-        return (1.0 + self.label.count('\n') + 1.0 + self.attributes.count('\n')) * LINE_HEIGHT + self.line_height_mod
+        return (1.0 + self.label.count('\n') + 1.0 +
+                self.attributes.count('\n')) * LINE_HEIGHT + self.line_height_mod
 
 
 class Edge(object):
@@ -228,9 +234,17 @@ class Edge(object):
     @classmethod
     def get_id(cls):
         cls.__last_id += 1
-        return "{id_prefix}{id}".format(id_prefix=cls._id_prefix, id=cls.__last_id)
+        return "{id_prefix}{id}".format(
+            id_prefix=cls._id_prefix,
+            id=cls.__last_id)
 
-    def __init__(self, source, target, label='', source_arrow='none', target_arrow='none'):
+    def __init__(
+            self,
+            source,
+            target,
+            label='',
+            source_arrow='none',
+            target_arrow='none'):
         self.source = source
         self.target = target
         self.label = label
@@ -251,10 +265,14 @@ class Edge(object):
         return self._template.render(edge=self)
 
     def __str__(self):
-        return "<%s: %s -> %s (%s)>" % (self.id, self.source, self.target, self.label)
+        return "<%s: %s -> %s (%s)>" % (self.id,
+                                        self.source,
+                                        self.target,
+                                        self.label)
 
     def __repr__(self):
         return str(self)
+
 
 class Graph(object):
     _template = TEMPLATE_BASE

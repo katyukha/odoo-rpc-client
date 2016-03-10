@@ -2,7 +2,6 @@
 """
 
 from ..plugin import Plugin
-from ..orm.object import Object
 from ..orm.record import (Record,
                           RecordList)
 
@@ -36,8 +35,8 @@ class ExternalIDS(Plugin):
         data_obj = self.client['ir.model.data']
         domain = [] if module is None else [('module', '=', module)]
         if isinstance(val, Record):
-            domain +=[('model', '=', val._object.name),
-                      ('res_id', '=', val.id)]
+            domain += [('model', '=', val._object.name),
+                       ('res_id', '=', val.id)]
         elif isinstance(val, RecordList):
             domain += [('model', '=', val._object.name),
                        ('res_id', 'in', val.ids)]
@@ -98,5 +97,3 @@ class ExternalIDS(Plugin):
             e_record = e_record[0]
             return self.client[e_record.model][e_record.res_id]
         return False
-
-

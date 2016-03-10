@@ -36,14 +36,16 @@ class DBService(ServiceBase):
         """
         return self._service.list()
 
-    def create_db(self, password, dbname, demo=False, lang='en_US', admin_password='admin'):
+    def create_db(self, password, dbname, demo=False, lang='en_US',
+                  admin_password='admin'):
         """ Create new database on server, named *dbname*
 
             :param str password: super admin password
             :param str dbname: name of database to create
             :param bool demo: load demo data or not. Default: False
             :param str lang: language to be used for database. Default: 'en_US'
-            :param str admin_password: password to be used for 'Administrator' database user.
+            :param str admin_password: password to be used for 'Administrator'
+                                       database user.
                                        Default: 'admin'
             :return: Client instance logged to created database as admin user.
             :rtype: instance of *openerp_proxy.core.Client*
@@ -55,7 +57,8 @@ class DBService(ServiceBase):
             self.create_database(password, dbname, demo, lang, admin_password)
         else:  # pragma: no cover
             # for other server versions
-            process_id = self.create(password, dbname, demo, lang, admin_password)
+            process_id = self.create(password, dbname, demo, lang,
+                                     admin_password)
 
             # wait while database will be created
             while self.get_process(process_id)[0] < 1.0:
@@ -71,7 +74,7 @@ class DBService(ServiceBase):
 
             :param str password: super admin password
             :param str|Client db: name of database or *Client* instance
-                                  with *client.dbname is not None* name secified
+                                  with *client.dbname is not None*
             :raise: `ValueError` (unsupported value of *db* argument)
         """
         return self.drop(password, to_dbname(db))
@@ -84,7 +87,7 @@ class DBService(ServiceBase):
 
             :param str password: super admin password
             :param str|Client db: name of database or *Client* instance
-                                  with *client.dbname is not None* name secified
+                                  with *client.dbname is not None*
             :param str format: (only odoo 9.0) (default: zip)
             :raise: `ValueError` (unsupported value of *db* argument)
             :return: bytestring with laready base64 decoded data
@@ -110,11 +113,14 @@ class DBService(ServiceBase):
             :param str password: super admin password
             :param str dbname: name of database
             :param bytes data: restore data (base64 encoded string)
-            :param bool copy: (only odoo 8.0+) if set to True, then new dbuid will be generated. (default: False)
+            :param bool copy: (only odoo 8.0+) if set to True,
+                              then new db-uid will be generated.
+                              (default: False)
             :return: True
             :rtype: bool
         """
-        assert isinstance(data, bytes), "data must be instance of bytes. got: %s" % type(data)
+        assert isinstance(data, bytes), \
+            "data must be instance of bytes. got: %s" % type(data)
         if self.server_version() >= parse_version('8.0') and 'copy' in kwargs:
             args = [kwargs['copy']]
         else:

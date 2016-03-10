@@ -27,8 +27,9 @@ class Session(Extensible, DirMixIn):
 
             >>> print(session)
 
-        And You will get all databases You worked with listed as (index, url) pairs.
-        to connect to one of thouse databases just call session[index|url] and required
+        And You will get all databases You worked with listed as (index, url)
+        pairs. To connect to one of thouse databases
+        just call session[index|url] and required
         Client object will be returned.
 
         :param data_file: path to session file
@@ -40,7 +41,8 @@ class Session(Extensible, DirMixIn):
         """
         self.data_file = os.path.expanduser(data_file)
 
-        self._databases = {}  # key: url; value: instance of DB or dict with init args
+        # key: url; value: instance of DB or dict with init args
+        self._databases = {}
         self._db_aliases = {}  # key: aliase name; value: url
         self._options = {}
 
@@ -100,8 +102,8 @@ class Session(Extensible, DirMixIn):
 
     def option(self, opt, val=None, default=None):
         """ Get or set option.
-            if *val* is passed, *val* will be set as value for option, else just option value
-            will be returned
+            if *val* is passed, *val* will be set as value for option,
+            else just option value will be returned
 
             :param str opt: option to get or set value for
             :param val: value to be set for option *opt*
@@ -199,20 +201,22 @@ class Session(Extensible, DirMixIn):
 
     def get_db(self, url_or_index, **kwargs):
         """ Returns instance of Client object, that represents single
-            Odoo database it connected to, specified by passed index (integer) or
-            url (string) of database, previously saved in session.
+            Odoo database it connected to, specified by passed index (integer)
+            or url (string) of database, previously saved in session.
 
-            :param url_or_index: must be integer (if index) or string (if url). this parametr
-                                 specifies database to get from session
+            :param url_or_index: must be integer (if index) or string (if url).
+                                 this parametr specifies database
+                                 to get from session
             :type url_or_index: int|string
-            :param kwargs: can contain aditional arguments to be passed on init of Client
+            :param kwargs: can contain aditional arguments
+                           to be passed on init of Client
             :return: Client instance
             :raises ValueError: if cannot find database by specified args
 
             Examples::
 
                 session.get_db(1)   # using index
-                session.get_db('xml-rpc://katyukha@erp.jbm.int:8069/jbm0')  # using url
+                session.get_db('xml-rpc://katyukha@erp.jbm.int:8069/jbm0')
                 session.get_db('my_db')   # using aliase
         """
         if isinstance(url_or_index, numbers.Integral):
@@ -222,7 +226,8 @@ class Session(Extensible, DirMixIn):
 
         db = self._databases.get(url, False)
         if not db:
-            raise ValueError("Bad url %s. not found in history or databases" % url)
+            raise ValueError("Bad url %s. not found in history or databases"
+                             "" % url)
 
         if isinstance(db, Client):
             return db
@@ -233,14 +238,17 @@ class Session(Extensible, DirMixIn):
         if 'pwd' not in ep_args:
             if self.option('store_passwords') and 'password' in ep_args:
                 import base64
-                crypter, password = base64.b64decode(ep_args.pop('password').encode('utf8')).split(b':')
+                encoded_pwd = ep_args.pop('password').encode('utf8')
+                crypter, password = base64.b64decode(encoded_pwd).split(b':')
                 if crypter == b'simplecrypt':  # pragma: no cover
                     import simplecrypt
-                    ep_args['pwd'] = simplecrypt.decrypt(Client.to_url(ep_args), base64.b64decode(password))
+                    ep_args['pwd'] = simplecrypt.decrypt(
+                        Client.to_url(ep_args), base64.b64decode(password))
                 elif crypter == b'plain':
                     ep_args['pwd'] = password.decode('utf-8')
                 else:  # pragma: no cover
-                    raise Exception("Unknown crypter (%s) used in session" % repr(crypter))
+                    raise Exception("Unknown crypter (%s) used in session"
+                                    "" % repr(crypter))
             else:
                 ep_args['pwd'] = getpass('Password: ')  # pragma: no cover
 
@@ -257,16 +265,24 @@ class Session(Extensible, DirMixIn):
         """
         return self._databases.keys()
 
-    def connect(self, host=None, dbname=None, user=None, pwd=None, port=8069, protocol='xml-rpc', interactive=True, no_save=False):
-        """ Wraper aroun Client constructor class to simplify connect from shell.
+    def connect(self, host=None, dbname=None, user=None, pwd=None, port=8069,
+                protocol='xml-rpc', interactive=True, no_save=False):
+        """ Wraper around Client constructor class
+            to simplify connect from shell.
 
-            :param str host: host name to connect to (will be asked interactvely if not provided)
-            :param str dbname: name of database to connect to (will be asked interactvely if not provided)
-            :param str user: user name to connect as (will be asked interactvely if not provided)
-            :param str pwd: password for selected user (will be asked interactvely if not provided)
+            :param str host: host name to connect to
+                             (will be asked interactvely if not provided)
+            :param str dbname: name of database to connect to
+                               (will be asked interactvely if not provided)
+            :param str user: user name to connect as
+                             (will be asked interactvely if not provided)
+            :param str pwd: password for selected user
+                            (will be asked interactvely if not provided)
             :param int port: port to connect to. (default: 8069)
-            :param bool interactive: ask for connection parametrs if not provided. (default: True)
-            :param bool no_save: if set to True database will not be saved to session
+            :param bool interactive: ask for connection parameters
+                                     if not provided. (default: True)
+            :param bool no_save: if set to True database
+                                 will not be saved to session
             :return: Client object
         """
         if interactive:  # pragma: no cover
@@ -288,9 +304,16 @@ class Session(Extensible, DirMixIn):
         if isinstance(db, Client):
             return db
 
-        db = Client(host=host, dbname=dbname, user=user, pwd=pwd, port=port, protocol=protocol)
+        db = Client(host=host,
+                    dbname=dbname,
+                    user=user,
+                    pwd=pwd,
+                    port=port,
+                    protocol=protocol)
         self.add_db(db)
-        db._no_save = no_save   # if set to True, disalows saving database connection in session
+
+        # if set to True, disalows saving database connection in session
+        db._no_save = no_save
         return db
 
     def _get_db_init_args(self, database):
@@ -298,13 +321,15 @@ class Session(Extensible, DirMixIn):
             res = database.get_init_args()
             if self.option('store_passwords') and database._pwd:
                 import base64
-                password = base64.b64encode(b'plain:' + database._pwd.encode('utf-8')).decode('utf-8')
+                password = base64.b64encode(
+                    b'plain:' + database._pwd.encode('utf-8')).decode('utf-8')
                 res.update({'password': password})
             return res
         elif isinstance(database, dict):
             return database
         else:  # pragma: no cover
-            raise ValueError("Bad database instance. It should be dict or Client object")
+            raise ValueError("Bad database instance. "
+                             "It should be dict or Client object")
 
     def save(self):
         """ Saves session on disc

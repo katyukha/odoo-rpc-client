@@ -63,7 +63,9 @@ class Test_25_Plugin_ModuleUtils(BaseTestCase):
     def test_35_module_contains(self):
         self.assertIsNone(self.client.plugins.module_utils._modules)
         self.assertIn('sale', self.client.plugins.module_utils)
-        self.assertNotIn('some strange unexistent module', self.client.plugins.module_utils)
+        self.assertNotIn(
+            'some strange unexistent module',
+            self.client.plugins.module_utils)
         self.assertIsNotNone(self.client.plugins.module_utils._modules)
 
     def test_40_module_install(self):
@@ -181,7 +183,8 @@ class Test_26_Plugin_ModuleUtils(BaseTestCase):
             self.client.plugins.external_ids.get_for(None, 'base')
 
     def test_25_get_for__unexisting_xml_id(self):
-        data = self.client.plugins.external_ids.get_for('base.unexisting_xml_id')
+        data = self.client.plugins.external_ids.get_for(
+            'base.unexisting_xml_id')
         self.assertIsInstance(data, RecordList)
         self.assertEqual(data.length, 0)
         self.assertFalse(data)
@@ -195,7 +198,8 @@ class Test_26_Plugin_ModuleUtils(BaseTestCase):
         self.assertEqual(xml_id, "base.main_partner")
 
         # Create new partner without xml_id
-        new_partner_id = self.client['res.partner'].create({'name': 'Test partner'})
+        new_partner_id = self.client[
+            'res.partner'].create({'name': 'Test partner'})
         new_partner = self.client['res.partner'].browse(new_partner_id)
 
         no_xml_id = self.client.plugins.external_ids.get_xmlid(new_partner)
@@ -205,8 +209,10 @@ class Test_26_Plugin_ModuleUtils(BaseTestCase):
         new_partner.unlink()
 
     def test_35_get_record(self):
-        mpartner = self.client.plugins.external_ids.get_record('base.main_partner')
+        mpartner = self.client.plugins.external_ids.get_record(
+            'base.main_partner')
         self.assertEqual(mpartner, self.main_partner)
 
-        no_partner = self.client.plugins.external_ids.get_record('base.unexisting_xml_id')
+        no_partner = self.client.plugins.external_ids.get_record(
+            'base.unexisting_xml_id')
         self.assertFalse(no_partner)

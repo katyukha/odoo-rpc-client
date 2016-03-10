@@ -1,4 +1,3 @@
-#import openerp_proxy.orm.record
 import six
 import numbers
 import collections
@@ -36,13 +35,15 @@ class ObjectCache(dict):
             # and difference calls)
             self.update({cid: {'id': cid} for cid in keys})
         else:
-            self.update({cid: {'id': cid} for cid in set(keys).difference(six.viewkeys(self))})
+            self.update({cid: {'id': cid}
+                         for cid in set(keys).difference(six.viewkeys(self))})
         return self
 
     def update_context(self, new_context):
         """ Updates or sets new context for thes ObjectCache instance
 
-            :param dict new_context: context dictionary to update cached context with
+            :param dict new_context: context dictionary to update cached
+                                     context with
             :return: updated context
         """
         if new_context is not None:
@@ -68,14 +69,18 @@ class ObjectCache(dict):
         """
         self[rid][field_name] = value
         if value and ftype == 'many2one':
-            rcache = self._root_cache[self._object.columns_info[field_name]['relation']]
+            rcache = self._root_cache[self._object.
+                                      columns_info[field_name]['relation']]
 
             if isinstance(value, numbers.Integral):  # pragma: no cover
-                rcache[value]  # internal dict {'id': key} will be created by default (see ObjectCache)
+                # internal dict {'id': key} will be created by default
+                # (see ObjectCache)
+                rcache[value]
             elif isinstance(value, collections.Iterable):
                 rcache[value[0]]['__name_get_result'] = value[1]
         elif value and ftype in ('many2many', 'one2many'):
-            rcache = self._root_cache[self._object.columns_info[field_name]['relation']]
+            rcache = self._root_cache[self._object.
+                                      columns_info[field_name]['relation']]
             rcache.update_keys(value)
 
     def parse_prefetch_fields(self, fields):
@@ -88,7 +93,8 @@ class ObjectCache(dict):
             :return: tuple(prefetch_fields, related_fields),
                      where prefetch_fields is list of fields, to be read for
                      current object, and related_fields is dictionary of form
-                     ``{'related.object': ['relatedfield1', 'relatedfield2.relatedfield']}``
+                     ``{'related.object': ['relatedfield1',
+                                           'relatedfield2.relatedfield']}``
         """
         rel_fields = collections.defaultdict(list)
         prefetch_fields = []
@@ -100,7 +106,8 @@ class ObjectCache(dict):
                 prefetch_fields.append(xfield)
                 relation = xfield_info.get('relation', False)
                 if field_path and relation:
-                    rel_fields[relation].append(field_path[0])  # only one item left
+                    # only one item left
+                    rel_fields[relation].append(field_path[0])
 
         return prefetch_fields, rel_fields
 
@@ -176,4 +183,3 @@ def empty_cache(client):
 
     """
     return Cache(client)
-
