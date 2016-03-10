@@ -104,6 +104,9 @@ function run_single_test {
         pip install --upgrade coverage tabulate six extend_me requests mock pudb jupyter ipython[notebook] anyfield
     fi
 
+    # install in develop mode
+    python setup.py develop
+
     set +e   # allow errors
 
     # Run tests

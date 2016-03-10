@@ -53,8 +53,8 @@ def json_write(file_path, *args, **kwargs):
     """ Write data to specified json file
 
         Note, this function uses dumps function to convert data to json first,
-        and write only if conversion is successfule. This allows to avoid loss of data
-        when rewriting file.
+        and write only if conversion is successfule. This allows to avoid
+        loss of data when rewriting file.
     """
     # note, using dumps instead of dump, because we need to check if data will
     # be dumped correctly. using dump on incorect data, causes file to be half
@@ -73,6 +73,33 @@ def wpartial(func, *args, **kwargs):
     partial = functools.partial(func, *args, **kwargs)
 
     return functools.wraps(func)(partial)
+
+
+def preprocess_args(*args, **kwargs):
+    """ Skip all args, and kwargs that set to None
+
+        Mostly for internal usage.
+
+        Used to workaround xmlrpc None restrictions
+    """
+    kwargs = {key: val for key, val in kwargs.items() if val is not None}
+
+    xargs = list(args[:])
+    while xargs and xargs[-1] is None:
+        xargs.pop()
+    return xargs, kwargs
+
+def stdcall(fn):
+    """ Simple decorator for server methods, that supports standard call
+
+        If method supports call like
+        ``method(ids, <args>, context=context, <kwargs>)``,
+        then it may be decrated by this decorator to appear in
+        dir(record) and dir(recordlist) calls, thus making it available
+        for autocompletition in ipython or other python shells
+    """
+    fn.__x_stdcall__ = True
+    return fn
 
 
 class UConverter(object):
@@ -115,7 +142,8 @@ class UConverter(object):
                 try:
                     value = six.binary_type(value)
                 except:
-                    raise UnicodeError('unable to convert to unicode %r' % (value,))
+                    raise UnicodeError('unable to convert to unicode %r'
+                                       '' % (value,))
 
         # value is binary type (str for python2 and bytes for python3)
         for ln in self.encodings:
@@ -129,16 +157,17 @@ class UConverter(object):
 ustr = UConverter()
 
 
+# DirMixIn class implementation. To be able to use super calls to __dir__ in
+# subclasses (Py 2/3 support)
+# code is based on
+# http://www.quora.com/How-dir-is-implemented-Is-there-any-PEP-related-to-that
 try:
     object.__dir__
 except AttributeError:
-    # implement basic __dir__ to make it assessible via super() by subclasses
     class DirMixIn(object):
         """ Mix-in to make implementing __dir__ method in subclasses simpler
         """
         def __dir__(self):
-            # code is based on
-            # http://www.quora.com/How-dir-is-implemented-Is-there-any-PEP-related-to-that
             def get_attrs(obj):
                 import types
                 if not hasattr(obj, '__dict__'):
@@ -169,9 +198,9 @@ except AttributeError:
 
             return dir2(self)
 else:
-    # There are no need to implement any aditional logic for Python 3.3+, because
-    # there base class 'object' already have implemented '__dir__' method,
-    # which could be accessed via super() by subclasses
+    # There are no need to implement any aditional logic for Python 3.3+,
+    # because there base class 'object' already have implemented
+    # '__dir__' method, which could be accessed via super() by subclasses
     class DirMixIn:
         pass
 

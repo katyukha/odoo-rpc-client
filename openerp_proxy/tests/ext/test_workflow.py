@@ -14,9 +14,18 @@ from ...orm import (Record,
                     RecordList)
 
 
-@unittest.skipUnless(os.environ.get('TEST_WITH_EXTENSIONS', False), 'requires extensions enabled')
-@unittest.skipIf(os.environ.get('TEST_SKIP_WORKFLOW', False), 'workflow tests disabled')
+@unittest.skipUnless(
+    os.environ.get(
+        'TEST_WITH_EXTENSIONS',
+        False),
+    'requires extensions enabled')
+@unittest.skipIf(
+    os.environ.get(
+        'TEST_SKIP_WORKFLOW',
+        False),
+    'workflow tests disabled')
 class Test_32_ExtWorkFlow(BaseTestCase):
+
     def setUp(self):
         super(Test_32_ExtWorkFlow, self).setUp()
 
@@ -37,7 +46,8 @@ class Test_32_ExtWorkFlow(BaseTestCase):
         self.object_no_wkf = self.client.get_obj('res.partner')
         self.record_no_wkf = self.object_no_wkf.browse(1)
         self.obj_ids_no_wkf = self.object_no_wkf.search([], limit=10)
-        self.recordlist_no_wkf = self.object_no_wkf.read_records(self.obj_ids_no_wkf)
+        self.recordlist_no_wkf = self.object_no_wkf.read_records(
+            self.obj_ids_no_wkf)
 
     def test_obj_workflow(self):
         res = self.object.workflow
@@ -69,7 +79,11 @@ class Test_32_ExtWorkFlow(BaseTestCase):
         self.assertIsInstance(res, list)
         self.assertEqual(res, [])
 
-    @unittest.skipIf(os.environ.get('TEST_WITHOUT_DB_CHANGES', False), 'db changes not allowed. skipped')
+    @unittest.skipIf(
+        os.environ.get(
+            'TEST_WITHOUT_DB_CHANGES',
+            False),
+        'db changes not allowed. skipped')
     def test_record_signal_send(self):
         # first sale order seems to be in draft state on just created DB
         so = self.record
@@ -81,7 +95,8 @@ class Test_32_ExtWorkFlow(BaseTestCase):
         # get first avalable transition with signal
         trans = [t for t in act.out_transitions if t.signal]
         if not trans:
-            raise unittest.SkipTest("There is no avalable transitions in first sale order to test workflow")
+            raise unittest.SkipTest(
+                "There is no avalable transitions in first sale order to test workflow")
         trans = trans[0]
 
         # send signal

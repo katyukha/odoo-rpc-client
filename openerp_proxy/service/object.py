@@ -4,8 +4,9 @@ from ..exceptions import ConnectorError
 
 class ObjectService(ServiceBase):
     """ Service class to simplify interaction with 'object' service
-        Particulary, implements logic of choosing execute method ('execute' or 'execute_kw')
-        The last one cannot work with keyword arguments(
+        Particulary, implements logic of choosing execute method
+        ('execute' or 'execute_kw') The last one cannot work with
+        keyword arguments(
     """
     class Meta:
         name = 'object'
@@ -21,9 +22,16 @@ class ObjectService(ServiceBase):
         """
         if self.__use_execute_kw is None:
             try:
-                self._service.execute_kw(self.client.dbname, self.client.uid, self.client._pwd, 'ir.model', 'search', ([],), dict(limit=1))
+                self._service.execute_kw(self.client.dbname,
+                                         self.client.uid,
+                                         self.client._pwd,
+                                         'ir.model',
+                                         'search',
+                                         ([],),
+                                         dict(limit=1))
                 self.__use_execute_kw = True
             except ConnectorError:  # pragma: no cover
+                # Odoo version < 6.1
                 self.__use_execute_kw = False
         return self.__use_execute_kw
 
@@ -38,9 +46,21 @@ class ObjectService(ServiceBase):
             del kwargs['context']
 
         if self.use_execute_kw:
-            result = self._service.execute_kw(self.client.dbname, self.client.uid, self.client._pwd, obj, method, args, kwargs)
+            result = self._service.execute_kw(self.client.dbname,
+                                              self.client.uid,
+                                              self.client._pwd,
+                                              obj,
+                                              method,
+                                              args,
+                                              kwargs)
         else:  # pragma: no cover
-            result = self._service.execute(self.client.dbname, self.client.uid, self.client._pwd, obj, method, *args, **kwargs)
+            result = self._service.execute(self.client.dbname,
+                                           self.client.uid,
+                                           self.client._pwd,
+                                           obj,
+                                           method,
+                                           *args,
+                                           **kwargs)
 
         return result
 
@@ -51,7 +71,12 @@ class ObjectService(ServiceBase):
             :param str signal: name of signal to send to workflow
             :param int object_id: ID of document (record) to send signal to
         """
-        result_wkf = self._service.exec_workflow(self.client.dbname, self.client.uid, self.client._pwd, object_name, signal, object_id)
+        result_wkf = self._service.exec_workflow(self.client.dbname,
+                                                 self.client.uid,
+                                                 self.client._pwd,
+                                                 object_name,
+                                                 signal,
+                                                 object_id)
         return result_wkf
 
     def _get_registered_objects(self):
@@ -71,7 +96,8 @@ class ObjectService(ServiceBase):
         return self.__registered_objects
 
     def clean_cache(self):
-        """ Cleans service cache, to fill them with fresh data with next call of related methods
+        """ Cleans service cache, to fill them with fresh data
+            on next call of related methods
         """
         self.__use_execute_kw = None
         self.__registered_objects = None

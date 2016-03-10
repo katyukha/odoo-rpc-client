@@ -1,3 +1,9 @@
+""" This module contains generic classes and functions, which allows to add
+additional ipython-style representation capabilities for classes,
+such as table representations via `HTMLTable <#HTMLTable>`__ or
+`PrettyTable <#PrettyTable>`__ classes
+"""
+
 import os
 import six
 import csv
@@ -5,7 +11,7 @@ import os.path
 import tempfile
 import tabulate
 from jinja2 import Template
-from IPython.display import FileLink
+from IPython.display import HTML, FileLink
 
 
 from ...utils import ustr as _
@@ -25,12 +31,28 @@ __all__ = ('FieldNotFoundException',
 def toHField(field):
     """ Convert value to HField instance
 
-        :param field: value to convert to HField instance. Could be string
-                      with dot splitted names of related object, or callable
-                      of one argument (record instance) or *HField* instance or
-                      tuple(field_path|callable, field_name)
+        :param field: value to convert to HField instance.
         :return: HField instance based on passed value
         :rtype: HField
+        :raises ValueError: if ``field`` value cannot be automaticaly
+                            convereted to ``HField`` instance
+
+        ``field`` argument may be one of following types:
+
+        - ``HField``: in this case ``field`` will be returned unchanged
+        - ``str``: in this case ``field`` assumend to be field path, so
+          ``HField`` instance will be created for it as ``HField(field)``
+        - ``tuple(str, str)``: In this case ``field`` assumed to be
+          pair of (field_path, field_name), so new ``HField`` instance
+          will be constructed with following arguments:
+          ``HField(field[0], name=field[1])``
+        - ``callable``: if ``field`` is callable, then it is assumed to be
+          custom getter function, so new ``HField`` instance
+          will be created as ``HField(field)``
+
+        For more information look at
+        `HField <#openerp_proxy.ext.repr.generic.HField>`__
+        documentation
     """
     if isinstance(field, HField):
         return field
@@ -45,8 +67,14 @@ def toHField(field):
 
 
 class FieldNotFoundException(Exception):
+
     """ Exception raised when HField cannot find field in object been processed
+
+        :param obj: object to field not found in
+        :param name: field that is not found in object *obj*
+        :param original_exc: Exception that was raised on attempt to get field
     """
+
     def __init__(self, obj, name, original_exc=None):
         self.name = name
         self.obj = obj
@@ -54,7 +82,7 @@ class FieldNotFoundException(Exception):
 
     @property
     def message(self):
-        return u"Field %s not found in obj %s" % (_(self.field), _(self.obj))
+        return u"Field %s not found in obj %s" % (_(self.name), _(self.obj))
 
     # TODO: implement correct behavior. It fails in IPython notebook with
     # UnicodeEncodeError because of python's standard warnings module
@@ -72,6 +100,7 @@ class FieldNotFoundException(Exception):
 
 @six.python_2_unicode_compatible
 class HField(object):
+
     """ Describes how to get a field.
         Primaraly used in html representation logic.
 
@@ -107,7 +136,15 @@ class HField(object):
         :param dict kwargs: same as *args* but for keyword arguments
     """
 
-    def __init__(self, field, name=None, silent=False, default=None, parent=None, args=None, kwargs=None):
+    def __init__(
+            self,
+            field,
+            name=None,
+            silent=False,
+            default=None,
+            parent=None,
+            args=None,
+            kwargs=None):
         if callable(field):
             field = normalizeSField(field)
 
@@ -155,8 +192,7 @@ class HField(object):
         self._kwargs = kwargs
         return self
 
-    @classmethod
-    def _get_field(cls, obj, name):
+    def _get_field(self, obj, name):
         """ Try to get field named *name* from object *obj*
         """
         try:
@@ -174,7 +210,8 @@ class HField(object):
     def get_field(self, record):
         """ Returns requested value from specified record (object)
 
-            :param record: Record instance to get field from (also should work on any other object)
+            :param record: Record instance to get field from
+                           (also should work on any other object)
             :type record: Record
             :return: requested value
         """
@@ -193,23 +230,28 @@ class HField(object):
                 field = fields.pop(0)
                 try:
                     r = self._get_field(r, field)
-                    if callable(r) and fields:  # and if attribute is callable and
+                    # and if attribute is callable and
+                    if callable(r) and fields:
                                                 # it is not last field then call
                                                 # it without arguments
                         r = r()
-                    elif callable(r) and not fields:  # it is last field and it is callable
+                    # it is last field and it is callable
+                    elif callable(r) and not fields:
                         r = r(*self._args, **self._kwargs)
-                except:  # FieldNotFoundException:
+                except Exception as exc:
                     if not self._silent:   # reraise exception if not silent
-                        raise
+                        raise exc
                     else:                  # or return default value
                         r = self._default
                         break
 
-        # Support nested HTML Tables
         if isinstance(r, HTMLTable):
+            # Support nested HTML Tables
             r.nested = True
             r = r.render()
+        elif isinstance(r, HTML):
+            # Support IPython HTML compatible objects
+            r = r._repr_html_()
 
         return r
 
@@ -230,10 +272,12 @@ class HField(object):
 
 
 class PrettyTable(object):
+
     """ Just a simple warapper around tabulate.tabulate to show IPython displayable table
 
         Only 'pretty' representation, yet.
     """
+
     def __init__(self, *args, **kwargs):
         self._args = args
         self._kwargs = kwargs
@@ -248,6 +292,7 @@ class PrettyTable(object):
 
 
 class BaseTable(object):
+
     """ Base class for table representation
 
         :param data: record list (or iterable of anything other) to create represetation for
@@ -258,6 +303,7 @@ class BaseTable(object):
                        tuple(field_path|callable, field_name)
         :type fields: list(str | callable | HField instance | tuple(field, name))
     """
+
     def __init__(self, data, fields):
         self._data = data
         self._fields = []
@@ -272,7 +318,7 @@ class BaseTable(object):
                        with dot splitted names of related object, or callable
                        of one argument (record instance) or *HField* instance or
                        tuple(field_path|callable, field_name)
-        :type fields: list(str | callable | HField instance | tuple(field, name))
+        :type fields: list(str) | callable | HField instance | tuple(field, name))
         :return: self
         """
         fields = [] if fields is None else fields
@@ -318,13 +364,18 @@ class BaseTable(object):
             fmode = 'wb'
             adapt = lambda s: _(s).encode('utf-8')
 
-        tmp_file = tempfile.NamedTemporaryFile(mode=fmode, dir=CSV_PATH, suffix='.csv', delete=False)
+        tmp_file = tempfile.NamedTemporaryFile(
+            mode=fmode,
+            dir=CSV_PATH,
+            suffix='.csv',
+            delete=False)
         with tmp_file as csv_file:
             csv_writer = csv.writer(csv_file)
             csv_writer.writerow(tuple((adapt(h) for h in self.fields)))
             for row in self:
                 csv_writer.writerow(tuple((adapt(val) for val in row)))
-        return FileLink(os.path.join(CSV_PATH, os.path.split(tmp_file.name)[-1]))
+        return FileLink(
+            os.path.join(CSV_PATH, os.path.split(tmp_file.name)[-1]))
 
     def _repr_pretty_(self, printer, cycle):
         return printer.text(PrettyTable(self, headers=self.fields).table)
@@ -333,6 +384,7 @@ class BaseTable(object):
 # TODO: also implement vertical table orientation, which could be usefult for
 # comparing few records or reuse same code for displaying single record.
 class HTMLTable(BaseTable):
+
     """ HTML Table representation object for RecordList
 
         :param data: record list (or iterable of anything other) to create represetation for
@@ -389,7 +441,14 @@ class HTMLTable(BaseTable):
         <div>
     """)
 
-    def __init__(self, data, fields, caption=None, highlighters=None, display_help=True, **kwargs):
+    def __init__(
+            self,
+            data,
+            fields,
+            caption=None,
+            highlighters=None,
+            display_help=True,
+            **kwargs):
         self._caption = u"HTMLTable"
         self._highlighters = {}
         self._display_help = display_help

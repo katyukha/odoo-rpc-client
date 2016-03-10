@@ -8,9 +8,12 @@ from .. import exceptions as exceptions
 
 
 class XMLRPCError(exceptions.ConnectorError):
+    """ Exception raised on XMLRpc errors
+
+        :param xmlrpclib.Fault fault_instance: exception raised by XMLRPC lib
+    """
     def __init__(self, fault_instance):
-        """ @param instance of xmlrpclib.Fault
-        """
+        self._fault = fault_instance
         msg = (u"A fault occured\n"
                u"Fault code: %s\n"
                u"Fault string: %s\n"
@@ -18,6 +21,12 @@ class XMLRPCError(exceptions.ConnectorError):
                       ustr(fault_instance.faultString)))
         msg = msg.encode('utf-8')
         super(XMLRPCError, self).__init__(msg)
+
+    @property
+    def fault(self):
+        """ Return xmlrpclib.Fault instance related to this error
+        """
+        return self._fault
 
 
 class XMLRPCMethod(object):
@@ -28,7 +37,7 @@ class XMLRPCMethod(object):
     def __init__(self, method):
         self.__method = method
 
-    def __getattr__(self, name):
+    def __getattr__(self, name):  # pragma: no cover
         return XMLRPCMethod(getattr(self.__method, name))
 
     def __call__(self, *args):

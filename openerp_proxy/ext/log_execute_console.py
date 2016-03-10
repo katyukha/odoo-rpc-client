@@ -1,6 +1,12 @@
-""" Simple extension which makes all client.services.object.execute calls to be logget to console
+""" Simple extension which makes all
+``client.services.object.execute`` calls to be logged
 
-    Ususaly used for debug and performance tests
+*NOTE*: this exension is not included in ``openerp_proxy.ext.all``
+so it should be enabled (imported) manualy
+
+Also allows to measure tim spent on rpc calls
+
+Ususaly used for debug and performance tests
 """
 
 import time
@@ -29,10 +35,18 @@ class TimeTracker(object):
 
     @classmethod
     def start_timing(cls, name):
+        """ Start timer named *name*
+
+            :param str name: name of timer to be started
+        """
         cls.query_timers[name] = 0.0
 
     @classmethod
     def get_query_times(cls, name):
+        """ Get time spent for queries for timer named *name*
+
+            :param str name: name of timer to be started
+        """
         return cls.query_timers.get(name, 0.0)
 
     @classmethod
@@ -46,6 +60,8 @@ class TimeTracker(object):
 
     @classmethod
     def remove_timer(cls, name):
+        """ Remove timer for timers list.
+        """
         del cls.query_timers[name]
 
     def __init__(self, name):

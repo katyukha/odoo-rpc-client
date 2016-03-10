@@ -1,32 +1,42 @@
 # -*- coding: utf8 -*-
-""" This module provides some classes to simplify acces to Odoo server via xmlrpc.
-    Some of these classes are may be not safe enough and should be used with carefully
+"""
+This module provides some classes to simplify access to Odoo server via xmlrpc.
 
-    Example ussage of this module:
+Example ussage of this module
 
-    >>> erp_db = Client('server.com', 'dbname', 'some_user', 'mypassword')
-    >>> sale_obj = erp_db['sale_order']
+.. code:: python
+
+    >>> cl = Client('server.com', 'dbname', 'some_user', 'mypassword')
+    >>> sale_obj = cl['sale_order']
     >>> sale_ids = sale_obj.search([('state','not in',['done','cancel'])])
     >>> sale_data = sale_obj.read(sale_ids, ['name'])
     >>> for order in sale_data:
     ...     print("%5s :    %s" % (order['id'],order['name']))
-    >>> tmpl_ids = erp_db['product.template'].search([('name','ilike','template_name')])
-    >>> print(erp_db['product.product'].search([('product_tmpl_id','in',tmpl_ids)]))
+    >>> product_tmpl_obj = cl['product.template']
+    >>> product_obj = cl['product.product']
+    >>> tmpl_ids = product_tmpl_obj.search([('name','ilike','template_name')])
+    >>> print(product_obj.search([('product_tmpl_id','in',tmpl_ids)]))
 
     >>> db = Client('erp.host.com', 'dbname='db0', user='your_user')
     >>> so = db['sale.order']
     >>> order_ids = so.search([('state','=','done')])
     >>> order = so.read(order_ids[0])
 
-    Also You can call any method (beside private ones starting with underscore(_)) of any model.
-    For example to check availability of stock move all You need is:
+Also You can call any method (beside private
+ones starting with underscore(_)) of any model.
+For example following code allows to check
+availability of stock moves:
+
+.. code:: python
 
     >>> db = session.connect()
     >>> move_obj = db['stock.move']
     >>> move_ids = [1234] # IDs of stock moves to be checked
     >>> move_obj.check_assign(move_ids)
 
-    Ability to use Record class as analog to browse_record:
+Ability to use Record class as analog to browse_record:
+
+.. code:: python
 
     >>> move_obj = db['stock.move']
     >>> move = move_obj.browse(1234)
@@ -73,7 +83,8 @@ class Client(Extensible):
        :param str user: username to login as
        :param str pwd: password to log-in with
        :param int port: port number of server
-       :param str protocol: protocol used to connect. To get list of available protcols call:
+       :param str protocol: protocol used to connect.
+                            To get list of available protcols call:
                             ``openerp_proxy.connection.get_connector_names()``
 
        any other keyword arguments will be directly passed to connector
@@ -90,7 +101,8 @@ class Client(Extensible):
                Object ('sale.order')
     """
 
-    def __init__(self, host, dbname=None, user=None, pwd=None, port=8069, protocol='xml-rpc', **extra_args):
+    def __init__(self, host, dbname=None, user=None, pwd=None, port=8069,
+                 protocol='xml-rpc', **extra_args):
         self._dbname = dbname
         self._username = user
         self._pwd = pwd
@@ -136,12 +148,18 @@ class Client(Extensible):
     @property
     def services(self):
         """ ServiceManager instance, which contains list
-            of all available services for current connection,
-            accessible by name::
+            of all available services for current connection.
+
+            :rtype: openerp_proxy.service.service.ServiceManager
+
+            Usage examples::
 
                 db.services.report   # report service
                 db.services.object   # object service (model related actions)
-                db.services.common   # used for login (db.services.common.login(dbname, username, password)
+                db.services.common   # used for login
+                                     # (db.services.common.login(dbname,
+                                     #                           username,
+                                     #                           password)
                 db.services.db       # database management service
 
         """
@@ -150,12 +168,16 @@ class Client(Extensible):
     @property
     def plugins(self):
         """ Plugins associated with this Client instance
+
+            :rtype: openerp_proxy.plugin.PluginManager
         """
         return self._plugins
 
     @property
     def connection(self):
         """ Connection to server.
+
+            :rtype: openerp_proxy.connection.connection.ConnectorBase
         """
         return self._connection
 
@@ -174,7 +196,7 @@ class Client(Extensible):
     def user(self):
         """ Currenct logged in user instance
 
-            :rtype: Record instance
+            :rtype: openerp_proxy.orm.record.Record
         """
         if self._user is None:
             self._user = self.get_obj('res.users').read_records(self.uid)
@@ -200,7 +222,9 @@ class Client(Extensible):
 
     @property
     def registered_objects(self):
-        """ Stores list of registered in Odoo database objects
+        """ List of registered in Odoo database objects
+
+            :rtype: list
         """
         return self.services['object'].get_registered_objects()
 
@@ -214,6 +238,7 @@ class Client(Extensible):
             :param str user: username to login as
             :param str password: password to log-in with
             :return: new Client instance, with specifed credentials
+            :rtype: openerp_proxy.core.Client
         """
         return self.connect(dbname=dbname, user=user, pwd=password)
 
@@ -225,10 +250,11 @@ class Client(Extensible):
             self instance and update them with passed keyword arguments,
             and call Proxy class constructor passing result as arguments.
 
-             Note, that if You pass any keyword arguments, You also should pass
-             'pwd' keyword argument with user password
+            **Note**, that if You pass any keyword arguments,
+            You also should pass 'pwd' keyword argument with user password
 
-            :return: Id of user logged in or new Client instance (if kwargs passed)
+            :return: Id of user logged in or new Client
+                     instance (if kwargs passed)
             :rtype: int|Client
             :raises LoginException: if wrong login or password
         """
@@ -240,9 +266,12 @@ class Client(Extensible):
 
         # Get the uid
         if self._pwd is None or self.username is None or self.dbname is None:
-            raise LoginException("User login and password required for this operation")
+            raise LoginException("User login and password required "
+                                 "for this operation")
 
-        uid = self.services['common'].login(self.dbname, self.username, self._pwd)
+        uid = self.services['common'].login(self.dbname,
+                                            self.username,
+                                            self._pwd)
 
         if not uid:
             raise LoginException("Bad login or password")
@@ -288,15 +317,18 @@ class Client(Extensible):
             :param object_id: ID of document (record) to send signal to
             :type obejct_id: int
         """
-        result_wkf = self.services['object'].execute_wkf(object_name, signal, object_id)
+        result_wkf = self.services['object'].execute_wkf(object_name,
+                                                         signal,
+                                                         object_id)
         return result_wkf
 
     def get_obj(self, object_name):
-        """ Returns wraper around Odoo object 'object_name' which is instance of Object
+        """ Returns wraper around Odoo object 'object_name'
+            which is instance of orm.object.Object class
 
             :param object_name: name of an object to get wraper for
             :return: instance of Object which wraps choosen object
-            :rtype: Object instance
+            :rtype: openerp_proxy.orm.object.Object
         """
         return self.services['object'].get_obj(object_name)
 
@@ -356,7 +388,6 @@ class Client(Extensible):
         self.plugins.refresh()
         self._user_context = None
         self._user = None
-        self._username = None
 
     def __str__(self):
         return u"Client: %s" % self.get_url()

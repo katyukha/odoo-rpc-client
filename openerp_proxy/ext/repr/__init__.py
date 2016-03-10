@@ -1,8 +1,8 @@
 """ This module provides additional representation capabilities
-of RecordList class, like representation as HTML table with
-ability to highlight specific rows, which is useful when
-used inside IPython notebook
+for most of standard classes like *Record* or *RecordList*.
 
+This allows them to be represented as HTML tables in Jupyter notebook,
+or for example show RecordList data as table in IPython console.
 """
 
 # TODO: rename to IPython or something like that
@@ -189,10 +189,6 @@ class ColInfo(AttrDict):
         """ Default fields displayed in resulting HTML table
         """
         if self._fields is None:
-            def _get_selection(x):
-                return u'<br/>\n'.join((u"%s - %s" % (_(repr(i[0])), _(i[1]))
-                                        for i in x['info'].get('selection', []) or []))
-
             self._fields = [
                 HField('name', name='Name', silent=True),
                 HField('info.string', name='Disp. Name', silent=True),
@@ -446,11 +442,11 @@ class IPYSession(Session):
                      u"<li>session[<b>url</b>]</li>"
                      u"<li>session.get_db(<b>url</b>|<b>index</b>|<b>aliase</b>)</li></ul>")
 
-        data = u"<tr><th>DB URL</th><th>DB Index</th><th>DB Aliases</th></tr>"
+        data = u"<tr><th>DB Index</th><th>DB URL</th><th>DB Aliases</th></tr>"
         for url in self._databases.keys():
             index = self._index_url(url)
             aliases = u", ".join((_(al) for al, aurl in self.aliases.items() if aurl == url))
-            data += tr(td(url), td(index), td(aliases))
+            data += tr(td(index), td(url), td(aliases))
 
         table = TMPL_TABLE % {'styles': '',
                               'extra_classes': 'table-striped',
@@ -459,4 +455,3 @@ class IPYSession(Session):
         return TMPL_INFO_WITH_HELP % {'info': table,
                                       'caption': u"Previous connections",
                                       'help': help_text}
-

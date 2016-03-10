@@ -45,7 +45,11 @@ class Test_20_Object(BaseTestCase):
         self.assertIn('browse', dir(self.object))
 
     def test_getttr(self):
-        self.assertEqual(self.object.search.__name__, 'res.partner:search')
+        self.assertEqual(self.object.search.__name__, 'search')
+
+        self.assertEqual(self.object.some_partner_method.__name__,
+                         '%s:some_partner_method' % self.object.name)
+        self.assertTrue(self.object.some_partner_method.__x_stdcall__)
 
         # Test that attibute error is raised on access on private methods
         with self.assertRaises(AttributeError):
@@ -53,7 +57,8 @@ class Test_20_Object(BaseTestCase):
 
     def test_call_unexistent_method(self):
         # method wrapper will be created
-        self.assertEqual(self.object.some_unexisting_mehtod.__name__, 'res.partner:some_unexisting_mehtod')
+        self.assertEqual(self.object.some_unexisting_mehtod.__name__,
+                         'res.partner:some_unexisting_mehtod')
 
         # but exception should be raised
         with self.assertRaises(ConnectorError):
@@ -91,13 +96,16 @@ class Test_20_Object(BaseTestCase):
         self.assertEqual(res, 1)
 
         # test search_records with read_fields argument
-        res = self.object.search_records([], read_fields=['name', 'country_id'], limit=10)
+        res = self.object.search_records([],
+                                         read_fields=['name', 'country_id'],
+                                         limit=10)
         self.assertIsInstance(res, RecordList)
         self.assertEqual(res.length, 10)
         self.assertEqual(len(res._lcache), res.length)
         for record in res:
             self.assertEqual(len(record._data), 3)
-            self.assertItemsEqual(list(record._data), ['id', 'name', 'country_id'])
+            self.assertItemsEqual(list(record._data),
+                                  ['id', 'name', 'country_id'])
 
     def test_read_records(self):
         # read one record
@@ -116,20 +124,25 @@ class Test_20_Object(BaseTestCase):
             self.object.read_records(None)
 
         # Test read with specified fields
-        record = self.object.read_records(1, ['name', 'country_id'])
+        record = self.object.read_records(1,
+                                          ['name', 'country_id'])
         self.assertEqual(len(record._data), 3)
-        self.assertItemsEqual(list(record._data), ['id', 'name', 'country_id'])
+        self.assertItemsEqual(list(record._data),
+                              ['id', 'name', 'country_id'])
 
     def test_browse(self):
-        with mock.patch.object(self.object, 'read_records') as fake_read_records:
+        with mock.patch.object(self.object,
+                               'read_records') as fake_read_records:
             self.object.browse(1)
             fake_read_records.assert_called_with(1)
 
-        with mock.patch.object(self.object, 'read_records') as fake_read_records:
+        with mock.patch.object(self.object,
+                               'read_records') as fake_read_records:
             self.object.browse([1])
             fake_read_records.assert_called_with([1])
 
-        with mock.patch.object(self.object, 'read_records') as fake_read_records:
+        with mock.patch.object(self.object,
+                               'read_records') as fake_read_records:
             self.object.browse(None)
             fake_read_records.assert_called_with(None)
 
@@ -147,6 +160,7 @@ class Test_20_Object(BaseTestCase):
 
     def test_object_specific_extension(self):
         class MyProductObject(Object):
+
             class Meta:
                 name = 'res.users'
 
@@ -156,13 +170,32 @@ class Test_20_Object(BaseTestCase):
         # reload client caches
         self.client.clean_caches()
 
-        # Newly defined object method must be present in res.users object / model
+        # Newly defined object method must be present in res.users model
         res = self.client['res.users'].test_previously_unexistent_method()
         self.assertEqual(res, "Method Ok")
 
         # but must not be present in other objects / models
         with self.assertRaises(ConnectorError):
             self.client['res.partner'].test_previously_unexistent_method()
+
+    def test_create_write_unlink(self):
+        new_partner_id = self.object.create({'name': 'New Partner'})
+
+        self.assertIsInstance(new_partner_id, int)
+
+        self.object.write([new_partner_id], {'name': 'New Partner Name'})
+
+        new_name = self.object.read(new_partner_id, ['name'])['name']
+
+        self.assertEqual(new_name, 'New Partner Name')
+
+        self.assertEqual(self.object.search([('id', '=', new_partner_id)],
+                                            count=True),
+                         1)
+        self.object.unlink([new_partner_id])
+        self.assertEqual(self.object.search([('id', '=', new_partner_id)],
+                                            count=True),
+                         0)
 
 
 class Test_21_Record(BaseTestCase):
@@ -180,7 +213,6 @@ class Test_21_Record(BaseTestCase):
 
     def test_dir(self):
         self.assertIn('read', dir(self.record))
-        self.assertIn('search', dir(self.record))
         self.assertIn('write', dir(self.record))
         self.assertIn('unlink', dir(self.record))
 
@@ -206,7 +238,9 @@ class Test_21_Record(BaseTestCase):
         self.assertNotIn('new_key', self.record._data)
 
     def test_str(self):
-        self.assertEqual(str(self.record), u"R(res.partner, 1)[%s]" % (self.record.name_get()[0][1]))
+        self.assertEqual(str(self.record),
+                         u"R(res.partner, 1)[%s]"
+                         u"" % (self.record.name_get()[0][1]))
 
     def test_repr(self):
         self.assertEqual(str(self.record), repr(self.record))
@@ -248,10 +282,12 @@ class Test_21_Record(BaseTestCase):
         self.assertIs(int(self.record), 1)
 
     def test_record_hash(self):
-        self.assertEqual(hash(self.record), hash((self.record._object.name, self.record.id)))
+        self.assertEqual(hash(self.record),
+                         hash((self.record._object.name, self.record.id)))
 
     def test_record_relational_fields(self):
-        res = self.record.child_ids  # read data from res.partner:child_ids field
+        # read data from res.partner:child_ids field
+        res = self.record.child_ids
 
         self.assertIsInstance(res, RecordList)
         self.assertGreaterEqual(res.length, 1)
@@ -284,8 +320,12 @@ class Test_21_Record(BaseTestCase):
         self.assertEqual(len(self.record._cache.keys()), 2)
         self.assertIn('res.partner', self.record._cache)
         self.assertIn('res.company', self.record._cache)
-        self.assertIn(len(list(self.record._cache['res.company'].values())[0]), [2, 3])
-        self.assertIn('name', list(self.record._cache['res.company'].values())[0])
+        self.assertIn(
+            len(list(self.record._cache['res.company'].values())[0]), [2, 3])
+        self.assertIn(
+            'name',
+            list(
+                self.record._cache['res.company'].values())[0])
 
         # refresh record
         self.record.refresh()
@@ -296,11 +336,16 @@ class Test_21_Record(BaseTestCase):
         self.assertEqual(len(self.record._cache.keys()), 2)
         self.assertIn('res.partner', self.record._cache)
         self.assertIn('res.company', self.record._cache)
-        self.assertEqual(len(list(self.record._cache['res.company'].values())[0]), 1)
-        self.assertNotIn('name', list(self.record._cache['res.company'].values())[0])
+        self.assertEqual(
+            len(list(self.record._cache['res.company'].values())[0]), 1)
+        self.assertNotIn(
+            'name',
+            list(
+                self.record._cache['res.company'].values())[0])
 
     def test_record_specific_extension(self):
         class MyProductRecord(Record):
+
             class Meta:
                 object_name = 'res.users'
 
@@ -344,6 +389,14 @@ class Test_22_RecordList(BaseTestCase):
         self.obj_ids = self.object.search([], limit=10)
         self.recordlist = self.object.read_records(self.obj_ids)
 
+    def test_dir(self):
+        self.assertIn('read', dir(self.recordlist))
+        self.assertIn('write', dir(self.recordlist))
+        self.assertIn('unlink', dir(self.recordlist))
+
+        # test if normal mehtods avalilable in dir(object)
+        self.assertIn('refresh', dir(self.recordlist))
+
     def test_ids(self):
         self.assertSequenceEqual(self.recordlist.ids, self.obj_ids)
 
@@ -356,7 +409,8 @@ class Test_22_RecordList(BaseTestCase):
         self.assertIsInstance(self.recordlist.records[0], Record)
 
     def test_str(self):
-        self.assertEqual(str(self.recordlist), u"RecordList(res.partner): length=10")
+        self.assertEqual(
+            str(self.recordlist), u"RecordList(res.partner): length=10")
 
     def test_repr(self):
         self.assertEqual(repr(self.recordlist), str(self.recordlist))
@@ -399,7 +453,8 @@ class Test_22_RecordList(BaseTestCase):
         self.assertNotIn(r, self.recordlist)
 
     def test_setitem(self):
-        rec = self.object.search_records([('id', 'not in', self.recordlist.ids)], limit=1)[0]
+        rec = self.object.search_records(
+            [('id', 'not in', self.recordlist.ids)], limit=1)[0]
 
         old_rec = self.recordlist[8]
 
@@ -432,7 +487,8 @@ class Test_22_RecordList(BaseTestCase):
         self.assertNotIn(None, self.recordlist)
 
     def test_insert_record(self):
-        rec = self.object.search_records([('id', 'not in', self.recordlist.ids)], limit=1)[0]
+        rec = self.object.search_records(
+            [('id', 'not in', self.recordlist.ids)], limit=1)[0]
 
         self.assertEqual(len(self.recordlist), 10)
         self.assertNotIn(rec, self.recordlist)
@@ -444,7 +500,8 @@ class Test_22_RecordList(BaseTestCase):
         self.assertEqual(self.recordlist[1], rec)
 
     def test_insert_by_id(self):
-        rec = self.object.search_records([('id', 'not in', self.recordlist.ids)], limit=1)[0]
+        rec = self.object.search_records(
+            [('id', 'not in', self.recordlist.ids)], limit=1)[0]
 
         self.assertEqual(len(self.recordlist), 10)
         self.assertNotIn(rec, self.recordlist)
@@ -456,7 +513,8 @@ class Test_22_RecordList(BaseTestCase):
         self.assertEqual(self.recordlist[1], rec)
 
     def test_insert_bad_value(self):
-        rec = self.object.search_records([('id', 'not in', self.recordlist.ids)], limit=1)[0]
+        rec = self.object.search_records(
+            [('id', 'not in', self.recordlist.ids)], limit=1)[0]
 
         self.assertEqual(len(self.recordlist), 10)
         self.assertNotIn(rec, self.recordlist)
@@ -476,7 +534,9 @@ class Test_22_RecordList(BaseTestCase):
         self.assertIsInstance(res[0], Record)
 
         # TODO: rewrite this to test that items was uniquifyed
-        self.assertEqual(len(res), len(set([r.parent_id for r in self.recordlist if r.parent_id])))
+        self.assertEqual(
+            len(res),
+            len(set([r.parent_id for r in self.recordlist if r.parent_id])))
 
     def test_mapped_3_m2o_dot_char_field(self):
         res = self.recordlist.mapped('parent_id.name')
@@ -484,7 +544,8 @@ class Test_22_RecordList(BaseTestCase):
         self.assertIsInstance(res[0], six.string_types)
 
         # TODO: rewrite this to test that items was uniquifyed
-        self.assertEqual(len(res), len(set([r.parent_id.name for r in self.recordlist if r.parent_id])))
+        self.assertEqual(
+            len(res), len(set([r.parent_id.name for r in self.recordlist if r.parent_id])))
 
     def test_mapped_4_m2o_dot_char_field(self):
         res = self.recordlist.mapped('country_id.code')
@@ -492,7 +553,8 @@ class Test_22_RecordList(BaseTestCase):
         self.assertIsInstance(res[0], six.string_types)
 
         # TODO: rewrite this to test that items was uniquifyed
-        self.assertEqual(len(res), len(set([r.country_id.code for r in self.recordlist if r.country_id])))
+        self.assertEqual(
+            len(res), len(set([r.country_id.code for r in self.recordlist if r.country_id])))
 
     def test_mapped_5_m2o_dot_o2m_field(self):
         res = self.recordlist.mapped('user_ids')
@@ -536,11 +598,15 @@ class Test_22_RecordList(BaseTestCase):
         self.assertIn('res.country', cache)
 
         c_cache = cache['res.country']
-        country_checked = False  # if in some cases selected partners have no related countries, raise error
+        # if in some cases selected partners have no related countries, raise
+        # error
+        country_checked = False
         for record in self.recordlist:
             # test that country_id field was added to partner's cache
             self.assertEqual(len(record._data), 3)
-            self.assertItemsEqual(list(record._data), ['id', 'name', 'country_id'])
+            self.assertItemsEqual(
+                list(record._data),
+                ['id', 'name', 'country_id'])
 
             # if current partner have related country_id
             #
@@ -565,12 +631,18 @@ class Test_22_RecordList(BaseTestCase):
                 # thus, we program will imediatly cache this value
                 if country_is_list:
                     self.assertEqual(len(c_cache[country_id]), 4)
-                    self.assertItemsEqual(list(c_cache[country_id]), ['id', 'name', 'code', '__name_get_result'])
+                    self.assertItemsEqual(
+                        list(c_cache[country_id]),
+                        ['id','name', 'code', '__name_get_result'])
                 else:
                     self.assertEqual(len(c_cache[country_id]), 4)
-                    self.assertItemsEqual(list(c_cache[country_id]), ['id', 'name', 'code', '__name_get_result'])
+                    self.assertItemsEqual(
+                        list(c_cache[country_id]),
+                        ['id', 'name', 'code', '__name_get_result'])
 
-        self.assertTrue(country_checked, "Country must be checked. may be there are wrong data in test database")
+        self.assertTrue(
+            country_checked,
+            "Country must be checked. may be there are wrong data in test database")
 
     def test_copy(self):
         # test that cipied list and original list have same cache instance,
@@ -594,13 +666,21 @@ class Test_22_RecordList(BaseTestCase):
 
     def test_sorting(self):
         def to_names(rlist):
+            """ Convert recordlist to list of names
+            """
             return [r.name for r in rlist]
 
         names = to_names(self.recordlist)
 
-        self.assertSequenceEqual(sorted(names), to_names(sorted(self.recordlist, key=lambda x: x.name)))
-        self.assertSequenceEqual(sorted(names, reverse=True), to_names(sorted(self.recordlist, key=lambda x: x.name, reverse=True)))
-        self.assertSequenceEqual(list(reversed(names)), to_names(reversed(self.recordlist)))
+        self.assertSequenceEqual(sorted(names),
+                                 to_names(sorted(self.recordlist,
+                                                 key=lambda x: x.name)))
+        self.assertSequenceEqual(sorted(names, reverse=True),
+                                 to_names(sorted(self.recordlist,
+                                                 key=lambda x: x.name,
+                                                 reverse=True)))
+        self.assertSequenceEqual(list(reversed(names)),
+                                 to_names(reversed(self.recordlist)))
 
         # test recordlist sort methods
         rlist = self.recordlist.copy()
@@ -620,13 +700,15 @@ class Test_22_RecordList(BaseTestCase):
         # TODO: test for context
         with mock.patch.object(self.object, 'search') as fake_method:
             self.recordlist.search([('id', '!=', 1)], limit=5)
-            fake_method.assert_called_with([('id', 'in', self.recordlist.ids), ('id', '!=', 1)], limit=5)
+            fake_method.assert_called_with(
+                [('id', 'in', self.recordlist.ids), ('id', '!=', 1)], limit=5)
 
     def test_search_records(self):
         # TODO: test for context
         with mock.patch.object(self.object, 'search_records') as fake_method:
             self.recordlist.search_records([('id', '!=', 1)], limit=4)
-            fake_method.assert_called_with([('id', 'in', self.recordlist.ids), ('id', '!=', 1)], limit=4)
+            fake_method.assert_called_with(
+                [('id', 'in', self.recordlist.ids), ('id', '!=', 1)], limit=4)
 
     def test_read(self):
         # TODO: test for context
@@ -656,7 +738,9 @@ class Test_22_RecordList(BaseTestCase):
         all_obj_ids = self.object.search([], limit=False)
 
         # generate 10 unexisting ids
-        unexistent_ids = list(range(max(all_obj_ids) + 1, max(all_obj_ids) + 40, 4))
+        unexistent_ids = list(range(max(all_obj_ids) + 1,
+                                    max(all_obj_ids) + 40,
+                                    4))
         self.assertEqual(len(unexistent_ids), 10)
 
         # test simple existense
@@ -667,7 +751,8 @@ class Test_22_RecordList(BaseTestCase):
         self.assertItemsEqual(elist.ids, all_obj_ids[:10])
 
         # test existense with repeated items
-        rlist = get_record_list(self.object, all_obj_ids[:10] + unexistent_ids + all_obj_ids[:5])
+        rlist_ids = all_obj_ids[:10] + unexistent_ids + all_obj_ids[:5]
+        rlist = get_record_list(self.object, rlist_ids)
         self.assertEqual(len(rlist), 25)
 
         # with uniqify=True (defualt)
@@ -695,7 +780,9 @@ class Test_22_RecordList(BaseTestCase):
             rec.country_id
 
         self.assertEqual(len(pcache), len(self.recordlist))
-        self.assertGreaterEqual(len(ccache), 1)  # there are atleast on country in cache
+        self.assertGreaterEqual(
+            len(ccache),
+            1)  # there are atleast on country in cache
 
         clen = len(ccache)
 
@@ -704,7 +791,9 @@ class Test_22_RecordList(BaseTestCase):
 
         for data in ccache.values():
             if '__name_get_result' in data:
-                self.assertItemsEqual(list(data), ['id', 'name', 'code', '__name_get_result'])
+                self.assertItemsEqual(
+                    list(data), [
+                        'id', 'name', 'code', '__name_get_result'])
             else:
                 self.assertItemsEqual(list(data), ['id', 'name', 'code'])
 

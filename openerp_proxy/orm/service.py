@@ -6,7 +6,8 @@ __all__ = ('Service',)
 
 class Service(ObjectService):
     """ Service class to simplify interaction with 'object' service.
-        Particulary, implements logic of choosing execute method ('execute' or 'execute_kw')
+        Particulary, implements logic of choosing execute
+        method ('execute' or 'execute_kw') to use.
         The last one cannot work with keyword arguments
     """
 
@@ -15,7 +16,8 @@ class Service(ObjectService):
         self.__objects = {}   # cached objects
 
     def get_obj(self, object_name):
-        """ Returns wraper around Odoo object 'object_name' which is instance of Object
+        """ Returns wraper around Odoo object 'object_name'
+            which is instance of Object
 
             :param object_name: name of an object to get wraper for
             :type object_name: string
@@ -33,9 +35,8 @@ class Service(ObjectService):
         return obj
 
     def clean_cache(self):
-        """ Cleans caches, to fill them with fresh data with next call of related methods
+        """ Cleans caches, to fill them with fresh data
+            on next call of related methods
         """
         super(Service, self).clean_cache()
         self.__objects = {}
-
-

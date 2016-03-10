@@ -13,8 +13,10 @@ from ...orm import (Record,
                     Object)
 
 
-@unittest.skipUnless(os.environ.get('TEST_WITH_EXTENSIONS', False), 'requires extensions enabled')
+@unittest.skipUnless(os.environ.get('TEST_WITH_EXTENSIONS', False),
+                     'requires extensions enabled')
 class Test_31_ExtSugar(BaseTestCase):
+
     def setUp(self):
         super(Test_31_ExtSugar, self).setUp()
 
@@ -46,7 +48,8 @@ class Test_31_ExtSugar(BaseTestCase):
         self.assertEqual(len(self.object), self.object.search([], count=True))
 
     def test_obj_call_name_search(self):
-        res = self.object('admin')  # name_search by name. only one record with this name
+        # name_search by name. only one record with this name
+        res = self.object('admin')
         self.assertIsInstance(res, Record)
         self.assertEqual(res._name, 'Administrator')
 
@@ -58,10 +61,12 @@ class Test_31_ExtSugar(BaseTestCase):
     def test_obj_call_search_records(self):
         with mock.patch.object(self.object, 'search_records') as fake_search_records:
             self.object([('name', 'ilike', 'admin')])
-            fake_search_records.assert_called_with([('name', 'ilike', 'admin')])
+            fake_search_records.assert_called_with(
+                [('name', 'ilike', 'admin')])
 
             self.object([('name', 'ilike', 'admin')], count=True)
-            fake_search_records.assert_called_with([('name', 'ilike', 'admin')], count=True)
+            fake_search_records.assert_called_with(
+                [('name', 'ilike', 'admin')], count=True)
 
             self.object(name='admin')
             fake_search_records.assert_called_with([('name', '=', 'admin')])
@@ -70,11 +75,14 @@ class Test_31_ExtSugar(BaseTestCase):
             fake_search_records.assert_called_with([])
 
     def test_client_dir(self):
-        # test if models a in dir
+        # test if models are in dir
         self.assertIn('_res_partner', dir(self.client))
 
         # test if normal methods are listed in dir(client)
         self.assertIn('execute', dir(self.client))
+
+        # test if plugins are listed in dir(client)
+        self.assertIn('Test', dir(self.client))
 
     def test_client_getattr(self):
         res = self.client._res_partner
@@ -84,3 +92,5 @@ class Test_31_ExtSugar(BaseTestCase):
         with self.assertRaises(AttributeError):
             self.client._some_bad_model
 
+    def test_client_getattr_pluigns(self):
+        self.assertEqual(self.client.Test, self.client.plugins.Test)

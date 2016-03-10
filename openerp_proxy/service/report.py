@@ -84,11 +84,14 @@ class ReportResult(Extensible):
         """
         if self._path is None:
             import hashlib
-            content_hash = hashlib.sha256(self.content).hexdigest().encode('utf-8')
+            content_hash = hashlib.sha256(self.content)
+            content_hash = content_hash.hexdigest().encode('utf-8')
             report_name_base = self._report.report_action.name.encode('utf-8')
             report_name_base = report_name_base.replace(b'/', b'-')\
                                                .replace(b':', b'-')
-            self._path = str(report_name_base + content_hash + b'.' + self.format.encode('utf-8'))
+            self._path = str(report_name_base +
+                             content_hash +
+                             b'.' + self.format.encode('utf-8'))
         return self._path
 
     def save(self, path=None):
@@ -107,7 +110,8 @@ class Report(Extensible):
 
         useful to simplify report generation
 
-        :param ReportService service: instance of report service to bind report to
+        :param ReportService service: instance of report service
+                                      to bind report to
         :param Record report: model of report action
 
     """
@@ -138,8 +142,10 @@ class Report(Extensible):
         """ Generate report
 
             :param report_data: RecordList or Record or list of obj_ids.
-                                represent document or documents to generate report for
-            :param str report_type: Type of report to generate. default is 'pdf'.
+                                represent document or documents
+                                to generate report for
+            :param str report_type: Type of report to generate.
+                                    default is 'pdf'.
             :param dict context: Aditional info. Optional.
             :raises: ReportError
             :return: ReportResult instance that contains generated report
@@ -165,7 +171,8 @@ class ReportService(ServiceBase):
         """ Returns list of reports registered in system
         """
         report_obj = self.client.get_obj('ir.actions.report.xml')
-        return {r.report_name: Report(self, r) for r in report_obj.search_records([])}
+        return {r.report_name: Report(self, r)
+                for r in report_obj.search_records([])}
 
     @property
     def available_reports(self):
@@ -208,7 +215,8 @@ class ReportService(ServiceBase):
             :param str model: name of model to generate report for
             :param ids: list of object ID to get report for (or just single id)
             :type ids: list of int | int
-            :param str report_type: Type of report to generate. default is 'pdf'.
+            :param str report_type: Type of report to generate.
+                                    default is 'pdf'.
             :param dict context: Aditional info. Optional.
             :return: ID of report to get by method *report_get*
             :rtype: int
@@ -230,9 +238,11 @@ class ReportService(ServiceBase):
             :param int report_id: int that represents ID of report to get
                                   (value returned by report method)
             :return: dictinary with keys:
-                        - 'state': boolean, True if report generated correctly
-                        - 'result': base64 encoded content of report file
-                        - 'format': string representing format, report generated in
+
+                     - 'state': boolean, True if report generated correctly
+                     - 'result': base64 encoded content of report file
+                     - 'format': string representing format,
+                       report generated in
 
             :rtype: dict
         """
@@ -241,7 +251,8 @@ class ReportService(ServiceBase):
                                         self.client._pwd,
                                         report_id)
 
-    def render_report(self, report_name, model, ids, report_type='pdf', context=None):
+    def render_report(self, report_name, model, ids, report_type='pdf',
+                      context=None):
         """ Proxy to report service *render_report* method
 
             NOTE: available after version 6.1.
@@ -250,12 +261,13 @@ class ReportService(ServiceBase):
             :param str model: name of model to generate report for
             :param ids: list of object ID to get report for (or just single id)
             :type ids: list of int | int
-            :param str report_type: Type of report to generate. default is 'pdf'.
+            :param str report_type: Type of report to generate.
+                                    default is 'pdf'.
             :param dict context: Aditional info. Optional.
             :return: dictinary with keys:
                         - 'state': boolean, True if report generated correctly
                         - 'result': base64 encoded content of report file
-                        - 'format': string representing format, report generated in
+                        - 'format': string representing report format
 
             :rtype: dict
         """
@@ -271,16 +283,19 @@ class ReportService(ServiceBase):
                                            data,
                                            context)
 
-    def generate_report(self, report_name, report_data, report_type='pdf', context=None):
+    def generate_report(self, report_name, report_data, report_type='pdf',
+                        context=None):
         """ Generate specified report for specifed report data.
             Report data could be RecordList or Record instance.
             Result is wrapped into ReportResult class
 
 
             :param str report_name: string representing name of report service
-            :param report_data: RecordList or Record or ('model_name', obj_ids).
-                                represent document or documents to generate report for
-            :param str report_type: Type of report to generate. default is 'pdf'.
+            :param report_data: RecordList or Record or ('model_name', obj_ids)
+                                represent document or documents
+                                to generate report for
+            :param str report_type: Type of report to generate.
+                                    default is 'pdf'.
             :param dict context: Aditional info. Optional.
             :raises: ReportError
             :return: ReportResult instance that contains generated report
@@ -301,7 +316,8 @@ class ReportService(ServiceBase):
                                                obj_ids,
                                                report_type=report_type,
                                                context=context)
-        else:  # server < 6.1
+        else:  # pragma: no cover
+            # server < 6.1
             report_id = self.report(report_name,
                                     report_model,
                                     obj_ids,
