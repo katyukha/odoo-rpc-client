@@ -25,12 +25,19 @@ class ExternalIDS(Plugin):
             :raises ValueError: if *val* argument could not be parsed
 
             ``val`` could be one of folowing types:
+
             - ``Record`` instance
             - ``RecordList`` instance
             - ``tuple(model, res_id)``, for example ``('res.partner', 5)``
             - ``str``, string in format 'module.name'.
-              Note, that if *module* specified as parametr, then *val*
-              supposed to be *name* only.
+
+            **Note**, in case of *val* is *str*: if *module*
+            specified as parameter, then *val* supposed to be *name* only.
+            For example, folowing calls are equal::
+
+                cl.plugins.external_ids.get_for('base.group_configuration')
+                cl.plugins.external_ids.get_for('group_configuration',
+                                                module='base')
         """
         data_obj = self.client['ir.model.data']
         domain = [] if module is None else [('module', '=', module)]

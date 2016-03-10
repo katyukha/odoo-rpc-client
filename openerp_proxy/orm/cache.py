@@ -93,8 +93,7 @@ class ObjectCache(dict):
             :return: tuple(prefetch_fields, related_fields),
                      where prefetch_fields is list of fields, to be read for
                      current object, and related_fields is dictionary of form
-                     ``{'related.object': ['relatedfield1',
-                                           'relatedfield2.relatedfield']}``
+                     ``{'related.object': ['relatedfield1', 'relatedfield2.relatedfield']}``
         """
         rel_fields = collections.defaultdict(list)
         prefetch_fields = []

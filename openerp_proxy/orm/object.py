@@ -128,7 +128,7 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
 
     def resolve_field_path(self, field):
         """ Resolves dot-separated field path
-            to list of tuples (model, field_name)
+            to list of tuples (model, field_name, related_model)
 
             :param str field: dot-separated field path to resolve
 

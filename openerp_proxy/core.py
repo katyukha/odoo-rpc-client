@@ -148,8 +148,11 @@ class Client(Extensible):
     @property
     def services(self):
         """ ServiceManager instance, which contains list
-            of all available services for current connection,
-            accessible by name::
+            of all available services for current connection.
+
+            :rtype: openerp_proxy.service.service.ServiceManager
+
+            Usage examples::
 
                 db.services.report   # report service
                 db.services.object   # object service (model related actions)
@@ -165,12 +168,16 @@ class Client(Extensible):
     @property
     def plugins(self):
         """ Plugins associated with this Client instance
+
+            :rtype: openerp_proxy.plugin.PluginManager
         """
         return self._plugins
 
     @property
     def connection(self):
         """ Connection to server.
+
+            :rtype: openerp_proxy.connection.connection.ConnectorBase
         """
         return self._connection
 
@@ -189,7 +196,7 @@ class Client(Extensible):
     def user(self):
         """ Currenct logged in user instance
 
-            :rtype: Record instance
+            :rtype: openerp_proxy.orm.record.Record
         """
         if self._user is None:
             self._user = self.get_obj('res.users').read_records(self.uid)
@@ -215,7 +222,9 @@ class Client(Extensible):
 
     @property
     def registered_objects(self):
-        """ Stores list of registered in Odoo database objects
+        """ List of registered in Odoo database objects
+
+            :rtype: list
         """
         return self.services['object'].get_registered_objects()
 
@@ -229,6 +238,7 @@ class Client(Extensible):
             :param str user: username to login as
             :param str password: password to log-in with
             :return: new Client instance, with specifed credentials
+            :rtype: openerp_proxy.core.Client
         """
         return self.connect(dbname=dbname, user=user, pwd=password)
 
@@ -240,8 +250,8 @@ class Client(Extensible):
             self instance and update them with passed keyword arguments,
             and call Proxy class constructor passing result as arguments.
 
-             Note, that if You pass any keyword arguments,
-             You also should pass 'pwd' keyword argument with user password
+            **Note**, that if You pass any keyword arguments,
+            You also should pass 'pwd' keyword argument with user password
 
             :return: Id of user logged in or new Client
                      instance (if kwargs passed)
@@ -318,7 +328,7 @@ class Client(Extensible):
 
             :param object_name: name of an object to get wraper for
             :return: instance of Object which wraps choosen object
-            :rtype: Object instance
+            :rtype: openerp_proxy.orm.object.Object
         """
         return self.services['object'].get_obj(object_name)
 
