@@ -238,10 +238,11 @@ class ReportService(ServiceBase):
             :param int report_id: int that represents ID of report to get
                                   (value returned by report method)
             :return: dictinary with keys:
-                        - 'state': boolean, True if report generated correctly
-                        - 'result': base64 encoded content of report file
-                        - 'format': string representing format,
-                                    report generated in
+
+                     - 'state': boolean, True if report generated correctly
+                     - 'result': base64 encoded content of report file
+                     - 'format': string representing format,
+                       report generated in
 
             :rtype: dict
         """
