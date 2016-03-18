@@ -233,7 +233,7 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
         return self.service.execute(self.name, 'unlink', *args, **kwargs)
 
     def search(self, *args, **kwargs):
-        """search(args[, offset=0][, limit=None][, order=None][, count=False])
+        """search(args[, offset=0][, limit=None][, order=None][, count=False][, context=None])
 
             Search records by criteria.
 

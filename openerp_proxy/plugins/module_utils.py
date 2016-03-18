@@ -1,5 +1,7 @@
 from ..plugin import Plugin
 from ..orm.object import Object
+from ..utils import (stdcall,
+                     DirMixIn)
 
 
 # Overriden to add shortcut for module update
@@ -14,6 +16,7 @@ class ModuleObject(Object):
     class Meta:
         name = 'ir.module.module'
 
+    @stdcall
     def upgrade(self, ids, context=None):
         """ Immediatly upgrades module
         """
@@ -24,6 +27,7 @@ class ModuleObject(Object):
         self.client.clean_caches()
         return res
 
+    @stdcall
     def install(self, ids, context=None):
         """ Immediatly install module
         """
@@ -35,7 +39,7 @@ class ModuleObject(Object):
         return res
 
 
-class ModuleUtils(Plugin):
+class ModuleUtils(Plugin, DirMixIn):
     """ Utility plugin to simplify module management
 
         Allows to access Odoo module objects as attributes of this plugin:
@@ -82,6 +86,14 @@ class ModuleUtils(Plugin):
                              for m in modules}
         return self._modules
 
+    @property
+    def installed_modules(self):
+        """ RecordList with list of modules installed in currenct database
+
+            :rtype: RecordList
+        """
+        return self.client['ir.module.module'].search_records([('state', '=', 'installed')])
+
     def update_module_list(self):
         """ Update module list
 
@@ -92,7 +104,7 @@ class ModuleUtils(Plugin):
         return self.client['ir.module.module'].update_list()
 
     def __dir__(self):
-        res = dir(super(ModuleUtils, self))
+        res = super(ModuleUtils, self).__dir__()
         res.extend(['m_' + i for i in self.modules.keys()])
         return res
 

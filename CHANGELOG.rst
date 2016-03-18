@@ -1,3 +1,9 @@
+0.6.6:
+    - module_utils plugin fixes mostly related to __dir__ method (used for auto-complete in IPython)
+        - added ``stdcall`` decorators to ``upgrade`` and ``install`` methods of 'ir.module.module' object
+        - Bugfix in ``__dir__`` implementation for plugin object
+        - added ``installed_modules`` property to ``module_utils`` plugin
+        - better tests for this plugin
 0.6.5:
     - Added ``openerp_proxy.plugins.external_ids`` plugin
     - ``openerp_proxy.ext.repr``: better support of ``IPython.display.HTML`` objects representation

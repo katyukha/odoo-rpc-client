@@ -33,10 +33,16 @@ class Test_25_Plugin_ModuleUtils(BaseTestCase):
         self.assertEqual(len(self.client.plugins), 2)
 
     def test_15_modules(self):
+        self.assertIsInstance(self.client.plugins.module_utils.modules, dict)
         self.assertIn('sale', self.client.plugins.module_utils.modules)
+        self.assertIsInstance(self.client.plugins.module_utils.modules['sale'], Record)
+        self.assertEqual(self.client.plugins.module_utils.modules['sale']._object.name, 'ir.module.module')
 
     def test_20_modules_dir(self):
         self.assertIn('m_sale', dir(self.client.plugins.module_utils))
+        self.assertIn('modules', dir(self.client.plugins.module_utils))
+        self.assertIn('update_module_list', dir(self.client.plugins.module_utils))
+        self.assertIn('installed_modules', dir(self.client.plugins.module_utils))
 
     def test_25_module_getitem(self):
         res = self.client.plugins.module_utils['sale']
@@ -92,6 +98,11 @@ class Test_25_Plugin_ModuleUtils(BaseTestCase):
 
         self.assertEqual(smod.state, 'installed')
         smod.upgrade()  # just call it
+
+    def test_55_installed_modules(self):
+        modules = self.client.plugins.module_utils.installed_modules
+        modules2 = self.client['ir.module.module'].search_records([('state', '=', 'installed')])
+        self.assertItemsEqual(modules, modules2)
 
 
 class Test_26_Plugin_ModuleUtils(BaseTestCase):
