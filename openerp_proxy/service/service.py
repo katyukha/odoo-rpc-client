@@ -109,12 +109,28 @@ class ServiceManager(Extensible, DirMixIn):
 
 
 class ServiceMetaMixIn(type):
-    """ Smimple meta mixin class, that cleans all service caches,
+    """ Simple meta mixin class, that cleans all service caches,
         when new service class created / imported
     """
     def __new__(mcs, *args, **kwargs):
-        ServiceManager.clean_caches()
-        return super(ServiceMetaMixIn, mcs).__new__(mcs, *args, **kwargs)
+        cls = super(ServiceMetaMixIn, mcs).__new__(mcs, *args, **kwargs)
+
+        # Clean caches only if new user extension class defined
+        # This condition is required, because extension mechanism creates new
+        # class, that is subclass of all classes defined by user, and it marked
+        # by attribute '_generated', so we do not need to clean caches, when
+        # this class is created. such classes will be created each time,
+        # service instance is assesed first time. For example, when connection,
+        # we use 'common' service, and when we access this service first time,
+        # new *_generated* service class created, when next we access 'object'
+        # service, then again new *_generated* class is created for this
+        # 'object' service. But no ew user defined classes created, thus it is
+        # possibly leads to dubling of some rpc requests, such as
+        # 'registered_objects'.
+        if not getattr(cls, '_generated', False):
+            ServiceManager.clean_caches()
+
+        return cls
 
 
 ServiceType = ExtensibleByHashType._('Service', hashattr='name', with_meta=ServiceMetaMixIn)

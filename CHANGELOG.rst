@@ -1,4 +1,6 @@
 0.6.6:
+    - Bugfix: double call to _get_registered_objects, caused be cleaning caches,
+      on assess to any service first time
     - module_utils plugin fixes mostly related to __dir__ method (used for auto-complete in IPython)
         - added ``stdcall`` decorators to ``upgrade`` and ``install`` methods of 'ir.module.module' object
         - Bugfix in ``__dir__`` implementation for plugin object

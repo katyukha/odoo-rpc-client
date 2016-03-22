@@ -14,7 +14,7 @@ class ObjectService(ServiceBase):
     def __init__(self, *args, **kwargs):
         super(ObjectService, self).__init__(*args, **kwargs)
         self.__use_execute_kw = None
-        self.__registered_objects = None
+        self._registered_objects = None
 
     @property
     def use_execute_kw(self):
@@ -90,15 +90,15 @@ class ObjectService(ServiceBase):
     def get_registered_objects(self):
         """ Returns list of registered objects in database
         """
-        if self.__registered_objects is not None:
-            return self.__registered_objects
-        self.__registered_objects = self._get_registered_objects()
-        return self.__registered_objects
+        if self._registered_objects is not None:
+            return self._registered_objects
+        self._registered_objects = self._get_registered_objects()
+        return self._registered_objects
 
     def clean_cache(self):
         """ Cleans service cache, to fill them with fresh data
             on next call of related methods
         """
         self.__use_execute_kw = None
-        self.__registered_objects = None
+        self._registered_objects = None
 
