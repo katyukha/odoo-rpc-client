@@ -3,6 +3,7 @@ from .test_client import *        # noqa
 from .test_orm import *           # noqa
 from .test_plugins import *       # noqa
 from .test_session import *       # noqa
+from .test_main import *          # noqa
 from .ext.test_sugar import *     # noqa
 from .ext.test_workflow import *  # noqa
 from .test_ipynb import *         # noqa
