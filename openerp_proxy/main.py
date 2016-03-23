@@ -37,6 +37,27 @@ HELP_HEADER = """
 """
 
 
+def generate_header_databases(session):
+    """ Prepare to display history of database connections
+    """
+    header_databases = "\n"
+    for index, url in session.index.items():
+        header_databases += "        - [%3s] %s\n" % (index, url)
+    return header_databases
+
+
+def generate_header_aliases(session):
+    """ Prepare to display list of database aliases available
+    """
+    header_aliases = "\n"
+    if session.aliases:
+        max_aliase_len = max((len(i) for i in session.aliases))
+        aliase_tmpl = "%%%ds" % max_aliase_len
+        for aliase, url in session.aliases.items():
+            header_aliases += "        - %s: %s\n" % (aliase_tmpl % aliase, url)
+    return header_aliases
+
+
 def main():
     """ Entry point for running as standalone APP
     """
@@ -46,16 +67,9 @@ def main():
 
     session = Session()
 
-    header_databases = "\n"
-    for index, url in session.index.items():
-        header_databases += "        - [%3s] %s\n" % (index, url)
-
-    header_aliases = "\n"
-    max_aliase_len = max((len(i) for i in session.aliases))
-    aliase_tmpl = "%%%ds" % max_aliase_len
-    for aliase, url in session.aliases.items():
-        header_aliases += "        - %s: %s\n" % (aliase_tmpl % aliase, url)
-
+    # generate header
+    header_databases = generate_header_databases(session)
+    header_aliases = generate_header_aliases(session)
     header = HELP_HEADER % {'databases': header_databases,
                             'aliases': header_aliases}
 

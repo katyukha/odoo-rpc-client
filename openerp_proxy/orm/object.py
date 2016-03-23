@@ -69,13 +69,6 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
         """
         return self.service.client
 
-    # Overriden to add some standard method to be available in introspection
-    # Useful for IPython auto completition
-    def __dir__(self):
-        res = super(Object, self).__dir__()
-        res.extend(['search'])
-        return res
-
     def __getattr__(self, name):
         def method_wrapper(object_name, method_name):
             """ Wraper around Odoo objects's methods.
@@ -233,7 +226,7 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
         return self.service.execute(self.name, 'unlink', *args, **kwargs)
 
     def search(self, *args, **kwargs):
-        """search(args[, offset=0][, limit=None][, order=None][, count=False])
+        """search(args[, offset=0][, limit=None][, order=None][, count=False][, context=None])
 
             Search records by criteria.
 

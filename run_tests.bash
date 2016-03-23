@@ -27,6 +27,8 @@ usage="
 
 "
 
+# Hide deprecation warnings of IPython, highly logged when testing on Python3.5
+export PYTHONWARNINGS="ignore::DeprecationWarning:IPython"
 
 # process cmdline options
 while [[ $# -gt 0 ]]
