@@ -29,13 +29,22 @@ from .utils import (describe_object_html,
 from .generic import (FieldNotFoundException,
                       HField,
                       toHField,
-                      # PrettyTable,
-                      # BaseTable,
+                      PrettyTable,
+                      BaseTable,
                       HTMLTable)
 
 # import submodules
-import orm
-import reports
+from .orm import *
+from .reports import *
+
+__all__ = (
+    'FieldNotFoundException',
+    'HField',
+    'toHField',
+    'PrettyTable',
+    'BaseTable',
+    'HTMLTable',
+)
 
 
 class ClientRegistedObjects(list):
