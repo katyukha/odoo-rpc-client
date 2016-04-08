@@ -16,6 +16,14 @@ from .utils import (json_read,
 __all__ = ('Session',)
 
 
+class SessionClientExt(Client):
+    """ Simple Client extension to add attribute '_no_save' used in session
+    """
+    def __init__(self, *args, **kwargs):
+        super(SessionClientExt, self).__init__(*args, **kwargs)
+        self._no_save = False
+
+
 class Session(Extensible, DirMixIn):
 
     """ Simple session manager which allows to manage databases easier

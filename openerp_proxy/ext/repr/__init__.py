@@ -24,8 +24,14 @@ from ...service.object import ObjectService
 from ...utils import ustr as _
 from ...utils import AttrDict
 
-from .utils import *
-from .generic import *
+from .utils import (describe_object_html,
+                    REPORTS_PATH)
+from .generic import (FieldNotFoundException,
+                      HField,
+                      toHField,
+                      # PrettyTable,
+                      # BaseTable,
+                      HTMLTable)
 
 
 class RecordListData(RecordList):
@@ -78,7 +84,18 @@ class RecordListData(RecordList):
         """
         if not fields:
             fields = ('id', '_name')
-        return HTMLTable(self, fields, **kwargs)
+
+        kwargs['caption'] = kwargs.get('caption', 'RecordList(`%s`)' % self.object.name)
+        table = HTMLTable(self, fields, **kwargs)
+
+        # Prefetch available fields
+        # Disabled, in some cases, greatly reduce performance
+        # to_prefetch = (f._field
+                       # for f in table.fields
+                       # if isinstance(f._field, six.string_types))
+        # self._lcache.prefetch_fields(to_prefetch)
+
+        return table
 
     def _repr_html_(self):
         """ Builds HTML representation for IPython
@@ -105,11 +122,13 @@ class HTMLRecord(Record):
     """
 
     def get_table_data(self, *fields):
-        """ Returns list of lists representation of two-columns table (Field name, Field Value)
+        """ Returns list of lists representation of three-columns table:
+            (Field name, System name, Field Value)
 
             :return: list of lists
         """
         if not fields:
+            # create list of HField instances of simple fields
             fields = sorted((HField(col_name, name=col_data['string'])
                              for col_name, col_data in self._columns_info.items()
                              if col_name in self._object.simple_fields),
@@ -119,12 +138,14 @@ class HTMLRecord(Record):
         parsed_fields = [toHField(field) for field in fields]
 
         # Prefetch available fields
-        to_prefetch = [f._field
+        to_prefetch = (f._field
                        for f in parsed_fields
-                       if isinstance(f._field, six.string_types)]
+                       if isinstance(f._field, six.string_types))
         self._lcache.prefetch_fields(to_prefetch)
 
-        return [(field, field(self))
+        return [(str(field),
+                 field._field if isinstance(field._field, six.string_types) else '',
+                 field(self))
                 for field in parsed_fields]
 
     def as_html(self, *fields):
@@ -138,11 +159,11 @@ class HTMLRecord(Record):
            :return: ipython's HTML object representing this record
            :rtype: HTML
         """
-        html_data = dict(self.get_table_data(*fields))
-
-        return HTML(describe_object_html(html_data,
-                                         _("Record: %s") % self._name,
-                                         help=_("Data for %s") % self._name))
+        return HTMLTable(self.get_table_data(*fields),
+                         (HField('0', name='Field name', is_header=True),
+                          HField('1', name='System name'),
+                          HField('2', name='Value')),
+                         caption=_("Record: %s") % self._name)
 
     def as_table(self, *fields):
         """ Returns text table representation of this Record.
@@ -153,18 +174,17 @@ class HTMLRecord(Record):
 
            :param list fields: list of fields to display in table representation
         """
-        return PrettyTable(self.get_table_data(*fields),
-                           headers=[u'Field', u'Value'])
+        return self.as_html(*fields)
 
     def _repr_html_(self):
         """ Builds HTML representation for IPython
         """
         help_text = (u"To get HTML Table representation of this record call method:<br/>"
-                     u"&nbsp;<i>.as_html()</i><br/>"
+                     u"&nbsp;<i>.as_table()</i><br/>"
                      u"Optionaly You can pass list of fields You want to see:<br/>"
-                     u"&nbsp;<i>.as_html('name', 'origin')</i><br/>"
-                     u"for better information get doc on <i>as_html</i> method:<br/>"
-                     u"&nbsp;<i>.as_html?</i><br/>")
+                     u"&nbsp;<i>.as_table('name', 'origin')</i><br/>"
+                     u"for better information get doc on <i>as_table</i> method:<br/>"
+                     u"&nbsp;<i>.as_table?</i><br/>")
 
         return describe_object_html({
             "Object": self._object,
@@ -284,7 +304,9 @@ class ClientRegistedObjects(list):
         return self._html_table
 
     def _repr_html_(self):
-        return self.html_table._repr_html_()
+        """ HTML representation for registered objects
+        """
+        return self.html_table.render()
 
 
 class ObjectServiceHtmlMod(ObjectService):
@@ -442,16 +464,11 @@ class IPYSession(Session):
                      u"<li>session[<b>url</b>]</li>"
                      u"<li>session.get_db(<b>url</b>|<b>index</b>|<b>aliase</b>)</li></ul>")
 
-        data = u"<tr><th>DB Index</th><th>DB URL</th><th>DB Aliases</th></tr>"
-        for url in self._databases.keys():
-            index = self._index_url(url)
-            aliases = u", ".join((_(al) for al, aurl in self.aliases.items() if aurl == url))
-            data += tr(td(index), td(url), td(aliases))
-
-        table = TMPL_TABLE % {'styles': '',
-                              'extra_classes': 'table-striped',
-                              'rows': data}
-
-        return TMPL_INFO_WITH_HELP % {'info': table,
-                                      'caption': u"Previous connections",
-                                      'help': help_text}
+        return describe_object_html(
+            ((self._index_url(url),
+              url,
+              u", ".join((_(al) for al, aurl in self.aliases.items() if aurl == url)))
+             for url in self._databases.keys()),
+            caption='Previous connections',
+            help=help_text,
+            headers=[u'DB Index', u'DB URL', u'DB Aliases'])

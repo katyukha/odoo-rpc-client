@@ -114,6 +114,10 @@ class HField(object):
         :param bool silent: If set to True, then not exceptions will be raised and *default* value
                             will be returned. (default=False)
         :param default: default value to be returned if field not found. default=None
+        :param bool is_header: if set to True, then this field will be displayed
+                               as header in HTMLTable representation, Useful for columns like ID.
+                               Have no effect in text representation
+                               (default: False)
         :param HField parent: (for internal usage) parent field. First get value of parent field
                               for record, and then get value of current field based on value
                               of parent field: ( self.get_field(self._parent.get_field(record)) )
@@ -136,15 +140,8 @@ class HField(object):
         :param dict kwargs: same as *args* but for keyword arguments
     """
 
-    def __init__(
-            self,
-            field,
-            name=None,
-            silent=False,
-            default=None,
-            parent=None,
-            args=None,
-            kwargs=None):
+    def __init__(self, field, name=None, silent=False, default=None,
+                 is_header=False, parent=None, args=None, kwargs=None):
         if callable(field):
             field = normalizeSField(field)
 
@@ -152,6 +149,7 @@ class HField(object):
         self._name = name
         self._silent = silent
         self._default = default
+        self._is_header = is_header
         self._parent = parent
         self._args = tuple() if args is None else args
         self._kwargs = dict() if kwargs is None else kwargs
@@ -207,21 +205,31 @@ class HField(object):
                     raise FieldNotFoundException(obj, name)
         return res
 
-    def get_field(self, record):
+    def get_field(self, record, mode='text'):
         """ Returns requested value from specified record (object)
 
             :param record: Record instance to get field from
                            (also should work on any other object)
             :type record: Record
+            :param str mode: (optional) specify field mode.
+                             possible values: ('text', 'html')
+                             default: 'text'
             :return: requested value
         """
+        assert mode in ('text', 'html')
         # process parent field
         if self._parent is not None:
             record = self._parent.get_field(record)
 
         # check if field is callable
         if callable(self._field):
-            r = self._field(record, *self._args, **self._kwargs)
+            try:
+                r = self._field(record, *self._args, **self._kwargs)
+            except Exception as exc:
+                if self._silent:
+                    r = self._default
+                else:
+                    raise
         else:
             # field seems to be string
             fields = self._field.split('.')
@@ -240,18 +248,19 @@ class HField(object):
                         r = r(*self._args, **self._kwargs)
                 except Exception as exc:
                     if not self._silent:   # reraise exception if not silent
-                        raise exc
+                        raise
                     else:                  # or return default value
                         r = self._default
                         break
 
-        if isinstance(r, HTMLTable):
-            # Support nested HTML Tables
-            r.nested = True
-            r = r.render()
-        elif isinstance(r, HTML):
-            # Support IPython HTML compatible objects
-            r = r._repr_html_()
+        if mode == 'html':
+            if isinstance(r, HTMLTable):
+                # Support nested HTML Tables
+                r.nested = True
+                r = r.render()
+            elif isinstance(r, HTML):
+                # Support IPython HTML compatible objects
+                r = r._repr_html_()
 
         return r
 
@@ -431,7 +440,11 @@ class HTMLTable(BaseTable):
                     {% endif %}
 
                     {% for field in table.fields %}
-                         <td>{{ field(record) }}</td>
+                         {% if field._is_header %}
+                            <th>{{ field.get_field(record, mode='html') }}</th>
+                         {% else %}
+                            <td>{{ field.get_field(record, mode='html') }}</td>
+                         {% endif %}
                     {% endfor %}
 
                     </tr>
@@ -441,14 +454,8 @@ class HTMLTable(BaseTable):
         <div>
     """)
 
-    def __init__(
-            self,
-            data,
-            fields,
-            caption=None,
-            highlighters=None,
-            display_help=True,
-            **kwargs):
+    def __init__(self, data, fields, caption=None,
+                 highlighters=None, display_help=True, **kwargs):
         self._caption = u"HTMLTable"
         self._highlighters = {}
         self._display_help = display_help

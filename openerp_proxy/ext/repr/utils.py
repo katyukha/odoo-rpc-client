@@ -1,5 +1,6 @@
 import os
 import os.path
+import collections
 
 
 from ...utils import ustr as _
@@ -59,16 +60,28 @@ def tr(*args):
     return TMPL_TABLE_ROW % u"".join(args)
 
 
-def describe_object_html(data, caption='', help='', table_styles=''):
+def describe_object_html(data, caption='', help='', table_styles='',
+                         headers=None):
     """ Converts dictionary data to html table string
 
-        :param dict data: dictionary like object. must contain .items() method
-                          represents object info to be displayed in table
+        :param dict|list data: dictionary like object.
+                               must contain .items() method
+                               represents object info to be displayed in table
+                               or iterable table like structure, where
+                               first element ofeach row is assumend
+                               to be header
         :param str caption: table's caption
         :param str help: help message to be displayed near table
         :param str table_styles: string with styles for table
     """
-    html_data = u"".join((tr(th(k), td(v)) for k, v in data.items()))
+    if isinstance(data, dict):
+        html_data = u"".join((tr(th(k), td(v)) for k, v in data.items()))
+    elif isinstance(data, collections.Iterable):
+        html_data = u"".join((tr(th(line[0]), *[td(x) for x in line[1:]])
+                              for line in data))
+
+    if headers is not None:
+        html_data = tr(*[th(x) for x in headers]) + html_data
 
     table = TMPL_TABLE % {'styles': table_styles,
                           'rows': html_data,

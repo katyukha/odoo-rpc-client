@@ -31,6 +31,7 @@ class TimeTracker(object):
 
     """
 
+    # TODO: implement query counter, which may be used for performance tests
     query_timers = {}
 
     @classmethod
