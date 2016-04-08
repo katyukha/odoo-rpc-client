@@ -2,6 +2,7 @@ import os
 import os.path
 import collections
 
+from jinja2 import Template
 
 from ...utils import ustr as _
 from ...utils import makedirs
@@ -22,42 +23,39 @@ makedirs(REPORTS_PATH)
 
 
 # HTML Templates
-TMPL_INFO_WITH_HELP = u"""
+TMPL_OBJECT_DESCRIPTION = Template("""
 <div class="container-fluid">
     <div class="row">
         <div class="panel panel-default col-md-7 col-lg-7">
-            <div class="panel-heading">%(caption)s</div>
-            <div class="panel-body">%(info)s</div>
+            <div class="panel-heading">{{ caption }}</div>
+            <div class="panel-body">
+                <table class="table table-bordered table-condensed {{ extra_classes }}"
+                       style="margin-left:0; {{ styles }}">
+                    {% if headers %}
+                        <tr>
+                            {% for header in headers %}
+                                <th>{{ header }}</th>
+                            {% endfor %}
+                        </tr>
+                    {% endif %}
+                    {% for row in data %}
+                    <tr>
+                        <th>{{ row[0] }}</th>
+                        {% for cell in row[1:] %}
+                            <td>{{ cell }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
         </div>
         <div class="panel panel-default col-md-5 col-lg-5">
             <div class="panel-heading">Info</div>
-            <div class="panel-body">%(help)s</div>
+            <div class="panel-body">{{ help }}</div>
         </div>
     </div>
 </div>
-"""
-
-TMPL_TABLE = u"""
-<table class="table table-bordered table-condensed %(extra_classes)s" style="margin-left:0;%(styles)s">
-%(rows)s
-</table>
-"""
-
-TMPL_TABLE_ROW = u"<tr>%s</tr>"
-TMPL_TABLE_DATA = u"<td>%s</td>"
-TMPL_TABLE_HEADER = u"<th>%s</th>"
-
-
-def th(val):
-    return TMPL_TABLE_HEADER % _(val)
-
-
-def td(val):
-    return TMPL_TABLE_DATA % _(val)
-
-
-def tr(*args):
-    return TMPL_TABLE_ROW % u"".join(args)
+""")
 
 
 def describe_object_html(data, caption='', help='', table_styles='',
@@ -75,17 +73,11 @@ def describe_object_html(data, caption='', help='', table_styles='',
         :param str table_styles: string with styles for table
     """
     if isinstance(data, dict):
-        html_data = u"".join((tr(th(k), td(v)) for k, v in data.items()))
-    elif isinstance(data, collections.Iterable):
-        html_data = u"".join((tr(th(line[0]), *[td(x) for x in line[1:]])
-                              for line in data))
+        data = [(k, v) for k, v in data.items()]
 
-    if headers is not None:
-        html_data = tr(*[th(x) for x in headers]) + html_data
-
-    table = TMPL_TABLE % {'styles': table_styles,
-                          'rows': html_data,
-                          'extra_classes': ''}
-    return TMPL_INFO_WITH_HELP % {'info': table, 'help': help, 'caption': caption}
-
-
+    return TMPL_OBJECT_DESCRIPTION.render(data=data,
+                                          styles=table_styles,
+                                          extra_classes='',
+                                          help=help,
+                                          caption=caption,
+                                          headers=headers)

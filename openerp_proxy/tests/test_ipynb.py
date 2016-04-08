@@ -305,6 +305,7 @@ class Test_40_IPYNB(unittest.TestCase):
     # list of paths of notebooks to run
     notebooks_to_run = [
         os.path.join(PROJECT_DIR, 'examples', 'Examples & HTML tests.ipynb'),
+        os.path.join(PROJECT_DIR, 'examples', 'RecordList Representation.ipynb'),
     ]
 
     def setUp(self):
