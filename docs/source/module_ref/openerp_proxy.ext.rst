@@ -35,17 +35,6 @@
 :mod:`repr` Extension
 ---------------------
 
-Generic classes and functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: openerp_proxy.ext.repr.generic
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Extensions for standard objects
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 .. automodule:: openerp_proxy.ext.repr
     :members:
     :undoc-members:
