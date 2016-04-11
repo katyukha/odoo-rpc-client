@@ -118,15 +118,15 @@ class ServiceMetaMixIn(type):
         # Clean caches only if new user extension class defined
         # This condition is required, because extension mechanism creates new
         # class, that is subclass of all classes defined by user, and it marked
-        # by attribute '_generated', so we do not need to clean caches, when
-        # this class is created. such classes will be created each time,
-        # service instance is assesed first time. For example, when connection,
-        # we use 'common' service, and when we access this service first time,
-        # new *_generated* service class created, when next we access 'object'
-        # service, then again new *_generated* class is created for this
-        # 'object' service. But no ew user defined classes created, thus it is
-        # possibly leads to dubling of some rpc requests, such as
-        # 'registered_objects'.
+        # by attribute '_generated', so we do not need to clean caches when
+        # this class is created. Such classes will be created each time,
+        # service instance is accessed first time. For example, when connecting,
+        # we use 'common' service to login to database, and when we access this
+        # service first time, new *_generated* service class created, when next
+        # we access 'object' service, then again new *_generated* class is
+        # created for this 'object' service. But no new user defined classes
+        # created, thus it is possibly leads to dubling of some rpc requests,
+        # such as 'registered_objects'.
         if not getattr(cls, '_generated', False):
             ServiceManager.clean_caches()
 

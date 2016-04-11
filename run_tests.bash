@@ -112,7 +112,7 @@ function run_single_test {
     set +e   # allow errors
 
     # Run tests
-    coverage run -p setup.py test $TEST_MODULE_OPT
+    openerp_proxy <<< "print('It runs');exit;" && coverage run -p setup.py test $TEST_MODULE_OPT
     res=$?;  # save test results
 
     set -e   # disallow errors

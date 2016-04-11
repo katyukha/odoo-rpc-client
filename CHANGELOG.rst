@@ -1,3 +1,21 @@
+0.6.7:
+    - Representation module improvements
+        - HField: added ``is_header`` parameter, which in HTML representation wraps field in ``<th>`` tag
+          instead of default ``<td>``
+        - ``orm.Record`` representation improvement: now it is displayed as three-column table with
+          system field name, user visible field name and field value
+    - Examples:
+        - Added one more example:
+          `RecordList Representation.ipynb <examples/RecordList Representation.ipynb>`__
+    - Bugfixes:
+        - session: client._no_save attr was not set on client by default
+        - session: connection index now saved in session too
+        - representation: better handled cases when HField._field is callable which throws error,
+          now, if field._silent is set, then no error will be raised
+        - representation: if HField which results in HTML capable value displayed not inside HTMLTable,
+          then default value representation will be used, not HTML one.
+
+        
 0.6.6:
     - Bugfix: Issue `#4 <https://github.com/katyukha/openerp-proxy/issues/4>`__
     - Bugfix: double call to _get_registered_objects, caused be cleaning caches,

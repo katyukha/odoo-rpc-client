@@ -16,6 +16,15 @@ from .utils import (json_read,
 __all__ = ('Session',)
 
 
+class SessionClientExt(Client):
+    """ Simple Client extension to add attribute '_no_save'
+        used in session
+    """
+    def __init__(self, *args, **kwargs):
+        super(SessionClientExt, self).__init__(*args, **kwargs)
+        self._no_save = False
+
+
 class Session(Extensible, DirMixIn):
 
     """ Simple session manager which allows to manage databases easier
@@ -48,7 +57,7 @@ class Session(Extensible, DirMixIn):
 
         self._db_index = {}  # key: index; value: url
         self._db_index_rev = {}  # key: url; value: index
-        self._db_index_counter = 0
+        self._db_index_counter = 0  # max index used
 
         if os.path.exists(self.data_file):
             data = json_read(self.data_file)
@@ -56,6 +65,13 @@ class Session(Extensible, DirMixIn):
             self._databases = data.get('databases', {})
             self._db_aliases = data.get('aliases', {})
             self._options = data.get('options', {})
+
+            if 'index' in data:
+                for url, index in data['index'].items():
+                    if url in self._databases:
+                        self._db_index[index] = url
+                        self._db_index_rev[url] = index
+                        self._db_index_counter = max(self._db_index_counter, index)
 
             for path in self.extra_paths:
                 self.add_path(path)
@@ -344,6 +360,7 @@ class Session(Extensible, DirMixIn):
             'databases': databases,
             'aliases': self._db_aliases,
             'options': self._options,
+            'index': self._db_index_rev,
         }
 
         json_write(self.data_file, data, indent=4)

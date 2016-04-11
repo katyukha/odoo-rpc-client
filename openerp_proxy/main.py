@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
+import operator
 
 HELP_HEADER = """
     Usage:
@@ -41,7 +42,7 @@ def generate_header_databases(session):
     """ Prepare to display history of database connections
     """
     header_databases = "\n"
-    for index, url in session.index.items():
+    for index, url in sorted(session.index.items(), key=operator.itemgetter(0)):
         header_databases += "        - [%3s] %s\n" % (index, url)
     return header_databases
 

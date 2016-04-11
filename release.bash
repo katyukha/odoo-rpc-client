@@ -16,6 +16,7 @@ usage="
 
     Available options:
         -n|--dry-run           - do not do release, just build doc, and build packages
+        --test-index           - upload to test pypi site
         --py2                  - use python 2
         --py3                  - use python 3 (default)
 
@@ -33,6 +34,9 @@ do
         ;;
         -n|--dry-run)
             DRY_RUN=1;
+        ;;
+        --test-index)
+            TEST_PYPI_INDEX=1;
         ;;
         --py2)
             USE_PY_VERSION='python2';
@@ -84,12 +88,17 @@ function release_implementation {
         setup_options="$setup_options upload";
     fi
 
+    # If using test index, add it to upload options
+    if [ ! -z $TEST_PYPI_INDEX ]; then
+        setup_options="$setup_options -r https://testpypi.python.org/pypi";
+    fi
+
     # Build [and upload to pypi] project
     python $SCRIPTPATH/setup.py $setup_options;
 
     build_docs;
 
-    if [ -z $DRY_RUN ]; then
+    if [ -z $DRY_RUN ] && [ -z $TEST_PYPI_INDEX ]; then
         python setup.py upload_docs;
     fi
 }

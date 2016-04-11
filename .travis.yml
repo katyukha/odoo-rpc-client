@@ -33,6 +33,7 @@ before_script:
   - "sleep 5"
 
 script:
+  - "openerp_proxy <<< 'print(42);exit';"  # Test that it runs via 'openerp_proxy' command
   - "coverage run -p setup.py test"
   - "coverage combine"
 
