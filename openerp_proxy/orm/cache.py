@@ -96,19 +96,19 @@ class ObjectCache(dict):
                      ``{'related.object': ['relatedfield1', 'relatedfield2.relatedfield']}``
         """
         rel_fields = collections.defaultdict(list)
-        prefetch_fields = []
+        prefetch_fields = set()
         for field in fields:
             field_path = field.split('.', 1)
             xfield = field_path.pop(0)
             xfield_info = self._object.columns_info.get(xfield, None)
             if xfield_info is not None:
-                prefetch_fields.append(xfield)
+                prefetch_fields.add(xfield)
                 relation = xfield_info.get('relation', False)
                 if field_path and relation:
                     # only one item left
                     rel_fields[relation].append(field_path[0])
 
-        return prefetch_fields, rel_fields
+        return list(prefetch_fields), rel_fields
 
     def prefetch_fields(self, fields):
         """ Prefetch specified fields for this cache.
@@ -123,6 +123,10 @@ class ObjectCache(dict):
         """
         to_prefetch, related = self.parse_prefetch_fields(fields)
 
+        # TODO: add logic to make code read only data that is not cached yet
+        #       smthing like ```ids_to_read = [c['id'] for c in self.values()
+        #       if set(to_prefetch) - set(c.keys)]```. Or just modify method
+        #       ```get_ids_to_read```
         col_info = self._object.columns_info
         for data in self._object.read(list(self), to_prefetch):
             for field, value in data.items():
