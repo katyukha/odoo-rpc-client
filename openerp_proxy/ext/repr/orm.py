@@ -71,11 +71,10 @@ class RecordListData(RecordList):
         table = HTMLTable(self, fields, **kwargs)
 
         # Prefetch available fields
-        # Disabled, in some cases, greatly reduce performance
-        # to_prefetch = (f._field
-                       # for f in table.fields
-                       # if isinstance(f._field, six.string_types))
-        # self._lcache.prefetch_fields(to_prefetch)
+        to_prefetch = (f._field
+                       for f in table.fields
+                       if isinstance(f._field, six.string_types))
+        self._lcache.prefetch_fields(to_prefetch)
 
         return table
 

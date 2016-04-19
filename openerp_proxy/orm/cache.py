@@ -30,6 +30,10 @@ class ObjectCache(dict):
         return self[key]
 
     def update_keys(self, keys):
+        """ Add new IDs to cache.
+
+            :param list keys: list of new IDs to be added to cache
+        """
         if not self:
             # for large amounts of data, this may be faster (no need for set
             # and difference calls)
@@ -53,10 +57,20 @@ class ObjectCache(dict):
                 self._context.update(new_context)
         return self.context
 
-    def get_ids_to_read(self, field):
-        """ Return list of ids, that have no specified field in cache
+    def get_ids_to_read(self, *fields):
+        """ Return list of ids, that have no at least one of specified
+            fields in cache
+
+            For example::
+
+                cache.get_ids_to_read('name', 'country_id', 'parent_id')
+
+            This code will traverse all record ids managed by this cache,
+            and find those that have no at least one field in cache.
+            This is highly useful in prefetching
         """
-        return [key for key, val in six.viewitems(self) if field not in val]
+        return [key for key, val in six.viewitems(self)
+                if any(( (field not in val) for field in fields))]
 
     def cache_field(self, rid, ftype, field_name, value):
         """ This method impelment additional caching functionality,
@@ -72,11 +86,15 @@ class ObjectCache(dict):
             rcache = self._root_cache[self._object.
                                       columns_info[field_name]['relation']]
 
-            if isinstance(value, numbers.Integral):  # pragma: no cover
+            if isinstance(value, six.integer_types):  # pragma: no cover
                 # internal dict {'id': key} will be created by default
-                # (see ObjectCache)
+                # (see ObjectCache.__missing__)
                 rcache[value]
             elif isinstance(value, collections.Iterable):
+                # usualy for many2one fields odoo returns tuples like
+                # (id, name), where id is ID of remote record, and name
+                # is human readable name of record (result of name_get method)
+                # so we cache this name for futher usage too
                 rcache[value[0]]['__name_get_result'] = value[1]
         elif value and ftype in ('many2many', 'one2many'):
             rcache = self._root_cache[self._object.
@@ -123,12 +141,9 @@ class ObjectCache(dict):
         """
         to_prefetch, related = self.parse_prefetch_fields(fields)
 
-        # TODO: add logic to make code read only data that is not cached yet
-        #       smthing like ```ids_to_read = [c['id'] for c in self.values()
-        #       if set(to_prefetch) - set(c.keys)]```. Or just modify method
-        #       ```get_ids_to_read```
         col_info = self._object.columns_info
-        for data in self._object.read(list(self), to_prefetch):
+        for data in self._object.read(self.get_ids_to_read(*to_prefetch),
+                                      to_prefetch):
             for field, value in data.items():
 
                 # Fill related cache
@@ -142,7 +157,11 @@ class ObjectCache(dict):
 
 
 class Cache(dict):
-    """ Cache to be used for Record's data
+    """ Cache to be used for Record's data.
+
+        This is root cache, which manages model local cache
+
+        cache['res.partner'] -> ObjectCache('res.partner')
     """
     __slots__ = ('_client',)
 
@@ -152,7 +171,7 @@ class Cache(dict):
 
     @property
     def client(self):
-        """ Access to Client instance this cache is belongs to
+        """ Access to Client instance this cache belongs to
         """
         return self._client
 
