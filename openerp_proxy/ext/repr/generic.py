@@ -369,20 +369,27 @@ class BaseTable(object):
         if six.PY3:
             adapt = lambda s: _(s)
             fmode = 'wt'
+            tmp_file = tempfile.NamedTemporaryFile(
+                mode=fmode,
+                dir=CSV_PATH,
+                suffix='.csv',
+                encoding='utf-8',
+                delete=False)
         else:
             fmode = 'wb'
             adapt = lambda s: _(s).encode('utf-8')
+            tmp_file = tempfile.NamedTemporaryFile(
+                mode=fmode,
+                dir=CSV_PATH,
+                suffix='.csv',
+                delete=False)
 
-        tmp_file = tempfile.NamedTemporaryFile(
-            mode=fmode,
-            dir=CSV_PATH,
-            suffix='.csv',
-            delete=False)
         with tmp_file as csv_file:
             csv_writer = csv.writer(csv_file)
             csv_writer.writerow(tuple((adapt(h) for h in self.fields)))
             for row in self:
                 csv_writer.writerow(tuple((adapt(val) for val in row)))
+
         return FileLink(
             os.path.join(CSV_PATH, os.path.split(tmp_file.name)[-1]))
 
