@@ -228,4 +228,8 @@ class AttrDict(dict, DirMixIn):
         return res
 
     def __dir__(self):
-        return super(AttrDict, self).__dir__() + self.keys()
+        return list(
+                    set(
+                        super(AttrDict, self).__dir__() + list(self.keys())
+                    )
+        )

@@ -2,6 +2,8 @@
      - bugfix in ``HTMLTable.to_csv`` for Python 3 related to writing non-ascii characters to csv file
      - Link to new example added to readme
      - session added property index_rev, which now is used to save index in file
+     - bugfix in ``utils.AttrDict.__dir__`` method. now it works allowing IPython auto-comlete for
+       objects that use ``utils.AttrDict`` class
      - prefetching:
         - bugfix: some times when passed few fields with
                   same names, prefetch raises strange errors (atleast on odoo 7.0 instance)
