@@ -4,6 +4,7 @@
      - session added property index_rev, which now is used to save index in file
      - bugfix in ``utils.AttrDict.__dir__`` method. now it works allowing IPython auto-comlete for
        objects that use ``utils.AttrDict`` class
+     - better support of last IPython shell
      - prefetching:
         - bugfix: some times when passed few fields with
                   same names, prefetch raises strange errors (atleast on odoo 7.0 instance)

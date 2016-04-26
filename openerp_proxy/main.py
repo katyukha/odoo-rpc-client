@@ -81,7 +81,13 @@ def main():
     }
     try:
         from IPython import embed
-        embed(user_ns=_locals, header=header)
+        try:
+            from IPython.terminal.ipapp import load_default_config
+            ip_config = load_default_config()
+        except:
+            ip_config = None
+
+        embed(user_ns=_locals, header=header, config=ip_config)
     except ImportError:
         from code import interact
         interact(local=_locals, banner=header)
