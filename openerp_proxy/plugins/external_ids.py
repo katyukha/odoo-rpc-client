@@ -102,5 +102,5 @@ class ExternalIDS(Plugin):
         e_record = self.get_for(xml_id, module=module)
         if e_record:
             e_record = e_record[0]
-            return self.client[e_record.model][e_record.res_id]
+            return self.client[e_record.model].browse(e_record.res_id)
         return False

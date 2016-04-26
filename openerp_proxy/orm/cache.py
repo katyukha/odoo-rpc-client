@@ -1,5 +1,4 @@
 import six
-import numbers
 import collections
 
 __all__ = ('empty_cache', 'Cache', 'ObjectCache')
@@ -90,7 +89,7 @@ class ObjectCache(dict):
                 # internal dict {'id': key} will be created by default
                 # (see ObjectCache.__missing__)
                 rcache[value]
-            elif isinstance(value, collections.Iterable):
+            elif isinstance(value, (list, tuple)):
                 # usualy for many2one fields odoo returns tuples like
                 # (id, name), where id is ID of remote record, and name
                 # is human readable name of record (result of name_get method)

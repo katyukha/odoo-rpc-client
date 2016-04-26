@@ -393,7 +393,7 @@ class RecordList(six.with_metaclass(RecordListMeta,
 
         # We need to add these ids to cache to make prefetching and data
         # reading work correctly. if some of ids will not be present in cache,
-        # then, on acces to field of record with such id, data will not been
+        # then, on access to field of record with such id, data will not be
         # read from database.
         # Look into *Record._get_field* method for more info
         self._lcache.update_keys(ids)
@@ -742,7 +742,7 @@ class RecordList(six.with_metaclass(RecordListMeta,
         """
         fields = fields if fields else self.object.simple_fields
 
-        self._cache[self.object.name].prefetch_fields(fields)
+        self._lcache.prefetch_fields(fields)
 
         return self
 
