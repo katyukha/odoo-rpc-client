@@ -45,6 +45,8 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
 
     """
 
+    __slots__ = ('_service', '_obj_name', '_columns_info')
+
     def __init__(self, service, object_name):
         self._service = service
         self._obj_name = object_name

@@ -1,3 +1,14 @@
+0.6.8:
+     - bugfix in ``HTMLTable.to_csv`` for Python 3 related to writing non-ascii characters to csv file
+     - Link to new example added to readme
+     - session added property index_rev, which now is used to save index in file
+     - bugfix in ``utils.AttrDict.__dir__`` method. now it works allowing IPython auto-comlete for
+       objects that use ``utils.AttrDict`` class
+     - better support of last IPython shell
+     - prefetching:
+        - bugfix: some times when passed few fields with
+                  same names, prefetch raises strange errors (atleast on odoo 7.0 instance)
+        - improvement: prefetch only records that have no atleast one field in cache
 0.6.7:
     - Representation module improvements
         - HField: added ``is_header`` parameter, which in HTML representation wraps field in ``<th>`` tag

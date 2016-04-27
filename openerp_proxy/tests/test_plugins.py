@@ -124,7 +124,7 @@ class Test_26_Plugin_ModuleUtils(BaseTestCase):
         ]
         self.main_partner_data = self.data_obj.search_records(
             main_partner_domain)[0]
-        self.main_partner = self.partner_obj[self.main_partner_data.res_id]
+        self.main_partner = self.partner_obj.browse(self.main_partner_data.res_id)
 
     def test_10_init_module_utils(self):
         self.assertNotIn('external_ids', self.client.plugins)

@@ -193,6 +193,17 @@ class Session(Extensible, DirMixIn):
                 self._index_url(url)
         return dict(self._db_index)
 
+    @property
+    def index_rev(self):
+        """ Reverse index.
+
+            Property which returns dict with {url: index}
+        """
+        if not self._db_index_rev:
+            for url in self._databases.keys():
+                self._index_url(url)
+        return dict(self._db_index_rev)
+
     def _index_url(self, url):
         """ Returns index of specified URL, or adds it to
             store assigning new index
@@ -360,7 +371,7 @@ class Session(Extensible, DirMixIn):
             'databases': databases,
             'aliases': self._db_aliases,
             'options': self._options,
-            'index': self._db_index_rev,
+            'index': self.index_rev,
         }
 
         json_write(self.data_file, data, indent=4)

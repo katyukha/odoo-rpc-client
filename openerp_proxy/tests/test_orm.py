@@ -835,3 +835,177 @@ class Test_23_Cache(BaseTestCase):
         # does not exist in client database
         with self.assertRaises(KeyError):
             self.cache['unexisting.object']
+
+    def test_missing_local(self):
+        obj_cache = self.cache['res.partner']
+
+        self.assertFalse(bool(obj_cache))
+        self.assertNotIn(42, obj_cache)
+        res = obj_cache[42]
+        self.assertIsInstance(res, dict)
+        self.assertIn('id', res)
+        self.assertEqual(len(res), 1)
+        self.assertIs(res['id'], 42)
+        self.assertIn(42, obj_cache)
+
+    def test_update_keys(self):
+        obj_cache = self.cache['res.partner']
+
+        self.assertFalse(bool(obj_cache))
+        self.assertNotIn(1, obj_cache)
+        self.assertNotIn(2, obj_cache)
+        self.assertNotIn(3, obj_cache)
+        self.assertNotIn(4, obj_cache)
+
+        # update cache with keys
+        obj_cache.update_keys([1, 2, 3])
+
+        self.assertIn(1, obj_cache)
+        self.assertEqual(len(obj_cache[1]), 1)
+        self.assertIn('id', obj_cache[1])
+        self.assertIs(obj_cache[1]['id'], 1)
+
+        self.assertIn(2, obj_cache)
+        self.assertEqual(len(obj_cache[2]), 1)
+        self.assertIn('id', obj_cache[2])
+        self.assertIs(obj_cache[2]['id'], 2)
+
+        self.assertIn(3, obj_cache)
+        self.assertEqual(len(obj_cache[3]), 1)
+        self.assertIn('id', obj_cache[3])
+        self.assertIs(obj_cache[3]['id'], 3)
+
+        self.assertNotIn(4, obj_cache)
+
+        # add new cache keys
+        obj_cache.update_keys([3, 4, 6])
+
+        self.assertIn(3, obj_cache)
+        self.assertEqual(len(obj_cache[3]), 1)
+        self.assertIn('id', obj_cache[3])
+        self.assertIs(obj_cache[3]['id'], 3)
+
+        self.assertIn(4, obj_cache)
+        self.assertEqual(len(obj_cache[4]), 1)
+        self.assertIn('id', obj_cache[4])
+        self.assertIs(obj_cache[4]['id'], 4)
+
+        self.assertNotIn(5, obj_cache)
+
+        self.assertIn(6, obj_cache)
+        self.assertEqual(len(obj_cache[6]), 1)
+        self.assertIn('id', obj_cache[6])
+        self.assertIs(obj_cache[6]['id'], 6)
+
+    def test_get_ids_to_read(self):
+        obj_cache = self.cache['res.partner']
+
+        # update cache with keys
+        obj_cache.update_keys([1, 2, 3, 4, 5])
+
+        self.assertItemsEqual(obj_cache.get_ids_to_read('name'), [1, 2, 3, 4, 5])
+
+        # fill field 'name' in first two cache items
+        obj_cache[1]['name'] = 'item 1'
+        obj_cache[2]['name'] = 'item 2'
+
+        # See that first two item are not mentioned in result, because they
+        # already have value for field 'name'
+        self.assertItemsEqual(obj_cache.get_ids_to_read('name'), [3, 4, 5])
+
+        # See that if we get ids to read for fields 'name' and 'address', than
+        # all ids will be returned again. this is because no cache item have
+        # field 'aaddress' filled
+        self.assertItemsEqual(obj_cache.get_ids_to_read('name', 'address'), [1, 2, 3 ,4, 5])
+
+        # test that if we change order of fields, nothing will change
+        self.assertItemsEqual(obj_cache.get_ids_to_read('address', 'name'), [1, 2, 3 ,4, 5])
+
+        # Add value for field 'address' to cache items #3 and #2
+        obj_cache[3]['address'] = 'Kyiv, Ukraine'
+        obj_cache[2]['address'] = 'Zhytomyr, Ukraine'
+
+        # ad test what ids will be returned
+        self.assertItemsEqual(obj_cache.get_ids_to_read('address'), [1, 4, 5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('name'), [3, 4 ,5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('address', 'name'), [1, 3, 4, 5])
+
+        # Ok, let's add field 'city' to last cache item (#5)
+        obj_cache[5]['city'] = 'Kyiv'
+
+        # And look what wi have
+        self.assertItemsEqual(obj_cache.get_ids_to_read('address'), [1, 4, 5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('name'), [3, 4 ,5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('city'), [1, 2, 3 ,4])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('address', 'name'), [1, 3, 4, 5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('address', 'city'), [1, 2, 3, 4, 5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('name', 'city'), [1, 2, 3, 4, 5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('name', 'address', 'city'), [1, 2, 3, 4, 5])
+
+    def test_cache_field_str(self):
+        obj_cache = self.cache['res.partner']
+
+        # cache is empty
+        self.assertFalse(bool(obj_cache))
+
+        obj_cache.cache_field(5, 'char', 'name', 'Test Name')
+
+        self.assertIn(5, obj_cache)
+        self.assertIn('id', obj_cache[5])
+        self.assertIs(obj_cache[5]['id'], 5)
+        self.assertIn('name', obj_cache[5])
+        self.assertEqual(obj_cache[5]['name'], 'Test Name')
+
+    def test_cache_field_m2o_int(self):
+        obj_cache = self.cache['res.partner']
+
+        # cache is empty
+        self.assertFalse(bool(obj_cache))
+
+        obj_cache.cache_field(5, 'many2one', 'user_id', 7)
+
+        # Test that all required data is present in obj_cache
+        self.assertIn(5, obj_cache)
+        self.assertIn('id', obj_cache[5])
+        self.assertIs(obj_cache[5]['id'], 5)
+        self.assertIn('user_id', obj_cache[5])
+        self.assertEqual(obj_cache[5]['user_id'], 7)
+
+        # Test that related cache filled
+        self.assertIn('res.users', self.cache)
+        rel_cache = self.cache['res.users']
+        self.assertIsInstance(rel_cache, ObjectCache)
+        self.assertIn(7, rel_cache)
+        self.assertIn('id', rel_cache[7])
+        self.assertIs(rel_cache[7]['id'], 7)
+
+    def test_cache_field_m2o_tuple(self):
+        obj_cache = self.cache['res.partner']
+
+        # cache is empty
+        self.assertFalse(bool(obj_cache))
+
+        obj_cache.cache_field(5, 'many2one', 'user_id', (7, 'Super Admin'))
+
+        # Test that all required data is present in obj_cache
+        self.assertIn(5, obj_cache)
+        self.assertIn('id', obj_cache[5])
+        self.assertIs(obj_cache[5]['id'], 5)
+        self.assertIn('user_id', obj_cache[5])
+
+        # value is stored in cache as returned by server, without changed
+        self.assertEqual(obj_cache[5]['user_id'], (7, 'Super Admin'))
+
+        # Test that related cache filled
+        self.assertIn('res.users', self.cache)
+        rel_cache = self.cache['res.users']
+        self.assertIsInstance(rel_cache, ObjectCache)
+        self.assertIn(7, rel_cache)
+        self.assertIn('id', rel_cache[7])
+        self.assertIs(rel_cache[7]['id'], 7)
+
+        # Test that name is saved as '__name_get_result' in related cache
+        self.assertIn('__name_get_result', rel_cache[7])
+        self.assertEqual(rel_cache[7]['__name_get_result'], 'Super Admin')
+
+        # TODO: add tests for many2many and one2many field types

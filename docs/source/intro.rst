@@ -116,6 +116,7 @@ Examples
 
 -  `Basics <http://nbviewer.ipython.org/github/katyukha/openerp-proxy/blob/master/examples/Basics.ipynb>`_
 -  `Examples & HTML tests <http://nbviewer.ipython.org/github/katyukha/openerp-proxy/blob/master/examples/Examples%20&%20HTML%20tests.ipynb>`_
+-  `RecordList Representation <http://nbviewer.ipython.org/github/katyukha/openerp-proxy/blob/master/examples/RecordList%20Representation.ipynb>`_
 
 
 Install
