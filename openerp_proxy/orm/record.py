@@ -125,6 +125,8 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
         self._object = obj
         self._cache = empty_cache(obj.client) if cache is None else cache
         self._lcache = self._cache[obj.name]
+
+        self._lcache[self._id]  # ensure that ID of this record is in cache.
         if context is not None:
             self._lcache.update_context(context)
 
