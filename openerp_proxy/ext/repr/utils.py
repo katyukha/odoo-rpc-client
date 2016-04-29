@@ -1,10 +1,8 @@
 import os
 import os.path
-import collections
 
 from jinja2 import Template
 
-from ...utils import ustr as _
 from ...utils import makedirs
 
 
@@ -55,7 +53,7 @@ TMPL_OBJECT_DESCRIPTION = Template("""
         </div>
     </div>
 </div>
-""")
+""")  # noqa
 
 
 def describe_object_html(data, caption='', help='', table_styles='',

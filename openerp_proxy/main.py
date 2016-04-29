@@ -42,7 +42,8 @@ def generate_header_databases(session):
     """ Prepare to display history of database connections
     """
     header_databases = "\n"
-    for index, url in sorted(session.index.items(), key=operator.itemgetter(0)):
+    for index, url in sorted(session.index.items(),
+                             key=operator.itemgetter(0)):
         header_databases += "        - [%3s] %s\n" % (index, url)
     return header_databases
 
@@ -55,7 +56,8 @@ def generate_header_aliases(session):
         max_aliase_len = max((len(i) for i in session.aliases))
         aliase_tmpl = "%%%ds" % max_aliase_len
         for aliase, url in session.aliases.items():
-            header_aliases += "        - %s: %s\n" % (aliase_tmpl % aliase, url)
+            header_aliases += "        - %s: %s\n" % (aliase_tmpl % aliase,
+                                                      url)
     return header_aliases
 
 
@@ -96,4 +98,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

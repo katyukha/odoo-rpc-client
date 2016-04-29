@@ -337,4 +337,3 @@ class ReportService(ServiceBase):
 
         return ReportResult(self.available_reports[report_name],
                             report_result)
-

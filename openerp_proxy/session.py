@@ -71,7 +71,8 @@ class Session(Extensible, DirMixIn):
                     if url in self._databases:
                         self._db_index[index] = url
                         self._db_index_rev[url] = index
-                        self._db_index_counter = max(self._db_index_counter, index)
+                        self._db_index_counter = max(self._db_index_counter,
+                                                     index)
 
             for path in self.extra_paths:
                 self.add_path(path)

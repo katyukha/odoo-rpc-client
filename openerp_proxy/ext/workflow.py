@@ -37,8 +37,9 @@ class ObjectWorkflow(ObjectRecords):
             # workflows for same model.
             wkf_records = wkf_obj.search_records([('osv', '=', self.name)])
             if wkf_records and len(wkf_records) > 1:   # pragma: no cover
-                raise ObjectException("More then one workflow per model not supported "
-                                      "be current version of openerp_proxy!")
+                raise ObjectException(
+                    "More then one workflow per model not supported "
+                    "be current version of openerp_proxy!")
             self._workflow = wkf_records and wkf_records[0] or False
         return self._workflow
 
@@ -68,9 +69,14 @@ class RecordWorkflow(Record):
                 self._workflow_instance = False
             else:
                 wkf_inst_obj = self._service.get_obj('workflow.instance')
-                wkf_inst_records = wkf_inst_obj.search_records([('wkf_id', '=', wkf.id),
-                                                                ('res_id', '=', self.id)], limit=1)
-                self._workflow_instance = wkf_inst_records and wkf_inst_records[0] or False
+                domain = [('wkf_id', '=', wkf.id),
+                          ('res_id', '=', self.id)]
+                wkf_inst_records = wkf_inst_obj.search_records(domain, limit=1)
+
+                if wkf_inst_records:
+                    self._workflow_instance = wkf_inst_records[0]
+                else:
+                    self._workflow_instance = False
         return self._workflow_instance
 
     @property

@@ -3,11 +3,6 @@ import os
 
 from pkg_resources import parse_version as V
 
-try:
-    import unittest.mock as mock
-except ImportError:
-    import mock
-
 from ...tests import BaseTestCase
 from ... import Client
 from ...orm import (Record,
@@ -96,7 +91,8 @@ class Test_32_ExtWorkFlow(BaseTestCase):
         trans = [t for t in act.out_transitions if t.signal]
         if not trans:
             raise unittest.SkipTest(
-                "There is no avalable transitions in first sale order to test workflow")
+                "There is no avalable transitions in first sale order "
+                "to test workflow")
         trans = trans[0]
 
         # send signal

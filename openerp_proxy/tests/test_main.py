@@ -1,13 +1,6 @@
 from . import BaseTestCase
-from .. import (Client,
-                Session)
+from .. import Session
 
-try:
-    import unittest.mock as mock
-except ImportError:
-    import mock
-
-import sys
 import os
 import os.path
 
@@ -64,7 +57,8 @@ class Test_95_Main(BaseTestCase):
         aliase = 'my_aliase'
         session.aliase(aliase, cl)
 
-        expected_header_aliases = "\n        - %s: %s\n" % (aliase, cl.get_url())
+        expected_header_aliases = "\n        - %s: %s\n" % (aliase,
+                                                            cl.get_url())
         expected_header_databases = "\n        - [  1] %s\n" % cl.get_url()
 
         self.assertEqual(expected_header_aliases,

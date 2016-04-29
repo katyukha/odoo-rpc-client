@@ -1,9 +1,8 @@
 """Report representation extensions
 """
 import os
-import six
 import os.path
-from IPython.display import HTML, FileLink
+from IPython.display import FileLink
 
 from ...service.report import (Report,
                                ReportResult,
@@ -13,9 +12,9 @@ from ...utils import AttrDict
 
 from .utils import (describe_object_html,
                     REPORTS_PATH)
-from .generic import (FieldNotFoundException,
-                      HField,
-                      toHField,
+from .generic import (HField,
+                      # toHField,
+                      # FieldNotFoundException,
                       # PrettyTable,
                       # BaseTable,
                       HTMLTable)
@@ -107,13 +106,15 @@ class ReportServiceExt(ReportService):
 
 class ReportExt(Report):
     def _repr_html_(self):
-        help_text = (u"This is report representation.<br/>"
-                     u"call <i>generate<i> method to generate new report<br/>"
-                     u"&nbsp;<i>.generate([1, 2, 3])</i><br/>"
-                     u"Also <i>generate</i> method can receive <br/>"
-                     u"RecordList or Record instance as first argument.<br/>"
-                     u"For more information look in "
-                     u"<a href='http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.service.html#module-openerp_proxy.service.report'>documentation</a>")
+        help_text = (
+            u"This is report representation.<br/>"
+            u"call <i>generate<i> method to generate new report<br/>"
+            u"&nbsp;<i>.generate([1, 2, 3])</i><br/>"
+            u"Also <i>generate</i> method can receive <br/>"
+            u"RecordList or Record instance as first argument.<br/>"
+            u"For more information look in "
+            u"<a href='http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.service.html#module-openerp_proxy.service.report'>documentation</a>"   # noqa
+        )
 
         return describe_object_html({
             "Name": self.report_action.name,
@@ -130,4 +131,3 @@ class ReportResultExt(ReportResult):
         # TODO: refactor this
         path = os.path.join(REPORTS_PATH, self.path)
         return FileLink(self.save(path).path)._repr_html_()
-

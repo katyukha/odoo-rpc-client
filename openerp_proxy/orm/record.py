@@ -191,7 +191,9 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
         return self._data.get('__name_get_result', u'ERROR')
 
     def __str__(self):
-        return u"R(%s, %s)[%s]" % (self._object.name, self.id, ustr(self._name))
+        return u"R(%s, %s)[%s]" % (self._object.name,
+                                   self.id,
+                                   ustr(self._name))
 
     def __repr__(self):
         return str(self)
@@ -504,7 +506,7 @@ class RecordList(six.with_metaclass(RecordListMeta,
             :rtype: RecordList
         """
         assert isinstance(item, (Record, numbers.Integral)), \
-                "Only Record or int instances could be added to list"
+            "Only Record or int instances could be added to list"
         if isinstance(item, Record):
             self._records.insert(index, item)
         else:
@@ -889,7 +891,7 @@ class ObjectRecords(Object):
             res = model_obj.search_records([('model', '=', self.name)],
                                            limit=2)
             assert res.length == 1, \
-                    "There must be only one model for this name"
+                "There must be only one model for this name"
             self._model = res[0]
 
         return self._model

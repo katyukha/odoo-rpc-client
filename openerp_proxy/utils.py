@@ -27,7 +27,8 @@ except NameError:
 try:
     from anyfield import toFn as normalizeSField
 except ImportError:
-    normalizeSField = lambda x: x
+    def normalizeSField(fn):
+        return fn
 
 
 def makedirs(path):
@@ -88,6 +89,7 @@ def preprocess_args(*args, **kwargs):
     while xargs and xargs[-1] is None:
         xargs.pop()
     return xargs, kwargs
+
 
 def stdcall(fn):
     """ Simple decorator for server methods, that supports standard call
@@ -228,8 +230,5 @@ class AttrDict(dict, DirMixIn):
         return res
 
     def __dir__(self):
-        return list(
-                    set(
-                        super(AttrDict, self).__dir__() + list(self.keys())
-                    )
-        )
+        res = super(AttrDict, self).__dir__() + list(self.keys())
+        return list(set(res))

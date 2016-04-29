@@ -27,8 +27,8 @@ class ObjectSugar(ObjectRecords):
         1. get record by ID::
 
                 move = obj[125]   # returns stock move record with ID=125
-                moves = obj[125,126,127]  # returns record list of three move records
-                                          # for IDS 125, 126, 127
+                moves = obj[125,126,127]  # returns record list of three move
+                                          # records for IDS 125, 126, 127
 
         2. name_search
 
@@ -36,30 +36,31 @@ class ObjectSugar(ObjectRecords):
            search on passed name::
 
                 so = so_obj('SO005')   # Returns sale order with name 'SO005'
-                so2 = so_obj('5')      # If there are more than one records found by name
-                                        # RecordList will be returned. In this case
-                                        # this call may return list which will
-                                        # contain for example sale orders with
-                                        # names like 'SO005', 'SO015', etc.
+                so2 = so_obj('5')      # If there are more than one records
+                                       # found by name, then RecordList
+                                       # will be returned. In this case
+                                       # this call may return list which will
+                                       # contain for example sale orders with
+                                       # names like 'SO005', 'SO015', etc.
 
         3. simple search.
 
-           If pass domain as first argument when calling object, then *search_records*
-           method will be called with all arguments forwarded::
+           If pass domain as first argument when calling object,
+           then *search_records* method will be called with all
+           arguments forwarded::
 
                res = so_obj([('state','=','done')], limit=10)
                # res -> RecordList('sale.order', length=10)
 
-           Also for simple searches without joins it is posible to pass just only keyword arguments
-           which all will be converted to domain::
+           Also for simple searches without joins it is posible to pass
+           just only keyword arguments which all will be converted to domain::
 
                res = so_obj(state='done')
 
-            But note, that in last way, **all keyword arguments will be converted to domain,
-            no one of them will be forwarded to search_records**, so it is not posible,
-            for example, to limit results at this moment
-
-
+            But note, that in last way, **all keyword arguments
+            will be converted to domain, no one of them will be forwarded
+            to search_records**, so it is not posible, for example, to limit
+            results at this moment
     """
 
     def search_record(self, *args, **kwargs):
@@ -73,7 +74,8 @@ class ObjectSugar(ObjectRecords):
     def __getitem__(self, name):
         if isinstance(name, (numbers.Integral, list, tuple)):
             return self.read_records(name)
-        raise KeyError("Bad key: %s! Only integer or list of intergers allowed" % name)
+        raise KeyError("Bad key: %s! "
+                       "Only integer or list of intergers allowed" % name)
 
     # Overridden to count all records in this object
     def __len__(self):
@@ -85,9 +87,9 @@ class ObjectSugar(ObjectRecords):
 
             (below under name 'name' i mean first of 'args')
             if name is list or tuple, then search_records will be called
-            if name not passed or name is None, then kwargs will be used to build search domain
-                and search_records will be called
-            else name_search will run
+            if name not passed or name is None, then kwargs will be used
+            to build search domain and search_records will be called
+            else name_search method will be used
         """
         args = list(args)
         name = args.pop(0) if args else None
@@ -144,7 +146,8 @@ class ClientSugar(Client, DirMixIn):
 
     @property
     def object_aliases(self):
-        """ Property, that holds list of all object aliases for this Client instance
+        """ Property, that holds list of all object aliases
+            for this Client instance
         """
         if self._object_aliases is None:
             self._object_aliases = {}

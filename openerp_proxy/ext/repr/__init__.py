@@ -6,26 +6,14 @@ or for example show RecordList data as table in IPython console.
 """
 
 # TODO: rename to IPython or something like that
-import os
-import six
-import os.path
-from IPython.display import HTML, FileLink
 
 from ... import (Client,
                  Session)
-from ...orm import (RecordList,
-                    Record,
-                    Object)
-from ...service.report import (Report,
-                               ReportResult,
-                               ReportService)
 from ...service.object import ObjectService
 
 from ...utils import ustr as _
-from ...utils import AttrDict
 
-from .utils import (describe_object_html,
-                    REPORTS_PATH)
+from .utils import describe_object_html
 from .generic import (FieldNotFoundException,
                       HField,
                       toHField,
@@ -34,8 +22,8 @@ from .generic import (FieldNotFoundException,
                       HTMLTable)
 
 # import submodules
-from .orm import *
-from .reports import *
+from .orm import *      # noqa
+from .reports import *  # noqa
 
 __all__ = (
     'FieldNotFoundException',
@@ -58,8 +46,13 @@ class ClientRegistedObjects(list):
     @property
     def html_table(self):
         if self._html_table is None:
-            ids = self._service.execute('ir.model', 'search', [('model', 'in', list(self))])
-            read = self._service.execute('ir.model', 'read', ids, ['name', 'model', 'info'])
+            ids = self._service.execute('ir.model',
+                                        'search',
+                                        [('model', 'in', list(self))])
+            read = self._service.execute('ir.model',
+                                         'read',
+                                         ids,
+                                         ['name', 'model', 'info'])
             self._html_table = HTMLTable(read,
                                          (('name', 'Name'),
                                           ('model', 'System Name'),
@@ -89,14 +82,16 @@ class ClientHTML(Client):
     def _repr_html_(self):
         """ Builds HTML representation for IPython
         """
-        help_text = (u"To get list of registered objects for thist database<br/>"
-                     u"access <i>registered_objects</i> property:<br/>"
-                     u"&nbsp;<i>.registered_objects</i><br/>"
-                     u"To get Object instance just call <i>get_obj</i> method<br/>"
-                     u"&nbsp;<i>.get_obj(name)</i><br/>"
-                     u"where <i>name</i> is name of Object You want to get"
-                     u"<br/>or use get item syntax instead:</br>"
-                     u"&nbsp;<i>[name]</i>")
+        help_text = (
+            u"To get list of registered objects for thist database<br/>"
+            u"access <i>registered_objects</i> property:<br/>"
+            u"&nbsp;<i>.registered_objects</i><br/>"
+            u"To get Object instance just call <i>get_obj</i> method<br/>"
+            u"&nbsp;<i>.get_obj(name)</i><br/>"
+            u"where <i>name</i> is name of Object You want to get"
+            u"<br/>or use get item syntax instead:</br>"
+            u"&nbsp;<i>[name]</i>"
+        )
 
         return describe_object_html({
             "Host": self.host,
@@ -107,22 +102,26 @@ class ClientHTML(Client):
         }, caption=u"RPC Client", help=help_text)
 
 
-
 class IPYSession(Session):
     def _repr_html_(self):
         """ Provides HTML representation of session (Used for IPython)
         """
-        help_text = (u"To get connection just call<br/> <ul>"
-                     u"<li>session.<b>aliase</b></li>"
-                     u"<li>session[<b>index</b>]</li>"
-                     u"<li>session[<b>aliase</b>]</li> "
-                     u"<li>session[<b>url</b>]</li>"
-                     u"<li>session.get_db(<b>url</b>|<b>index</b>|<b>aliase</b>)</li></ul>")
+        help_text = (
+            u"To get connection just call<br/> <ul>"
+            u"<li>session.<b>aliase</b></li>"
+            u"<li>session[<b>index</b>]</li>"
+            u"<li>session[<b>aliase</b>]</li> "
+            u"<li>session[<b>url</b>]</li>"
+            u"<li>session.get_db(<b>url</b>|<b>index</b>|<b>aliase</b>)</li>"
+            u"</ul>"
+        )
 
         return describe_object_html(
             ((self._index_url(url),
               url,
-              u", ".join((_(al) for al, aurl in self.aliases.items() if aurl == url)))
+              u", ".join((_(al)
+                          for al, aurl in self.aliases.items()
+                          if aurl == url)))
              for url in self._databases.keys()),
             caption='Previous connections',
             help=help_text,

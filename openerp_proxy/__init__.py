@@ -1,5 +1,5 @@
-from .core import Client
-from .session import Session
+from .core import Client      # noqa
+from .session import Session  # noqa
 
 from . import version
 

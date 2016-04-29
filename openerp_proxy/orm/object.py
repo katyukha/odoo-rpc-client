@@ -104,7 +104,7 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
 
     def __eq__(self, other):
         assert isinstance(other, Object), \
-                "Comparable only with instances of Object class"
+            "Comparable only with instances of Object class"
         return self.name == other.name and self.client == other.client
 
     def _get_columns_info(self):
@@ -196,7 +196,7 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
             :param dict vals: dictinary with values to be written to database
                               for records specified by ids
             :param dict context: context dictionary
-        """
+        """  # noqa
         args, kwargs = preprocess_args(ids, vals, context=context)
         return self.service.execute(self.name, 'write', *args, **kwargs)
 
@@ -211,7 +211,7 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
             :param dict context: context dictionary
             :return: ID of newly created record
             :rtype: int
-        """
+        """  # noqa
         args, kwargs = preprocess_args(vals, context=context)
         return self.service.execute(self.name, 'create', *args, **kwargs)
 
@@ -223,7 +223,7 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
             for this method
 
             :param list ids: list of IDs of records to be deleted
-        """
+        """  # noqa
         args, kwargs = preprocess_args(ids, context=context)
         return self.service.execute(self.name, 'unlink', *args, **kwargs)
 
@@ -234,5 +234,5 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
 
             Also look at `Odoo documentation <https://www.odoo.com/documentation/9.0/reference/orm.html#openerp.models.Model.search>`__
             for this method
-        """
+        """  # noqa
         return self.service.execute(self.name, 'search', *args, **kwargs)

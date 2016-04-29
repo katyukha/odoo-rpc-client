@@ -16,10 +16,10 @@ class ServiceManager(Extensible, DirMixIn):
         Usage::
 
             services = ServiceManager(client)
-            services.service_list                   # get list of registered services
-            services.object                 # returns service with name 'object'
-            services['common']              # returns service with name 'common'
-            services.get_service('report')  # returns service named 'report'
+            services.service_list          # get list of registered services
+            services.object                # returns service with name 'object'
+            services['common']             # returns service with name 'common'
+            services.get_service('report') # returns service named 'report'
     """
 
     __managers = []
@@ -82,8 +82,10 @@ class ServiceManager(Extensible, DirMixIn):
 
     @classmethod
     def clean_caches(cls):
-        """ Cleans saved service instances, so on next access new service instances will be generated.
-            This usualy happens when new service extension enabled (new class inherited from ServiceBase created)
+        """ Cleans saved service instances, so on next access
+            new service instances will be generated.
+            This usualy happens when new service extension enabled
+            (new class inherited from ServiceBase created)
         """
         for manager in cls.__managers:
             manager.clean_cache()
@@ -120,7 +122,7 @@ class ServiceMetaMixIn(type):
         # class, that is subclass of all classes defined by user, and it marked
         # by attribute '_generated', so we do not need to clean caches when
         # this class is created. Such classes will be created each time,
-        # service instance is accessed first time. For example, when connecting,
+        # service instance is accessed first time. For example, when connecting
         # we use 'common' service to login to database, and when we access this
         # service first time, new *_generated* service class created, when next
         # we access 'object' service, then again new *_generated* class is
@@ -133,7 +135,9 @@ class ServiceMetaMixIn(type):
         return cls
 
 
-ServiceType = ExtensibleByHashType._('Service', hashattr='name', with_meta=ServiceMetaMixIn)
+ServiceType = ExtensibleByHashType._('Service',
+                                     hashattr='name',
+                                     with_meta=ServiceMetaMixIn)
 
 
 def get_service_class(name):

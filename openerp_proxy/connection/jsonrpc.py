@@ -100,7 +100,10 @@ class JSONRPCProxy(object):
         self.host = host
         self.port = port
         self.service = service
-        addr = (host if port is None else "%s:%s" % (self.host, '' if self.port == 80 else self.port))
+
+        addr = host
+        if port not in (None, 80):
+            addr += ':%s' % self.port
         self.url = '%s://%s/jsonrpc' % (ssl and 'https' or 'http', addr)
 
         # request parametrs
@@ -112,7 +115,10 @@ class JSONRPCProxy(object):
     def __getattr__(self, name):
         meth = self._methods.get(name, None)
         if meth is None:
-            self._methods[name] = meth = JSONRPCMethod(self, self.url, self.service, name)
+            self._methods[name] = meth = JSONRPCMethod(self,
+                                                       self.url,
+                                                       self.service,
+                                                       name)
         return meth
 
 
@@ -133,7 +139,11 @@ class ConnectorJSONRPC(ConnectorBase):
         self.extra_args.pop('verbose', None)
 
     def _get_service(self, name):
-        return JSONRPCProxy(self.host, self.port, name, ssl=self.Meta.use_ssl, **self.extra_args)
+        return JSONRPCProxy(self.host,
+                            self.port,
+                            name,
+                            ssl=self.Meta.use_ssl,
+                            **self.extra_args)
 
 
 class ConnectorJSONRPCS(ConnectorJSONRPC):

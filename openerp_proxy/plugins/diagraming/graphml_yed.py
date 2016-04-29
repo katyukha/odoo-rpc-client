@@ -37,41 +37,45 @@ TEMPLATE_BASE = Template("""<?xml version="1.0" encoding="UTF-8" standalone="no"
     </data>
 </graphml>
 
-""")
+""")  # noqa
 
 TEMPLATE_NODE_BIG_ENTITY = Template("""
 <node id="{{ node.id }}">
-    <data key="d4"/>
-    <data key="d5">
-        <y:GenericNode configuration="com.yworks.entityRelationship.big_entity">
-            <y:Geometry height="{{ node.height }}" width="{{ node.width }}" x="0" y="0"/>
-            <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
-            <y:BorderStyle color="#000000" type="line" width="1.0"/>
-            <y:NodeLabel alignment="center" autoSizePolicy="content" backgroundColor="#B7C9E3"
-                         configuration="com.yworks.entityRelationship.label.name"
-                         fontFamily="Dialog" fontSize="12" fontStyle="plain" hasLineColor="false"
-                         modelName="internal" modelPosition="t"
-                         textColor="#000000" visible="true"
-                         >{{ node.label }}</y:NodeLabel>
-            <y:NodeLabel alignment="left" autoSizePolicy="content"
-                         configuration="com.yworks.entityRelationship.label.attributes"
-                         fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false"
-                         hasLineColor="false"
-                         modelName="custom" textColor="#000000"
-                         visible="true">{{ node.attributes }}<y:LabelModel>
-                    <y:ErdAttributesNodeLabelModel/>
-                </y:LabelModel>
-                <y:ModelParameter>
-                    <y:ErdAttributesNodeLabelModelParameter/>
-                </y:ModelParameter>
-            </y:NodeLabel>
-            <y:StyleProperties>
-                <y:Property class="java.lang.Boolean"
-                            name="y.view.ShadowNodePainter.SHADOW_PAINTING"
-                            value="true"/>
-            </y:StyleProperties>
-        </y:GenericNode>
-    </data>
+<data key="d4"/>
+<data key="d5">
+    <y:GenericNode configuration="com.yworks.entityRelationship.big_entity">
+        <y:Geometry height="{{ node.height }}" width="{{ node.width }}"
+                    x="0" y="0"/>
+        <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
+        <y:BorderStyle color="#000000" type="line" width="1.0"/>
+        <y:NodeLabel alignment="center" autoSizePolicy="content"
+                     backgroundColor="#B7C9E3"
+                     configuration="com.yworks.entityRelationship.label.name"
+                     fontFamily="Dialog" fontSize="12" fontStyle="plain"
+                     hasLineColor="false"
+                     modelName="internal" modelPosition="t"
+                     textColor="#000000" visible="true"
+                     >{{ node.label }}</y:NodeLabel>
+        <y:NodeLabel alignment="left" autoSizePolicy="content"
+                     configuration="com.yworks.entityRelationship.label.attributes"
+                     fontFamily="Dialog" fontSize="12" fontStyle="plain"
+                     hasBackgroundColor="false"
+                     hasLineColor="false"
+                     modelName="custom" textColor="#000000"
+                     visible="true">{{ node.attributes }}<y:LabelModel>
+                <y:ErdAttributesNodeLabelModel/>
+            </y:LabelModel>
+            <y:ModelParameter>
+                <y:ErdAttributesNodeLabelModelParameter/>
+            </y:ModelParameter>
+        </y:NodeLabel>
+        <y:StyleProperties>
+            <y:Property class="java.lang.Boolean"
+                        name="y.view.ShadowNodePainter.SHADOW_PAINTING"
+                        value="true"/>
+        </y:StyleProperties>
+    </y:GenericNode>
+</data>
 </node>
 """)
 
@@ -80,10 +84,12 @@ TEMPLATE_NODE_RELATIONSHIP = Template("""
     <data key="d4"/>
     <data key="d5">
     <y:GenericNode configuration="com.yworks.entityRelationship.relationship">
-        <y:Geometry height="{{ node.height }}" width="{{ node.width }}" x="1" y="0"/>
+        <y:Geometry height="{{ node.height }}" width="{{ node.width }}"
+                    x="1" y="0"/>
         <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
         <y:BorderStyle color="#000000" type="line" width="1.0"/>
-        <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog"
+        <y:NodeLabel alignment="center" autoSizePolicy="content"
+                     fontFamily="Dialog"
                      fontSize="12" fontStyle="plain" hasBackgroundColor="false"
                      hasLineColor="false"
                      height="17.96875" width="78.203125"
@@ -92,12 +98,16 @@ TEMPLATE_NODE_RELATIONSHIP = Template("""
             <y:SmartNodeLabelModel distance="4.0"/>
         </y:LabelModel>
         <y:ModelParameter>
-            <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0"
-                                            nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+            <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0"
+                                            nodeRatioX="0.0" nodeRatioY="0.0"
+                                            offsetX="0.0" offsetY="0.0"
+                                            upX="0.0" upY="-1.0"/>
         </y:ModelParameter>
         </y:NodeLabel>
         <y:StyleProperties>
-        <y:Property class="java.lang.Boolean" name="y.view.ShadowNodePainter.SHADOW_PAINTING" value="true"/>
+        <y:Property class="java.lang.Boolean"
+                    name="y.view.ShadowNodePainter.SHADOW_PAINTING"
+                    value="true"/>
         </y:StyleProperties>
     </y:GenericNode>
     </data>
@@ -105,21 +115,27 @@ TEMPLATE_NODE_RELATIONSHIP = Template("""
 """)
 
 TEMPLATE_EDGE = Template("""
-<edge id="{{ edge.id }}" source="{{ edge.source.id }}" target="{{ edge.target.id }}">
+<edge id="{{ edge.id }}" source="{{ edge.source.id }}"
+      target="{{ edge.target.id }}">
     <data key="d8"/>
     <data key="d9">
         <y:PolyLineEdge>
             <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
             <y:LineStyle color="#000000" type="line" width="1.0"/>
-            <y:Arrows source="{{ edge.source_arrow }}" target="{{ edge.target_arrow }}"/>
+            <y:Arrows source="{{ edge.source_arrow }}"
+                      target="{{ edge.target_arrow }}"/>
             <y:EdgeLabel alignment="center"
                          configuration="AutoFlippingLabel"
                          distance="2.0" fontFamily="Dialog"
-                         fontSize="12" fontStyle="plain" hasBackgroundColor="false"
+                         fontSize="12" fontStyle="plain"
+                         hasBackgroundColor="false"
                          hasLineColor="false"
-                         height="{{ edge.height }}" modelName="custom" preferredPlacement="anywhere"
+                         height="{{ edge.height }}" modelName="custom"
+                         preferredPlacement="anywhere"
                          ratio="0.5" textColor="#000000" visible="true"
-                         width="{{ edge.width }}" x="0" y="0">{{ edge.label }}<y:LabelModel>
+                         width="{{ edge.width }}"
+                         x="0" y="0">{{ edge.label }}
+                <y:LabelModel>
                     <y:SmartEdgeLabelModel autoRotationEnabled="false"
                                            defaultAngle="0.0"
                                            defaultDistance="10.0"/>
@@ -132,10 +148,14 @@ TEMPLATE_EDGE = Template("""
                                                     ratio="0.5"
                                                     segment="0"/>
                 </y:ModelParameter>
-                <y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0"
-                                                angleReference="absolute" angleRotationOnRightSide="co"
-                                                distance="-1.0" frozen="true" placement="anywhere"
-                                                side="anywhere" sideReference="relative_to_edge_flow"/>
+                <y:PreferredPlacementDescriptor angle="0.0"
+                                                angleOffsetOnRightSide="0"
+                                                angleReference="absolute"
+                                                angleRotationOnRightSide="co"
+                                                distance="-1.0" frozen="true"
+                                                placement="anywhere"
+                                                side="anywhere"
+                                                sideReference="relative_to_edge_flow"/>
             </y:EdgeLabel>
             <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
@@ -221,8 +241,9 @@ class NodeBigEntity(Node):
 
     @property
     def height(self):
-        return (1.0 + self.label.count('\n') + 1.0 +
-                self.attributes.count('\n')) * LINE_HEIGHT + self.line_height_mod
+        return ((1.0 + self.label.count('\n') + 1.0 +
+                 self.attributes.count('\n')) * LINE_HEIGHT +
+                self.line_height_mod)
 
 
 class Edge(object):

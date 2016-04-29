@@ -1,12 +1,6 @@
 from . import BaseTestCase
 from .. import (Client,
                 Session)
-
-try:
-    import unittest.mock as mock
-except ImportError:
-    import mock
-
 import sys
 import os
 import os.path
@@ -76,7 +70,9 @@ class Test_90_Session(BaseTestCase):
         self.assertIn(cl.get_url(), session.db_list)
         self.assertEqual(len(session.db_list), 1)
         self.assertIs(session.get_db(cl.get_url()), cl)
-        self.assertEqual(session.index[1], cl.get_url())  # first db must be with index=1
+
+        # first db must be with index=1
+        self.assertEqual(session.index[1], cl.get_url())
 
         # index and url may be used in this way too
         self.assertIs(session[cl.get_url()], cl)
@@ -106,7 +102,9 @@ class Test_90_Session(BaseTestCase):
         self.assertEqual(len(session.db_list), 1)
         self.assertIsNot(session.get_db(cl.get_url()), cl)
         self.assertEqual(session.get_db(cl.get_url()), cl)
-        self.assertEqual(session.index[1], cl.get_url())  # first db must be with index=1
+
+        # first db must be with index=1
+        self.assertEqual(session.index[1], cl.get_url())
         self.assertIsNot(session[cl.get_url()], cl)
         self.assertIsNot(session[1], cl)
         self.assertEqual(session[cl.get_url()], cl)
@@ -132,14 +130,16 @@ class Test_90_Session(BaseTestCase):
                              protocol=self.env.protocol,
                              port=self.env.port,
                              interactive=False,
-                             no_save=True)   # this arg is different from previous test
+                             no_save=True)   # diff from previous test
 
         self.assertIsInstance(cl, Client)
         self.assertIn(cl.get_url(), session._databases)
         self.assertIn(cl.get_url(), session.db_list)
         self.assertEqual(len(session.db_list), 1)
         self.assertIs(session.get_db(cl.get_url()), cl)
-        self.assertEqual(session.index[1], cl.get_url())  # first db must be with index=1
+
+        # first db must be with index=1
+        self.assertEqual(session.index[1], cl.get_url())
 
         # index and url may be used in this way too
         self.assertIs(session[cl.get_url()], cl)

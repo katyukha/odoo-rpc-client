@@ -9,6 +9,7 @@ env:
   global:
     - TEST_DB_SERVICE=1 TEST_WITH_EXTENSIONS=1
   matrix:
+ 
     - ODOO_VERSION="7.0" ODOO_PACKAGE="openerp" ODOO_TEST_PROTOCOL='xml-rpc'
 
     - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='json-rpc'
@@ -25,7 +26,7 @@ install:
   - "sudo apt-get install aptitude"
   - "sudo aptitude install -y $(dpkg -I odoo.deb | grep -o -P 'Depends: \\K(.*)' | tr ',' ' ') || true"
   - "sudo dpkg --force-depends -i odoo.deb || true"
-  - "pip install --upgrade coveralls ipython[notebook] setuptools>=18 pip pbr anyfield>=0.1.2"
+  - "pip install --upgrade coveralls ipython[notebook] setuptools>=18 pip pbr anyfield>=0.1.2 flake8"
   - "python setup.py develop"
 
 before_script:
@@ -33,6 +34,7 @@ before_script:
   - "sleep 5"
 
 script:
+  - "flake8 openerp_proxy --count --statistics;"  # test code style
   - "openerp_proxy <<< 'print(42);exit';"  # Test that it runs via 'openerp_proxy' command
   - "coverage run -p setup.py test"
   - "coverage combine"

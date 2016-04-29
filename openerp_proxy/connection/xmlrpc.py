@@ -66,9 +66,14 @@ class ConnectorXMLRPC(ConnectorBase):
     """
     class Meta:
         name = 'xml-rpc'
+        ssl = False
 
     def get_service_url(self, service_name):
-        return 'http://%s:%s/xmlrpc/%s' % (self.host, self.port, service_name)
+        addr = self.host
+        if self.port not in (None, 80):
+            addr += ':%s' % self.port
+        proto = 'https' if self.Meta.ssl else 'http'
+        return '%s://%s/xmlrpc/%s' % (proto, addr, service_name)
 
     def _get_service(self, name):
         return XMLRPCProxy(self.get_service_url(name), **self.extra_args)
@@ -81,8 +86,4 @@ class ConnectorXMLRPCS(ConnectorXMLRPC):
     """
     class Meta:
         name = 'xml-rpcs'
-
-    def get_service_url(self, service_name):
-        return 'https://%s:%s/xmlrpc/%s' % (self.host,
-                                            '' if self.port == 80 else self.port,  # this is to make ssl work
-                                            service_name)
+        ssl = True

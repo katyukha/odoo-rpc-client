@@ -20,15 +20,15 @@ logger.setLevel(logging.INFO)
 
 
 class TimeTracker(object):
-    """ Context manager to track separatly total time that some request took and
-        time spent on rpc queries.
+    """ Context manager to track separatly total time that some request took
+        and time spent on rpc queries.
 
         Example::
 
             with TimeTracker('my-code-block') as t:
                 product = db._product_product.serch_records([], limit=400000)
-            print("Query time: %s, Total time: %s" % (p.query_time, p.total_time))
-
+            print("Query time: %s, Total time: %s" % (p.query_time,
+                                                      p.total_time))
     """
 
     # TODO: implement query counter, which may be used for performance tests
@@ -125,11 +125,15 @@ class ObjectServiceLog(ObjectService):
             msg = "Execute [%s, %s] (%s, %s)" % (obj, method, args, kwargs)
 
         startTime = time.time()
-        res = super(ObjectServiceLog, self).execute(obj, method, *args, **kwargs)
+        res = super(ObjectServiceLog, self).execute(obj,
+                                                    method,
+                                                    *args,
+                                                    **kwargs)
         elapsedTime = time.time() - startTime
 
         TimeTracker._update_times(elapsedTime)
 
-        logger.info('{} finished in {} ms'.format(msg, int(elapsedTime * 1000)))
+        logger.info('{} finished in {} ms'.format(msg,
+                                                  int(elapsedTime * 1000)))
 
         return res
