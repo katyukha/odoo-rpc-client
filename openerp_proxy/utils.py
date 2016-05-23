@@ -137,7 +137,7 @@ class UConverter(object):
         # it is not binary type (str for python2 and bytes for python3)
         if not isinstance(value, six.binary_type):
             try:
-                return six.text_type(value)
+                value = six.text_type(value)
             except Exception:
                 # Cannot directly convert to unicode. So let's try to convert
                 # to binary, and that try diferent encoding to it
@@ -146,13 +146,18 @@ class UConverter(object):
                 except:
                     raise UnicodeError('unable to convert to unicode %r'
                                        '' % (value,))
+            else:
+                return value
 
         # value is binary type (str for python2 and bytes for python3)
         for ln in self.encodings:
             try:
-                return six.text_type(value, ln)
+                res = six.text_type(value, ln)
             except Exception:
                 pass
+            else:
+                return res
+
         raise UnicodeError('unable to convert to unicode %r' % (value,))
 
 # default converter instance
