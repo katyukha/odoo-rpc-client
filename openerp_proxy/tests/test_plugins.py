@@ -106,7 +106,7 @@ class Test_25_Plugin_ModuleUtils(BaseTestCase):
         self.assertItemsEqual(modules, modules2)
 
 
-class Test_26_Plugin_ModuleUtils(BaseTestCase):
+class Test_26_Plugin_ExternalIDS(BaseTestCase):
 
     def setUp(self):
         super(self.__class__, self).setUp()
@@ -229,3 +229,17 @@ class Test_26_Plugin_ModuleUtils(BaseTestCase):
         no_partner = self.client.plugins.external_ids.get_record(
             'base.unexisting_xml_id')
         self.assertFalse(no_partner)
+
+    def test_40_record_as_xmlid(self):
+        xml_id = self.main_partner.as_xmlid()
+        self.assertEqual(xml_id, "base.main_partner")
+
+        new_partner_id = self.client[
+            'res.partner'].create({'name': 'Test partner'})
+        new_partner = self.client['res.partner'].browse(new_partner_id)
+
+        no_xml_id = new_partner.as_xmlid()
+        self.assertFalse(no_xml_id)
+
+        # Cleanup, remove created partner
+        new_partner.unlink()

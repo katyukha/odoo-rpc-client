@@ -104,3 +104,16 @@ class ExternalIDS(Plugin):
             e_record = e_record[0]
             return self.client[e_record.model].browse(e_record.res_id)
         return False
+
+
+class Record__XMLIDS(Record):
+    """ Simple class to add ability to get xmlid from record itself
+    """
+    def as_xmlid(self, module=None):
+        """ Get xmlid for record
+
+            :param str module: module to search xmlid in
+            :return: xmlid for this record or False
+            :rtype: str
+        """
+        return self._client.plugins.external_ids.get_xmlid(self, module=module)

@@ -947,6 +947,7 @@ class ObjectRecords(Object):
                 ...     order.write({'note': 'order date is %s'%order.date})
         """
 
+        # TODO: use search_read for odoo versions >= 8.0
         read_fields = kwargs.pop('read_fields', None)
         context = kwargs.get('context', None)
         cache = kwargs.pop('cache', None)

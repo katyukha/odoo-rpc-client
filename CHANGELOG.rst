@@ -1,6 +1,13 @@
 Last changes
 ============
 
+Release 0.6.9.dev0
+------------------
+
+- ``external_ids`` plugin now adds ``Record.as_xmlid`` method
+- bugfix: ensure thet record is present in cache on init of Record class
+
+
 Release 0.6.8
 -------------
 
