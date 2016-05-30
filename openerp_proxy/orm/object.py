@@ -27,6 +27,8 @@ def get_object(client, name):
     return cls(client, name)
 
 
+# TODO: implement clean caches new columns may be defined, when new addon was
+# installed
 @six.python_2_unicode_compatible
 class Object(six.with_metaclass(ObjectType, DirMixIn)):
     """ Base class for all Objects

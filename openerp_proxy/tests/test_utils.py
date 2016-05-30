@@ -10,7 +10,11 @@ class Test_100_Utils(BaseTestCase):
 
     def setUp(self):
         super(self.__class__, self).setUp()
-        self.ustr2 = utils.UConverter(['utf8', 'ascii', 'cp1251'])
+
+        # Note, if cp1251 will be first, than tests will fail
+        # because following code will not throw errors:
+        #    u'Юнікод'.encode('utf8').decode('cp1251')
+        self.ustr2 = utils.UConverter(['utf8', 'cp1251', 'ascii'])
 
         class UObj(object):
             if six.PY3:
@@ -23,6 +27,7 @@ class Test_100_Utils(BaseTestCase):
         class BObj(object):
             if six.PY3:
                 # TODO: Is this correct for python3
+                # for python 3 repr will be called
                 def __str__(self):
                     return u"Юнікод"
             elif six.PY2:
