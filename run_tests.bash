@@ -24,6 +24,7 @@ usage="
         --recreate-db           - recreate test database at start
         --test-module <module>  - run specific test suit (python module that contains test cases)
         --reuse-venv            - do not delete/recreate virtual environment used for test
+        --flake8                - Run flake 8 on project's code
 
 "
 
@@ -56,6 +57,9 @@ do
             TEST_MODULE="$2";
             shift;
         ;;
+        --flake8)
+            TEST_FLAKE8=1
+        ;;
         --reuse-venv)
             REUSE_VENV=1;
         ;;
@@ -78,6 +82,12 @@ PY_VERSIONS=${PY_VERSIONS:-"2.7 3.5"};
 if [ ! -z $TEST_MODULE ]; then
     TEST_MODULE_OPT=" --test-suite=$TEST_MODULE";
 fi
+
+function run_flake_8 {
+    if [ ! -z $TEST_FLAKE8 ]; then
+        flake8 --count --statistics openerp_proxy;
+    fi
+}
 
 # run_single_test <python version>
 function run_single_test {
@@ -102,7 +112,7 @@ function run_single_test {
 
     # if virtualenv was [re]created then we need to install packages
     if [ ! -z $venv_created ]; then
-        pip install --upgrade pip setuptools pbr
+        pip install --upgrade pip setuptools pbr flake8
         pip install --upgrade coverage tabulate six extend_me requests mock pudb jupyter ipython[notebook] anyfield
     fi
 
@@ -112,7 +122,9 @@ function run_single_test {
     set +e   # allow errors
 
     # Run tests
-    openerp_proxy <<< "print('It runs');exit;" && coverage run -p setup.py test $TEST_MODULE_OPT
+    run_flake_8 && \
+        openerp_proxy <<< "print('It runs');exit;" && \
+        coverage run -p setup.py test $TEST_MODULE_OPT
     res=$?;  # save test results
 
     set -e   # disallow errors

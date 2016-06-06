@@ -101,4 +101,3 @@ class ObjectService(ServiceBase):
         """
         self.__use_execute_kw = None
         self._registered_objects = None
-

@@ -1,1 +1,1 @@
-from . import graph
+from . import graph  # noqa

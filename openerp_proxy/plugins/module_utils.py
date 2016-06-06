@@ -92,7 +92,8 @@ class ModuleUtils(Plugin, DirMixIn):
 
             :rtype: RecordList
         """
-        return self.client['ir.module.module'].search_records([('state', '=', 'installed')])
+        return self.client['ir.module.module'].search_records(
+            [('state', '=', 'installed')])
 
     def update_module_list(self):
         """ Update module list

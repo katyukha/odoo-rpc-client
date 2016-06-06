@@ -5,10 +5,12 @@ import sys
 from setuptools import setup
 
 # workaround for: https://github.com/travis-ci/travis-ci/issues/1778
-import multiprocessing
+import multiprocessing  # noqa
 
 # load version info
-version_file = os.path.join(os.path.dirname(__file__), 'openerp_proxy', 'version.py')
+version_file = os.path.join(os.path.dirname(__file__),
+                            'openerp_proxy',
+                            'version.py')
 if sys.version_info < (3,):
     execfile(version_file)
 else:

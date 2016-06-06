@@ -1,12 +1,8 @@
 import unittest
 import os
 
-try:
-    import unittest.mock as mock
-except ImportError:
-    import mock
-
-from .. import BaseTestCase
+from .. import (BaseTestCase,
+                mock)
 from ... import Client
 from ...orm import (Record,
                     RecordList,
@@ -59,7 +55,8 @@ class Test_31_ExtSugar(BaseTestCase):
         self.assertItemsEqual(res.ids, bank_ids)
 
     def test_obj_call_search_records(self):
-        with mock.patch.object(self.object, 'search_records') as fake_search_records:
+        with mock.patch.object(self.object,
+                               'search_records') as fake_search_records:
             self.object([('name', 'ilike', 'admin')])
             fake_search_records.assert_called_with(
                 [('name', 'ilike', 'admin')])

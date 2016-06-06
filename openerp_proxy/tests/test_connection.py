@@ -81,9 +81,10 @@ class Test_00_Connection(BaseTestCase):
         with self.assertRaises(LoginException):
             wrong_password = self.env.password + "-wrong"
             cl = client.login(self.env.dbname, self.env.user, wrong_password)
-            cl.uid   # Note, that login return's new instance of client,
-                     # and we need to acces uid property,
-                     # to make it try to login via RPC.
+            # Note, that login return's new instance of client,
+            # and we need to acces uid property,
+            # to make it try to login via RPC.
+            cl.uid
 
     def test_05_reconnect(self):
         client = self.client
@@ -97,5 +98,3 @@ class Test_00_Connection(BaseTestCase):
     def test_06_get_connector_names(self):
         self.assertItemsEqual(get_connector_names(),
                               ['json-rpc', 'json-rpcs', 'xml-rpc', 'xml-rpcs'])
-
-

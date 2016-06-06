@@ -2,7 +2,6 @@
 from extend_me import Extensible
 
 from ...plugin import Plugin
-#from ...orm.object import Object
 
 from . import graphml_yed
 
@@ -63,7 +62,8 @@ class ModelRelation(object):
         self._ir_field = None
 
         assert (self.source.client ==
-                self.target.client), "Source and targed binded to different clients"
+                self.target.client), ("Source and targed binded to "
+                                      "different clients")
 
     @property
     def client(self):
@@ -141,7 +141,8 @@ class ModelM2MRelation(ModelRelation):
 
     @property
     def m2m_table(self):
-        if self.ir_field and 'relation_table' in self.ir_field._object.columns_info:
+        if (self.ir_field and
+                'relation_table' in self.ir_field._object.columns_info):
             return self.ir_field.relation_table
         else:  # versions of odoo before 9.0
             return self.field_info.get('m2m_join_table', None)
@@ -154,7 +155,8 @@ class ModelM2MRelation(ModelRelation):
             return self.field_info.get('m2m_join_columns', None)
 
     def __eq__(self, other):
-        if isinstance(other, ModelM2MRelation) and super(ModelM2MRelation, self).__eq__(self, other):
+        if (isinstance(other, ModelM2MRelation) and
+                super(ModelM2MRelation, self).__eq__(self, other)):
             return (self.m2m_table and other.m2m_table and
                     self.m2m_columns and other.m2m_columns and
                     self.m2m_table == other.m2m_table and
@@ -184,7 +186,8 @@ class ModelGraph(Extensible):
 
     def __init__(self, client, models, depth=1):
         """
-            :param models: list of strings with names of Objects to build graph for
+            :param models: list of strings with names of Objects
+                           to build graph for
         """
         self._client = client
         self._depth = depth
@@ -248,7 +251,8 @@ class ModelGraph(Extensible):
 
                 self._relations.add(relation)
 
-                if level < self._depth and target not in self._processed_models:
+                if (level < self._depth and
+                        target not in self._processed_models):
                     self._find_relations(target, level + 1)
                 self._processed_models.add(target)
 

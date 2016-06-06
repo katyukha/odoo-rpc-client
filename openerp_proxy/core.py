@@ -66,7 +66,7 @@ from .service import ServiceManager
 from .plugin import PluginManager
 
 # Enable ORM features
-from . import orm
+from . import orm  # noqa
 
 
 __all__ = ('Client',)

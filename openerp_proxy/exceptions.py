@@ -13,6 +13,7 @@ class ClientException(Error):
     """
     pass
 
+
 class ReportError(Error):
     """ Error raise in process of report generation
     """

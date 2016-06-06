@@ -105,36 +105,50 @@ class HField(object):
         Primaraly used in html representation logic.
 
         :param field: path to field or function to get value from record
-                      if path is string, then it should be dot separated list of
-                      fields/subfields to get value from. for example
-                      ``sale_line_id.order_id.name`` or ``picking_id.move_lines.0.location_id``
+                      if path is string, then it should be dot separated
+                      list of fields/subfields to get value from.
+                      for example ``sale_line_id.order_id.name`` or
+                      ``picking_id.move_lines.0.location_id``
         :type field: str | func(record)->value
         :param str name: name of field. (optional)
-                            if specified, then this value will be used in column header of table.
-        :param bool silent: If set to True, then not exceptions will be raised and *default* value
-                            will be returned. (default=False)
-        :param default: default value to be returned if field not found. default=None
-        :param bool is_header: if set to True, then this field will be displayed
-                               as header in HTMLTable representation, Useful for columns like ID.
+                         if specified, then this value will be used
+                         in column header of table.
+        :param bool silent: If set to True, then no exceptions will be raised
+                            and *default* value will be returned.
+                            (default=False)
+        :param default: default value to be returned if field not found.
+                        default=None
+        :param bool is_header: if set to True, then this field will be
+                               displayed as header in HTMLTable representation,
+                               Useful for columns like ID.
                                Have no effect in text representation
                                (default: False)
-        :param HField parent: (for internal usage) parent field. First get value of parent field
-                              for record, and then get value of current field based on value
-                              of parent field: ( self.get_field(self._parent.get_field(record)) )
-        :param args: if specified, then it means that field is callable, and *args* should be passed
-                     to it as positional arguments. This may be useful to call *as_html_table* method
+        :param HField parent: (for internal usage) parent field.
+                              First get value of parent field for record,
+                              and then get value of current field based on
+                              value of parent field:
+                              (self.get_field(self._parent.get_field(record)))
+        :param args: if specified, then it means that field is callable,
+                     and *args* should be passed to it as positional arguments.
+                     This may be useful to call *as_html_table* method
                      of internal field. for example::
 
                          HField('picking_id.move_lines.as_html_table',
-                                args=('id', '_name', HField('location_id._name', 'Location')))
+                                args=('id', '_name',
+                                      HField('location_id._name', 'Location')))
 
                      or better way::
 
-                         HField('picking_id.move_lines.as_html_table').with_args(
-                             'id',
-                             '_name',
-                             HField('location_id._name', 'Location')
-                         )
+                         HField('picking_id.move_lines.as_html_table').\
+                             with_args('id',
+                                       '_name',
+                                       HField('location_id._name', 'Location')
+                             )
+
+                    Another approach is use
+                    `AnyField <https://pypi.python.org/pypi/anyfield>`__ lib,
+                    but at moment of writing this,
+                    it is in experimental stage still
 
         :type args: list | tuple
         :param dict kwargs: same as *args* but for keyword arguments
@@ -181,8 +195,9 @@ class HField(object):
                 HField('picking_id.move_lines.as_html_table').with_args(
                     'id', '_name', HField('location_id._name', 'Location'))
 
-            This arguments ('id', '_name', HField('location_id._name', 'Location'))
-            will be passed to ``picking_id.move_lines.as_html_table`` method
+            This arguments ('id', '_name', HField('location_id._name',
+            'Location')) will be passed to
+            ``picking_id.move_lines.as_html_table`` method
 
             :return: self
         """
@@ -225,7 +240,7 @@ class HField(object):
         if callable(self._field):
             try:
                 r = self._field(record, *self._args, **self._kwargs)
-            except Exception as exc:
+            except Exception:
                 if self._silent:
                     r = self._default
                 else:
@@ -240,13 +255,13 @@ class HField(object):
                     r = self._get_field(r, field)
                     # and if attribute is callable and
                     if callable(r) and fields:
-                                                # it is not last field then call
-                                                # it without arguments
+                        # if it is not last field then call
+                        # it without arguments
                         r = r()
                     # it is last field and it is callable
                     elif callable(r) and not fields:
                         r = r(*self._args, **self._kwargs)
-                except Exception as exc:
+                except Exception:
                     if not self._silent:   # reraise exception if not silent
                         raise
                     else:                  # or return default value
@@ -281,8 +296,8 @@ class HField(object):
 
 
 class PrettyTable(object):
-
-    """ Just a simple warapper around tabulate.tabulate to show IPython displayable table
+    """ Just a simple warapper around tabulate to show IPython displayable
+        table
 
         Only 'pretty' representation, yet.
     """
@@ -304,13 +319,14 @@ class BaseTable(object):
 
     """ Base class for table representation
 
-        :param data: record list (or iterable of anything other) to create represetation for
+        :param data: record list (or iterable of anything other)
+                     to create represetation for
         :type data: RecordList|iterable
         :param fields: list of fields to display. each field should be string
                        with dot splitted names of related object, or callable
-                       of one argument (record instance) or *HField* instance or
-                       tuple(field_path|callable, field_name)
-        :type fields: list(str | callable | HField instance | tuple(field, name))
+                       of one argument (record instance) or *HField* instance
+                       or tuple(field_path|callable, field_name)
+        :type fields: list(str | callable | HField | tuple(field, name))
     """
 
     def __init__(self, data, fields):
@@ -319,15 +335,17 @@ class BaseTable(object):
         self.update(fields=fields)
 
     def update(self, fields=None):
-        """ This method is used to change BaseTable fields, thus, changing representation
+        """ This method is used to change BaseTable fields,
+            thus, changing representation
 
-            arguments same as for constructor, except 'data' arg, which is absent in this method
+            arguments same as for constructor, except 'data' arg,
+            which is absent in this method
 
         :param fields: list of fields to display. each field should be string
                        with dot splitted names of related object, or callable
-                       of one argument (record instance) or *HField* instance or
-                       tuple(field_path|callable, field_name)
-        :type fields: list(str) | callable | HField instance | tuple(field, name))
+                       of one argument (record instance) or *HField* instance
+                       or tuple(field_path|callable, field_name)
+        :type fields: list(str) | callable | HField | tuple(field, name))
         :return: self
         """
         fields = [] if fields is None else fields
@@ -367,7 +385,9 @@ class BaseTable(object):
         """
         # Python 2/3 compatability
         if six.PY3:
-            adapt = lambda s: _(s)
+            def adapt(s):
+                return _(s)
+
             fmode = 'wt'
             tmp_file = tempfile.NamedTemporaryFile(
                 mode=fmode,
@@ -376,8 +396,10 @@ class BaseTable(object):
                 encoding='utf-8',
                 delete=False)
         else:
+            def adapt(s):
+                return _(s).encode('utf-8')
+
             fmode = 'wb'
-            adapt = lambda s: _(s).encode('utf-8')
             tmp_file = tempfile.NamedTemporaryFile(
                 mode=fmode,
                 dir=CSV_PATH,
@@ -403,22 +425,25 @@ class HTMLTable(BaseTable):
 
     """ HTML Table representation object for RecordList
 
-        :param data: record list (or iterable of anything other) to create represetation for
+        :param data: record list (or iterable of anything other)
+                     to create represetation for
         :type data: RecordList|iterable
         :param fields: list of fields to display. each field should be string
                        with dot splitted names of related object, or callable
-                       of one argument (record instance) or *HField* instance or
-                       tuple(field_path|callable, field_name)
-        :type fields: list(str | callable | HField instance | tuple(field, name))
+                       of one argument (record instance) or *HField* instance
+                       or tuple(field_path|callable, field_name)
+        :type fields: list(str | callable | HField | tuple(field, name))
         :param str caption: String to be used as table caption
         :param dict highlighters: dictionary in format::
 
                                       {color: callable(record)->bool}
 
                                   where *color* any color suitable for HTML and
-                                  callable is function of *Record instance* which decides,
-                                  if record should be colored by this color
-        :param bool display_help: if set to False, then no help message will be displayed
+                                  callable is function of *Record instance*
+                                  which decides, if record should be colored
+                                  by this color
+        :param bool display_help: if set to False,
+                                  then no help message will be displayed
     """
 
     _template = Template("""
@@ -428,7 +453,8 @@ class HTMLTable(BaseTable):
             {% endif %}
             {% if table._display_help and not table.nested %}
                 <div class='panel-body'>
-                    Note, that You may use <i>.to_csv()</i> method of this table to export it to CSV format
+                    Note, that You may use <i>.to_csv()</i>
+                    method of this table to export it to CSV format
                 </div>
             {% endif %}
             <table class='table table-bordered table-condensed table-striped'>
@@ -485,11 +511,15 @@ class HTMLTable(BaseTable):
         self._nested = value
 
     def update(self, fields=None, caption=None, highlighters=None, **kwargs):
-        """ This method is used to change HTMLTable initial data, thus, changing representation
-            Can be used for example, when some function returns partly configured HTMLTable instance,
-            but user want's to display more fields for example, or add some custom highlighters
+        """ This method is used to change HTMLTable initial data, thus,
+            changing representation
 
-            arguments same as for constructor, except 'data' arg, which is absent in this method
+            Can be used for example, when some function returns partly
+            configured HTMLTable instance, but user want's to display
+            more fields or add some custom highlighters
+
+            arguments same as for constructor, except 'data' arg,
+            which is absent in this method
 
             :return: self
         """

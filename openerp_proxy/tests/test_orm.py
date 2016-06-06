@@ -2,14 +2,8 @@ import six
 import numbers
 import collections
 
-
-try:
-    import unittest.mock as mock
-except ImportError:
-    import mock
-
-
-from . import BaseTestCase
+from . import (BaseTestCase,
+               mock)
 from ..core import Client
 from ..orm.record import (Record,
                           RecordList,
@@ -436,7 +430,8 @@ class Test_22_RecordList(BaseTestCase):
             self.recordlist[100]
 
     def test_getattr(self):
-        with mock.patch.object(self.object, 'some_server_method') as fake_method:
+        with mock.patch.object(self.object,
+                               'some_server_method') as fake_method:
             # bug override in mock object (python 2.7)
             if not getattr(fake_method, '__name__', False):
                 fake_method.__name__ = fake_method.name
@@ -545,7 +540,9 @@ class Test_22_RecordList(BaseTestCase):
 
         # TODO: rewrite this to test that items was uniquifyed
         self.assertEqual(
-            len(res), len(set([r.parent_id.name for r in self.recordlist if r.parent_id])))
+            len(res),
+            len(set([r.parent_id.name
+                     for r in self.recordlist if r.parent_id])))
 
     def test_mapped_4_m2o_dot_char_field(self):
         res = self.recordlist.mapped('country_id.code')
@@ -554,7 +551,9 @@ class Test_22_RecordList(BaseTestCase):
 
         # TODO: rewrite this to test that items was uniquifyed
         self.assertEqual(
-            len(res), len(set([r.country_id.code for r in self.recordlist if r.country_id])))
+            len(res),
+            len(set([r.country_id.code
+                     for r in self.recordlist if r.country_id])))
 
     def test_mapped_5_m2o_dot_o2m_field(self):
         res = self.recordlist.mapped('user_ids')
@@ -633,7 +632,7 @@ class Test_22_RecordList(BaseTestCase):
                     self.assertEqual(len(c_cache[country_id]), 4)
                     self.assertItemsEqual(
                         list(c_cache[country_id]),
-                        ['id','name', 'code', '__name_get_result'])
+                        ['id', 'name', 'code', '__name_get_result'])
                 else:
                     self.assertEqual(len(c_cache[country_id]), 4)
                     self.assertItemsEqual(
@@ -642,7 +641,8 @@ class Test_22_RecordList(BaseTestCase):
 
         self.assertTrue(
             country_checked,
-            "Country must be checked. may be there are wrong data in test database")
+            "Country must be checked. "
+            "may be there are wrong data in test database")
 
     def test_copy(self):
         # test that cipied list and original list have same cache instance,
@@ -903,7 +903,8 @@ class Test_23_Cache(BaseTestCase):
         # update cache with keys
         obj_cache.update_keys([1, 2, 3, 4, 5])
 
-        self.assertItemsEqual(obj_cache.get_ids_to_read('name'), [1, 2, 3, 4, 5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('name'),
+                              [1, 2, 3, 4, 5])
 
         # fill field 'name' in first two cache items
         obj_cache[1]['name'] = 'item 1'
@@ -916,10 +917,12 @@ class Test_23_Cache(BaseTestCase):
         # See that if we get ids to read for fields 'name' and 'address', than
         # all ids will be returned again. this is because no cache item have
         # field 'aaddress' filled
-        self.assertItemsEqual(obj_cache.get_ids_to_read('name', 'address'), [1, 2, 3 ,4, 5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('name', 'address'),
+                              [1, 2, 3, 4, 5])
 
         # test that if we change order of fields, nothing will change
-        self.assertItemsEqual(obj_cache.get_ids_to_read('address', 'name'), [1, 2, 3 ,4, 5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('address', 'name'),
+                              [1, 2, 3, 4, 5])
 
         # Add value for field 'address' to cache items #3 and #2
         obj_cache[3]['address'] = 'Kyiv, Ukraine'
@@ -927,20 +930,27 @@ class Test_23_Cache(BaseTestCase):
 
         # ad test what ids will be returned
         self.assertItemsEqual(obj_cache.get_ids_to_read('address'), [1, 4, 5])
-        self.assertItemsEqual(obj_cache.get_ids_to_read('name'), [3, 4 ,5])
-        self.assertItemsEqual(obj_cache.get_ids_to_read('address', 'name'), [1, 3, 4, 5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('name'), [3, 4, 5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('address', 'name'),
+                              [1, 3, 4, 5])
 
         # Ok, let's add field 'city' to last cache item (#5)
         obj_cache[5]['city'] = 'Kyiv'
 
         # And look what wi have
         self.assertItemsEqual(obj_cache.get_ids_to_read('address'), [1, 4, 5])
-        self.assertItemsEqual(obj_cache.get_ids_to_read('name'), [3, 4 ,5])
-        self.assertItemsEqual(obj_cache.get_ids_to_read('city'), [1, 2, 3 ,4])
-        self.assertItemsEqual(obj_cache.get_ids_to_read('address', 'name'), [1, 3, 4, 5])
-        self.assertItemsEqual(obj_cache.get_ids_to_read('address', 'city'), [1, 2, 3, 4, 5])
-        self.assertItemsEqual(obj_cache.get_ids_to_read('name', 'city'), [1, 2, 3, 4, 5])
-        self.assertItemsEqual(obj_cache.get_ids_to_read('name', 'address', 'city'), [1, 2, 3, 4, 5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('name'), [3, 4, 5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('city'), [1, 2, 3, 4])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('address', 'name'),
+                              [1, 3, 4, 5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('address', 'city'),
+                              [1, 2, 3, 4, 5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('name', 'city'),
+                              [1, 2, 3, 4, 5])
+        self.assertItemsEqual(obj_cache.get_ids_to_read('name',
+                                                        'address',
+                                                        'city'),
+                              [1, 2, 3, 4, 5])
 
     def test_cache_field_str(self):
         obj_cache = self.cache['res.partner']

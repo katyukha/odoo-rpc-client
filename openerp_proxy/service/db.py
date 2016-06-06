@@ -90,7 +90,7 @@ class DBService(ServiceBase):
                                   with *client.dbname is not None*
             :param str format: (only odoo 9.0) (default: zip)
             :raise: `ValueError` (unsupported value of *db* argument)
-            :return: bytestring with already base64 decoded data
+            :return: bytestring with base64 encoded data
             :rtype: bytes
         """
         # format argument available only for odoo version 9.0

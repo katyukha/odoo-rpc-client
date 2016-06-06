@@ -115,7 +115,7 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
         Note, to create instance of cache call *empty_cache*
     """
 
-    __slots__ = ['_object', '_cache', '_lcache', '_id']
+    __slots__ = ['_object', '_cache', '_lcache', '_id', '_related_objects']
 
     def __init__(self, obj, rid, cache=None, context=None):
         assert isinstance(obj, Object), "obj should be Object"
@@ -125,6 +125,9 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
         self._object = obj
         self._cache = empty_cache(obj.client) if cache is None else cache
         self._lcache = self._cache[obj.name]
+        self._related_objects = {}
+
+        self._lcache[self._id]  # ensure that ID of this record is in cache.
         if context is not None:
             self._lcache.update_context(context)
 
@@ -189,7 +192,9 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
         return self._data.get('__name_get_result', u'ERROR')
 
     def __str__(self):
-        return u"R(%s, %s)[%s]" % (self._object.name, self.id, ustr(self._name))
+        return u"R(%s, %s)[%s]" % (self._object.name,
+                                   self.id,
+                                   ustr(self._name))
 
     def __repr__(self):
         return str(self)
@@ -212,6 +217,40 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def _get_many2one_rel_obj(self, name, rel_data, cached=True):
+        """ Method used to fetch related object by name of field
+            that points to it
+        """
+        if name not in self._related_objects or not cached:
+            if rel_data:
+                # Do not forged about relations in form [id, name]
+                rel_id = (rel_data[0]
+                          if isinstance(rel_data, collections.Iterable)
+                          else rel_data)
+
+                rel_obj = self._service.get_obj(
+                    self._columns_info[name]['relation'])
+                self._related_objects[name] = get_record(rel_obj,
+                                                         rel_id,
+                                                         cache=self._cache,
+                                                         context=self.context)
+            else:
+                self._related_objects[name] = False
+        return self._related_objects[name]
+
+    def _get_one2many_rel_obj(self, name, rel_ids, cached=True, limit=None):
+        """ Method used to fetch related objects by name of field
+            that points to them using one2many relation
+        """
+        if name not in self._related_objects or not cached:
+            rel_obj = self._service.get_obj(
+                self._columns_info[name]['relation'])
+            self._related_objects[name] = get_record_list(rel_obj,
+                                                          rel_ids,
+                                                          cache=self._cache,
+                                                          context=self.context)
+        return self._related_objects[name]
+
     def _get_field(self, ftype, name):
         """ Returns value for field 'name' of type 'type'
 
@@ -231,6 +270,12 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
                                           context=self.context):
                 # write each row of data to cache
                 cache_field(data['id'], ftype, name, data[name])
+
+        # relational fields
+        if ftype == 'many2one':
+            return self._get_many2one_rel_obj(name, self._data[name])
+        if ftype in ('one2many', 'many2many'):
+            return self._get_one2many_rel_obj(name, self._data[name])
 
         return self._data[name]
 
@@ -269,6 +314,17 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
         """
         self._data.clear()
         self._data['id'] = self._id
+
+        # Update related objects cache
+        rel_objects = self._related_objects
+        self._related_objects = {}  # cleanup related_objects cache
+
+        # recursively cleanup related records
+        for rel in rel_objects.values():
+            if isinstance(rel, (Record, RecordList)):
+                # both, Record and RecordList objects have *refresh* method
+                rel.refresh()
+
         return self
 
     def read(self, fields=None, context=None, multi=False):
@@ -354,7 +410,12 @@ def get_record_list(obj, ids=None, fields=None, cache=None, context=None):
                                      cache=cache,
                                      context=context)
 
-
+# TODO:  impelment additional operators
+#    - operator: +
+#    - operator: +=
+#
+# TODO: implement correct bechavior of cache when adding new records to record
+# list with diferent cache
 @six.python_2_unicode_compatible
 class RecordList(six.with_metaclass(RecordListMeta,
                                     collections.MutableSequence,
@@ -376,8 +437,6 @@ class RecordList(six.with_metaclass(RecordListMeta,
 
     """
     __slots__ = ('_object', '_cache', '_lcache', '_records')
-
-    # TODO: expose object's methods via implementation of __dir__
 
     def __init__(self, obj, ids=None, fields=None, cache=None, context=None):
         """
@@ -502,7 +561,7 @@ class RecordList(six.with_metaclass(RecordListMeta,
             :rtype: RecordList
         """
         assert isinstance(item, (Record, numbers.Integral)), \
-                "Only Record or int instances could be added to list"
+            "Only Record or int instances could be added to list"
         if isinstance(item, Record):
             self._records.insert(index, item)
         else:
@@ -685,7 +744,7 @@ class RecordList(six.with_metaclass(RecordListMeta,
             and new empty cache.
 
             :param dict context: new context values to be used on new list
-            :param true new_cache: if set to True, then new cache instance
+            :param bool new_cache: if set to True, then new cache instance
                                    will be created for resulting recordlist
                                    if set to Cache instance, than it will be
                                    used for resulting recordlist
@@ -790,83 +849,8 @@ class RecordList(six.with_metaclass(RecordListMeta,
         return self.object.read(self.ids, *args, **kwargs)
 
 
-class RecordRelations(Record):
-    """
-        Extends Record class to add ability to browse related fields
-        from Record instance
-
-        .. code:: python
-
-            >>> o = client['sale.order.line'].read_records(1)
-            >>> o.order_id
-            R(sale.order, 25)[SO025]
-
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(RecordRelations, self).__init__(*args, **kwargs)
-        self._related_objects = {}
-
-    def _get_many2one_rel_obj(self, name, rel_data, cached=True):
-        """ Method used to fetch related object by name of field
-            that points to it
-        """
-        if name not in self._related_objects or not cached:
-            if rel_data:
-                # Do not forged about relations in form [id, name]
-                rel_id = (rel_data[0]
-                          if isinstance(rel_data, collections.Iterable)
-                          else rel_data)
-
-                rel_obj = self._service.get_obj(
-                    self._columns_info[name]['relation'])
-                self._related_objects[name] = get_record(rel_obj,
-                                                         rel_id,
-                                                         cache=self._cache,
-                                                         context=self.context)
-            else:
-                self._related_objects[name] = False
-        return self._related_objects[name]
-
-    def _get_one2many_rel_obj(self, name, rel_ids, cached=True, limit=None):
-        """ Method used to fetch related objects by name of field
-            that points to them using one2many relation
-        """
-        if name not in self._related_objects or not cached:
-            rel_obj = self._service.get_obj(
-                self._columns_info[name]['relation'])
-            self._related_objects[name] = get_record_list(rel_obj,
-                                                          rel_ids,
-                                                          cache=self._cache,
-                                                          context=self.context)
-        return self._related_objects[name]
-
-    # Overridden to allow browse for related fields
-    def _get_field(self, ftype, name):
-        res = super(RecordRelations, self)._get_field(ftype, name)
-        if ftype == 'many2one':
-            return self._get_many2one_rel_obj(name, res)
-        if ftype in ('one2many', 'many2many'):
-            return self._get_one2many_rel_obj(name, res)
-        return res
-
-    def refresh(self):
-        """Reread data and clean-up the caches
-
-           :returns: self
-           :rtype: Record
-        """
-        super(RecordRelations, self).refresh()
-
-        # Update related objects cache
-        rel_objects = self._related_objects
-        self._related_objects = {}
-
-        for rel in rel_objects.values():
-            if isinstance(rel, (Record, RecordList)):
-                # both, Record and RecordList objects have *refresh* method
-                rel.refresh()
-        return self
+# For backward compatability
+RecordRelations = Record
 
 
 class ObjectRecords(Object):
@@ -887,7 +871,7 @@ class ObjectRecords(Object):
             res = model_obj.search_records([('model', '=', self.name)],
                                            limit=2)
             assert res.length == 1, \
-                    "There must be only one model for this name"
+                "There must be only one model for this name"
             self._model = res[0]
 
         return self._model
@@ -943,6 +927,7 @@ class ObjectRecords(Object):
                 ...     order.write({'note': 'order date is %s'%order.date})
         """
 
+        # TODO: use search_read for odoo versions >= 8.0
         read_fields = kwargs.pop('read_fields', None)
         context = kwargs.get('context', None)
         cache = kwargs.pop('cache', None)

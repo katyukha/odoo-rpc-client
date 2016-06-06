@@ -7,4 +7,5 @@ from .test_main import *          # noqa
 from .ext.test_sugar import *     # noqa
 from .ext.test_workflow import *  # noqa
 from .test_ipynb import *         # noqa
+from .test_utils import *         # noqa
 from .test_db import *            # noqa

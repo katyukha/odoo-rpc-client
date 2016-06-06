@@ -5,11 +5,6 @@ from ..orm import (Record,
 
 import unittest
 
-try:
-    import unittest.mock as mock
-except ImportError:
-    import mock
-
 
 class Test_25_Plugin_ModuleUtils(BaseTestCase):
 
@@ -27,7 +22,7 @@ class Test_25_Plugin_ModuleUtils(BaseTestCase):
         self.assertEqual(len(self.client.plugins), 1)
         self.assertIn('Test', self.client.plugins)
 
-        import openerp_proxy.plugins.module_utils
+        import openerp_proxy.plugins.module_utils  # noqa
 
         self.assertIn('module_utils', self.client.plugins)
         self.assertEqual(len(self.client.plugins), 2)
@@ -35,14 +30,19 @@ class Test_25_Plugin_ModuleUtils(BaseTestCase):
     def test_15_modules(self):
         self.assertIsInstance(self.client.plugins.module_utils.modules, dict)
         self.assertIn('sale', self.client.plugins.module_utils.modules)
-        self.assertIsInstance(self.client.plugins.module_utils.modules['sale'], Record)
-        self.assertEqual(self.client.plugins.module_utils.modules['sale']._object.name, 'ir.module.module')
+        self.assertIsInstance(self.client.plugins.module_utils.modules['sale'],
+                              Record)
+        self.assertEqual(
+            self.client.plugins.module_utils.modules['sale']._object.name,
+            'ir.module.module')
 
     def test_20_modules_dir(self):
         self.assertIn('m_sale', dir(self.client.plugins.module_utils))
         self.assertIn('modules', dir(self.client.plugins.module_utils))
-        self.assertIn('update_module_list', dir(self.client.plugins.module_utils))
-        self.assertIn('installed_modules', dir(self.client.plugins.module_utils))
+        self.assertIn('update_module_list',
+                      dir(self.client.plugins.module_utils))
+        self.assertIn('installed_modules',
+                      dir(self.client.plugins.module_utils))
 
     def test_25_module_getitem(self):
         res = self.client.plugins.module_utils['sale']
@@ -101,11 +101,12 @@ class Test_25_Plugin_ModuleUtils(BaseTestCase):
 
     def test_55_installed_modules(self):
         modules = self.client.plugins.module_utils.installed_modules
-        modules2 = self.client['ir.module.module'].search_records([('state', '=', 'installed')])
+        modules2 = self.client['ir.module.module'].search_records(
+            [('state', '=', 'installed')])
         self.assertItemsEqual(modules, modules2)
 
 
-class Test_26_Plugin_ModuleUtils(BaseTestCase):
+class Test_26_Plugin_ExternalIDS(BaseTestCase):
 
     def setUp(self):
         super(self.__class__, self).setUp()
@@ -124,13 +125,14 @@ class Test_26_Plugin_ModuleUtils(BaseTestCase):
         ]
         self.main_partner_data = self.data_obj.search_records(
             main_partner_domain)[0]
-        self.main_partner = self.partner_obj.browse(self.main_partner_data.res_id)
+        self.main_partner = self.partner_obj.browse(
+            self.main_partner_data.res_id)
 
     def test_10_init_module_utils(self):
         self.assertNotIn('external_ids', self.client.plugins)
         self.assertIn('Test', self.client.plugins)
 
-        import openerp_proxy.plugins.external_ids
+        import openerp_proxy.plugins.external_ids  # noqa
 
         self.assertIn('external_ids', self.client.plugins)
 
@@ -227,3 +229,17 @@ class Test_26_Plugin_ModuleUtils(BaseTestCase):
         no_partner = self.client.plugins.external_ids.get_record(
             'base.unexisting_xml_id')
         self.assertFalse(no_partner)
+
+    def test_40_record_as_xmlid(self):
+        xml_id = self.main_partner.as_xmlid()
+        self.assertEqual(xml_id, "base.main_partner")
+
+        new_partner_id = self.client[
+            'res.partner'].create({'name': 'Test partner'})
+        new_partner = self.client['res.partner'].browse(new_partner_id)
+
+        no_xml_id = new_partner.as_xmlid()
+        self.assertFalse(no_xml_id)
+
+        # Cleanup, remove created partner
+        new_partner.unlink()

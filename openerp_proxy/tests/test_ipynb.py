@@ -18,6 +18,7 @@ from jupyter_client.manager import start_new_kernel
 PROJECT_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..', '..',))
 
+
 class CellExecuteError(Exception):
     """ Cell execution error
     """
@@ -56,8 +57,8 @@ class NBRunner(object):
         """ Start IPython kernel
         """
         self.km, self.kc = start_new_kernel(
-            #kernel_name=kernel_name,
-            #extra_arguments=self.extra_arguments,
+            # kernel_name=kernel_name,
+            # extra_arguments=self.extra_arguments,
             stderr=open(os.devnull, 'w'),
             cwd=os.getcwd())
         self.kc.allow_stdin = False
@@ -182,7 +183,7 @@ class NBRunner(object):
 
     def _prepare_run(self):
         # enable coverage:
-        msg_id = self.kc.execute(
+        self.kc.execute(
             "import sys, os, coverage;\n"
             "_coverage = coverage.coverage("
             "    data_suffix='%s-ipython' % os.getpid());\n"
@@ -305,7 +306,8 @@ class Test_40_IPYNB(unittest.TestCase):
     # list of paths of notebooks to run
     notebooks_to_run = [
         os.path.join(PROJECT_DIR, 'examples', 'Examples & HTML tests.ipynb'),
-        os.path.join(PROJECT_DIR, 'examples', 'RecordList Representation.ipynb'),
+        os.path.join(PROJECT_DIR, 'examples',
+                     'RecordList Representation.ipynb'),
     ]
 
     def setUp(self):

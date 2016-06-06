@@ -69,7 +69,7 @@ class ObjectCache(dict):
             This is highly useful in prefetching
         """
         return [key for key, val in six.viewitems(self)
-                if any(( (field not in val) for field in fields))]
+                if any(((field not in val) for field in fields))]
 
     def cache_field(self, rid, ftype, field_name, value):
         """ This method impelment additional caching functionality,
@@ -110,7 +110,8 @@ class ObjectCache(dict):
             :return: tuple(prefetch_fields, related_fields),
                      where prefetch_fields is list of fields, to be read for
                      current object, and related_fields is dictionary of form
-                     ``{'related.object': ['relatedfield1', 'relatedfield2.relatedfield']}``
+                     ``{'related.object': ['relatedfield1',
+                                           'relatedfield2.relatedfield']}``
         """
         rel_fields = collections.defaultdict(list)
         prefetch_fields = set()
