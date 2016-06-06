@@ -6,6 +6,10 @@ Release 0.6.9.dev0
 
 - ``external_ids`` plugin now adds ``Record.as_xmlid`` method
 - bugfix: ensure thet record is present in cache on init of Record class
+- bugfix: [json-rpc], if RPC method results in None, then there is no
+  'result' object in response, so if there are no 'error' object, nor 'result',
+  then suppose that 'result' is None, thus it is possible to deal with
+  Odoo methods, that returns None as result via RPC
 
 
 Release 0.6.8

@@ -89,7 +89,9 @@ class JSONRPCMethod(object):
             raise JSONRPCError(error['message'],
                                code=error.get('code', None),
                                data=error.get('data', None))
-        return result["result"]
+        # if 'result' is not present in response object, then it seems, that
+        # result is None
+        return result.get("result", None)
 
 
 class JSONRPCProxy(object):
