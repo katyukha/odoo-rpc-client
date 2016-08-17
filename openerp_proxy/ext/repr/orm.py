@@ -21,7 +21,7 @@ class RecordListData(RecordList):
         related to RecordList representation
     """
 
-    def as_table(self, *fields):
+    def as_table(self, *fields, **kwargs):
         """ Table representation of record list
 
             (Similar to .as_html_table method, but for console
@@ -30,7 +30,7 @@ class RecordListData(RecordList):
 
             All arguments passed are fields to be displayed
         """
-        return self.as_html_table(*fields)
+        return self.as_html_table(*fields, **kwargs)
 
     def as_html_list(self):
         """ HTML List representation of RecordList

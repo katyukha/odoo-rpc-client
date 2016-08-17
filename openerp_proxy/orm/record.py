@@ -410,6 +410,7 @@ def get_record_list(obj, ids=None, fields=None, cache=None, context=None):
                                      cache=cache,
                                      context=context)
 
+
 # TODO:  impelment additional operators
 #    - operator: +
 #    - operator: +=
@@ -565,7 +566,7 @@ class RecordList(six.with_metaclass(RecordListMeta,
         if isinstance(item, Record):
             self._records.insert(index, item)
         else:
-            self._records.insert(index, self._object.read_records(item))
+            self._records.insert(index, self._object.read_records(item, cache=self._cache))
         return self
 
     # Overridden to make ability to call methods of object on list of IDs
