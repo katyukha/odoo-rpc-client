@@ -566,7 +566,8 @@ class RecordList(six.with_metaclass(RecordListMeta,
         if isinstance(item, Record):
             self._records.insert(index, item)
         else:
-            self._records.insert(index, self._object.read_records(item, cache=self._cache))
+            self._records.insert(index, self._object.read_records(
+                item, cache=self._cache))
         return self
 
     # Overridden to make ability to call methods of object on list of IDs
@@ -930,8 +931,8 @@ class ObjectRecords(Object):
 
         # TODO: use search_read for odoo versions >= 8.0
         read_fields = kwargs.pop('read_fields', None)
-        context = kwargs.get('context', None)
         cache = kwargs.pop('cache', None)
+        context = kwargs.get('context', None)
 
         if kwargs.get('count', False):
             return self.search(*args, **kwargs)

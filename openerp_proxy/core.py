@@ -214,11 +214,11 @@ class Client(Extensible):
 
     @property
     def server_version(self):
-        """ Server version
+        """ Server base version  ('8.0', '9.0', etc)
 
             (Already parsed with pkg_resources.parse_version)
         """
-        return self.services.db.server_version()
+        return self.services.db.server_base_version()
 
     @property
     def registered_objects(self):

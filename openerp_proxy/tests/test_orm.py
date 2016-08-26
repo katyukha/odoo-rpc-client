@@ -75,6 +75,15 @@ class Test_20_Object(BaseTestCase):
         self.assertIsInstance(res, numbers.Integral)
         self.assertEqual(res, 1)
 
+    def test_search_read(self):
+        res = self.object.search_read([('id', '=', 1)], fields=['name'])
+        self.assertIsInstance(res, list)
+        self.assertEqual(len(res), 1)
+        self.assertIsInstance(res[0], dict)
+        self.assertIn('id', res[0])
+        self.assertIn('name', res[0])
+        self.assertEqual(res[0]['id'], 1)
+
     def test_search_records(self):
         res = self.object.search_records([('id', '=', 1)])
         self.assertIsInstance(res, RecordList)

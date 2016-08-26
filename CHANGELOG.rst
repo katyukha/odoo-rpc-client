@@ -1,8 +1,21 @@
 Last changes
 ============
 
+Release 0.7.0
+-------------
+
+- ``client.server_version`` now is aliase to
+  ``client.services.db.server_base_version``
+- Added ``services.db.server_base_version()`` which could be safely compared like:
+  ``client.services.db.server_base_version() >= pkg_resources.parse_version('9.0')``
+- Added method ``search_read`` to orm.object
+- Drop support of OpenERP 6.0
+- ext.repr: Added ability to pass table format to .as_table method
+  tablefmt arg must be suitable for tabulate.tabulate method from
+  [Tabulate](https://pypi.python.org/pypi/tabulate) package
+
 Release 0.6.9
-------------------
+-------------
 
 - ``external_ids`` plugin now adds ``Record.as_xmlid`` method
 - bugfix: ensure thet record is present in cache on init of Record class

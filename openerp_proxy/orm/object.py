@@ -1,5 +1,6 @@
 import six
 from extend_me import ExtensibleByHashType
+from pkg_resources import parse_version
 
 from ..utils import (AttrDict,
                      DirMixIn,
@@ -237,4 +238,36 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
             Also look at `Odoo documentation <https://www.odoo.com/documentation/9.0/reference/orm.html#openerp.models.Model.search>`__
             for this method
         """  # noqa
+        _, kwargs = preprocess_args(**kwargs)  # preprocess kwargs
         return self.service.execute(self.name, 'search', *args, **kwargs)
+
+    def search_read(self, domain=None, fields=None, offset=0, limit=None,
+                    order=None, context=None):
+        """ Search and read records specified by domain
+
+            Note that this method reads data in correct order
+
+            Also look at `Odoo documentation <https://www.odoo.com/documentation/9.0/reference/orm.html#openerp.models.Model.search_read>`__
+
+            :return: list of dictionaries with data had been read
+            :rtype: list
+        """  # noqa
+        if self.client.server_version >= parse_version('8.0'):
+            args, kwargs = preprocess_args(domain=domain,
+                                           fields=fields,
+                                           offset=offset,
+                                           limit=limit,
+                                           order=order,
+                                           context=context)
+            return self.service.execute(self.name, 'search_read', **kwargs)
+        else:
+            ids = self.search(domain,
+                              offset=offset,
+                              limit=limit,
+                              order=order,
+                              context=context)
+            read = self.read(ids, fields=fields, context=context)
+
+            # reorder read
+            index = dict((r['id'], r) for r in read)
+            return [index[x] for x in ids if x in index]

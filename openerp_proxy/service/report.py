@@ -12,9 +12,7 @@ which could be directly written to file (or
 just use *report.save(path)* method)
 """
 
-import time
 import numbers
-from pkg_resources import parse_version
 from extend_me import Extensible
 
 from .service import ServiceBase
@@ -310,30 +308,11 @@ class ReportService(ServiceBase):
 
         report_model = self[report_name].report_action.model
 
-        if self.client.server_version >= parse_version('6.1'):
-            report_result = self.render_report(report_name,
-                                               report_model,
-                                               obj_ids,
-                                               report_type=report_type,
-                                               context=context)
-        else:  # pragma: no cover
-            # server < 6.1
-            report_id = self.report(report_name,
-                                    report_model,
-                                    obj_ids,
-                                    report_type=report_type,
-                                    context=context)
-            attempt = 0
-            while True:
-                report_result = self.report_get(report_id)
-                if report_result['state']:
-                    break
-                else:
-                    time.sleep(1)
-                    attempt += 1
-
-                if attempt > 200:
-                    raise ReportError("Report download timeout!")
+        report_result = self.render_report(report_name,
+                                           report_model,
+                                           obj_ids,
+                                           report_type=report_type,
+                                           context=context)
 
         return ReportResult(self.available_reports[report_name],
                             report_result)

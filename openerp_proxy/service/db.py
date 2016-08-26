@@ -1,5 +1,4 @@
 import six
-import time
 from pkg_resources import parse_version
 
 from ..service.service import ServiceBase
@@ -52,17 +51,7 @@ class DBService(ServiceBase):
         """
         from openerp_proxy.core import Client
 
-        # requires server version >= 6.1
-        if self.server_version() >= parse_version('6.1'):
-            self.create_database(password, dbname, demo, lang, admin_password)
-        else:  # pragma: no cover
-            # for other server versions
-            process_id = self.create(password, dbname, demo, lang,
-                                     admin_password)
-
-            # wait while database will be created
-            while self.get_process(process_id)[0] < 1.0:
-                time.sleep(1)
+        self.create_database(password, dbname, demo, lang, admin_password)
 
         client = Client(self.client.host, port=self.client.port,
                         protocol=self.client.protocol, dbname=dbname,
@@ -94,11 +83,7 @@ class DBService(ServiceBase):
             :rtype: bytes
         """
         # format argument available only for odoo version 9.0
-        #
-        # Note, checking for 9.0rc because Odoo changed version naming.
-        # See issue https://github.com/odoo/odoo/issues/9799
-        #
-        if self.server_version() >= parse_version('9.0rc'):
+        if self.server_base_version() >= parse_version('9.0'):
             args = [kwargs.get('format', 'zip')]
         else:
             args = []
@@ -121,7 +106,8 @@ class DBService(ServiceBase):
         """
         assert isinstance(data, bytes), \
             "data must be instance of bytes. got: %s" % type(data)
-        if self.server_version() >= parse_version('8.0') and 'copy' in kwargs:
+        if self.server_base_version() >= parse_version('8.0') and \
+                'copy' in kwargs:
             args = [kwargs['copy']]
         else:
             args = []
@@ -134,6 +120,13 @@ class DBService(ServiceBase):
             (Already parsed with pkg_resources.parse_version)
         """
         return parse_version(self.server_version_str())
+
+    def server_base_version(self):
+        """ Returns server base version ('9.0', '8.0', etc)
+            parsed via pkg_resources.parse_version.
+            No info about comunity / enterprise here
+        """
+        return parse_version(self.server_version().base_version)
 
     def server_version_str(self):
         """ Return server version (not wrapped by pkg.parse_version)
