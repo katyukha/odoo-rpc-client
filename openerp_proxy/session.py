@@ -78,7 +78,6 @@ class ClientManager(object):
             'aliases': self.aliases,
             'index': self.index_rev,
         }
-        pass
 
     def _get_client_params(self, client):
         """ Returns dictionary with params that could be used to
@@ -335,7 +334,7 @@ class Session(Extensible, DirMixIn):
         if os.path.exists(self.data_file):
             data = json_read(self.data_file)
 
-            if 'databases' in data:
+            if 'clients' not in data and 'databases' in data:
                 # Backward compatability
                 data['clients'] = data.get('databases', {})
 
@@ -544,7 +543,7 @@ class Session(Extensible, DirMixIn):
         return db
 
     def save(self):
-        """ Saves session on disc
+        """ Saves session on disk
         """
         data = {
             'options': self._options,
