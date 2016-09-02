@@ -66,7 +66,7 @@ class Test_90_Session(BaseTestCase):
                              interactive=False)
 
         self.assertIsInstance(cl, Client)
-        self.assertIn(cl.get_url(), session._databases)
+        self.assertIn(cl.get_url(), session._clients)
         self.assertIn(cl.get_url(), session.db_list)
         self.assertEqual(len(session.db_list), 1)
         self.assertIs(session.get_db(cl.get_url()), cl)
@@ -97,7 +97,7 @@ class Test_90_Session(BaseTestCase):
         session = Session(self._session_file_path)
 
         # and test again
-        self.assertIn(cl.get_url(), session._databases)
+        self.assertIn(cl.get_url(), session._clients)
         self.assertIn(cl.get_url(), session.db_list)
         self.assertEqual(len(session.db_list), 1)
         self.assertIsNot(session.get_db(cl.get_url()), cl)
@@ -113,7 +113,7 @@ class Test_90_Session(BaseTestCase):
 
         # test situation when session just started and saved, without changes
         # this code is aimed mostly to increase test coverage. In this case in
-        # ._databases all values will be dict when saveing
+        # ._clients all values will be dict when saveing
         session = Session(self._session_file_path)
         session.save()
 
@@ -133,7 +133,7 @@ class Test_90_Session(BaseTestCase):
                              no_save=True)   # diff from previous test
 
         self.assertIsInstance(cl, Client)
-        self.assertIn(cl.get_url(), session._databases)
+        self.assertIn(cl.get_url(), session._clients)
         self.assertIn(cl.get_url(), session.db_list)
         self.assertEqual(len(session.db_list), 1)
         self.assertIs(session.get_db(cl.get_url()), cl)
@@ -153,7 +153,7 @@ class Test_90_Session(BaseTestCase):
         session = Session(self._session_file_path)
 
         # and test again
-        self.assertNotIn(cl.get_url(), session._databases)
+        self.assertNotIn(cl.get_url(), session._clients)
         self.assertNotIn(cl.get_url(), session.db_list)
         self.assertEqual(len(session.db_list), 0)
 

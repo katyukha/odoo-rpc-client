@@ -22,7 +22,287 @@ class SessionClientExt(Client):
     """
     def __init__(self, *args, **kwargs):
         super(SessionClientExt, self).__init__(*args, **kwargs)
-        self._no_save = False
+        self._no_save = kwargs.get('no_save', False)
+
+    def get_init_args(self):
+        res = super(SessionClientExt, self).get_init_args()
+        res.update({'no_save': self._no_save})
+        return res
+
+
+class ClientManager(object):
+    """ Manage Client instances
+    """
+    def __init__(self, data=None):
+        # key: url; value: instance of DB or dict with init args
+        self._clients = {}
+        self._aliases = {}  # key: aliase name; value: url
+
+        self._cl_index = {}  # key: index; value: url
+        self._cl_index_rev = {}  # key: url; value: index
+        self._cl_index_counter = 0  # max index used
+
+        if data is not None:
+            self._parse_data(data)
+
+    def _parse_data(self, data):
+        """ Parse initial data
+
+            Data should be a dictionary with following keys:
+
+            - client
+            - aliases
+            - index
+        """
+        self._clients = data.get('clients', {})
+        self._aliases = data.get('aliases', {})
+
+        index = data.get('index', {})
+        for url, index in index.items():
+            if url in self._clients:
+                self._cl_index[index] = url
+                self._cl_index_rev[url] = index
+                self._cl_index_counter = max(self._cl_index_counter,
+                                             index)
+
+    @property
+    def data(self):
+        clients = {}
+        for url, client in self._clients.items():
+            params = self._get_client_params(client)
+            if not params.get('no_save', False):
+                clients[url] = params
+
+        return {
+            'clients': clients,
+            'aliases': self.aliases,
+            'index': self.index_rev,
+        }
+        pass
+
+    def _get_client_params(self, client):
+        """ Returns dictionary with params that could be used to
+            initialize new Client instance.
+
+            :param client: Client to get params for
+            :type client: openerp_proxy.core.Client
+            :return: dict with client params
+            :rtype: dict
+        """
+        if isinstance(client, Client):
+            return client.get_init_args()
+        elif isinstance(client, dict):
+            return client
+        else:  # pragma: no cover
+            raise ValueError("Bad database instance. "
+                             "It should be dict or Client object")
+
+    @property
+    def aliases(self):
+        """ List of client aliases
+
+            To add new client aliase, use method *aliase*::
+
+                session = ClientManager()
+                session.aliase('mdb', db)  # db is instance of Client
+        """
+        return self._aliases
+
+    def aliase(self, name, val):
+        """ Sets up aliase 'name' for *val*
+
+            :param name: new aliase
+            :type name: string
+            :param val: client to create aliase for
+            :type val: int|string|Client instance
+
+            *val* could be index, url or Client object::
+
+                session = ClientManager()
+                session.aliase('tdb', 1)
+                session.aliase('mdb', 'xml-rpc://me@my.example.com:8069/my_db')
+                session.aliase('xdb', db)
+
+            And now You can use this aliase like::
+
+                session.tdb
+                session.mdb
+                session.xdb
+
+            :return: unchanged val
+        """
+        if isinstance(val, Client):
+            url = val.get_url()
+        elif isinstance(val, numbers.Integral) and val in self.index:
+            url = self.index[val]
+        else:
+            url = val
+
+        if url in self._clients:
+            self._aliases[name] = url
+        else:
+            raise ValueError("Bad value type: %s" % val)
+
+        return val
+
+    @property
+    def index(self):
+        """ Property which returns dict with {index: url}
+        """
+        if not self._cl_index:
+            for url in self._clients.keys():
+                self._index_url(url)
+        return dict(self._cl_index)
+
+    @property
+    def index_rev(self):
+        """ Reverse index.
+
+            Property which returns dict with {url: index}
+        """
+        if not self._cl_index_rev:
+            for url in self._clients.keys():
+                self._index_url(url)
+        return dict(self._cl_index_rev)
+
+    def _index_url(self, url):
+        """ Returns index of specified URL, or adds it to
+            store assigning new index
+        """
+        if self._cl_index_rev.get(url, False):
+            return self._cl_index_rev[url]
+
+        self._cl_index_counter += 1
+        self._cl_index[self._cl_index_counter] = url
+        self._cl_index_rev[url] = self._cl_index_counter
+        return self._cl_index_counter
+
+    def add_client(self, client):
+        """ Add db to session.
+
+            param client: client instance to be added to session
+            type client: openerp_proxy.core.Client
+        """
+        url = client.get_url()
+        self._clients[url] = client
+        self._index_url(url)
+
+    def _create_client(self, data):
+        """ Creates client from data
+
+            :param dict data: dictionary with client params
+            :return: Client instance
+            :rtype: openerp_proxy.client
+        """
+        return Client(**data)
+
+    def get_client(self, url_or_index):
+        """ Returns instance of Client object, that represents single
+            Odoo database it connected to, specified by passed index (integer)
+            or url (string) of database, previously saved in manager.
+
+            :param url_or_index: must be integer (if index) or string (if url).
+                                 this parametr specifies client to get
+            :type url_or_index: int|string
+            :return: openerp_proxy.Client
+            :raises ValueError: if cannot find client by specified args
+
+            Examples::
+
+                session.get_db(1)   # using index
+                session.get_db('xml-rpc://admin@localhost:8069/test-odoo-db')
+                session.get_db('my_db')   # using aliase
+        """
+        if isinstance(url_or_index, numbers.Integral):
+            url = self.index[url_or_index]
+        else:
+            url = self._aliases.get(url_or_index, url_or_index)
+
+        cl = self._clients.get(url, False)
+        if not cl:
+            raise ValueError("Bad url %s. not found in history"
+                             "" % url)
+
+        if isinstance(cl, Client):
+            return cl
+
+        cl = self._create_client(cl)
+        self.add_client(cl)
+        return cl
+
+    @property
+    def list(self):
+        """ Returns list of URLs of clients registered in this manager
+
+            :return: list of urls of clients registered in this manager
+            :rtype: list of strings
+        """
+        return self._clients.keys()
+
+    def __contains__(self, name):
+        return name in self._clients
+
+
+class SessionClientManager(ClientManager):
+    """ Client manager for sessions
+    """
+
+    def __init__(self, session, data):
+        super(SessionClientManager, self).__init__(data)
+        self.session = session
+
+    def _create_client(self, data):
+        """ Creates client from data
+
+            implements some password obfuscation
+
+            :param dict data: dictionary with client params
+            :return: Client instance
+            :rtype: openerp_proxy.client
+        """
+        if 'pwd' not in data:
+            data = data.copy()
+            if self.session.option('store_passwords') and 'password' in data:
+                import base64
+                encoded_pwd = data.pop('password').encode('utf8')
+                crypter, password = base64.b64decode(encoded_pwd).split(b':')
+                if crypter == b'simplecrypt':  # pragma: no cover
+                    # Legacy support
+                    import simplecrypt
+                    data['pwd'] = simplecrypt.decrypt(
+                        Client.to_url(data), base64.b64decode(password))
+                elif crypter == b'plain':
+                    # Current crypter
+                    data['pwd'] = password.decode('utf-8')
+                else:  # pragma: no cover
+                    raise Exception("Unknown crypter (%s) used in session"
+                                    "" % repr(crypter))
+            else:
+                # TODO: check if in interactive mode
+                data['pwd'] = getpass('Password: ')  # pragma: no cover
+
+        return super(SessionClientManager, self)._create_client(data)
+
+    def _get_client_params(self, client):
+        """ Returns dictionary with params that could be used to
+            initialize new Client instance.
+
+            implements some password deobfuscation
+
+            :param client: Client to get params for
+            :type client: openerp_proxy.core.Client
+            :return: dict with client params
+            :rtype: dict
+        """
+        params = super(SessionClientManager, self)._get_client_params(client)
+        if (isinstance(client, Client) and
+                self.session.option('store_passwords') and
+                client._pwd):
+            import base64
+            password = base64.b64encode(
+                b'plain:' + client._pwd.encode('utf-8')).decode('utf-8')
+            params.update({'password': password})
+        return params
 
 
 class Session(Extensible, DirMixIn):
@@ -50,29 +330,16 @@ class Session(Extensible, DirMixIn):
         """
         self.data_file = os.path.expanduser(data_file)
 
-        # key: url; value: instance of DB or dict with init args
-        self._databases = {}
-        self._db_aliases = {}  # key: aliase name; value: url
         self._options = {}
-
-        self._db_index = {}  # key: index; value: url
-        self._db_index_rev = {}  # key: url; value: index
-        self._db_index_counter = 0  # max index used
-
+        data = None
         if os.path.exists(self.data_file):
             data = json_read(self.data_file)
 
-            self._databases = data.get('databases', {})
-            self._db_aliases = data.get('aliases', {})
-            self._options = data.get('options', {})
+            if 'databases' in data:
+                # Backward compatability
+                data['clients'] = data.get('databases', {})
 
-            if 'index' in data:
-                for url, index in data['index'].items():
-                    if url in self._databases:
-                        self._db_index[index] = url
-                        self._db_index_rev[url] = index
-                        self._db_index_counter = max(self._db_index_counter,
-                                                     index)
+            self._options = data.get('options', {})
 
             for path in self.extra_paths:
                 self.add_path(path)
@@ -83,6 +350,8 @@ class Session(Extensible, DirMixIn):
                 except ImportError:
                     # TODO: implement some logging
                     pass
+
+        self._clients = SessionClientManager(self, data)
 
     @property
     def extra_paths(self):
@@ -139,6 +408,7 @@ class Session(Extensible, DirMixIn):
             self._options[opt] = default
         return self._options.get(opt, default)
 
+    # --- ClientManager proxy methods ---
     @property
     def aliases(self):
         """ List of database aliases
@@ -147,7 +417,7 @@ class Session(Extensible, DirMixIn):
 
                 session.aliase('mdb', db)  # db is instance of Client
         """
-        return self._db_aliases.copy()
+        return self._clients.aliases
 
     def aliase(self, name, val):
         """ Sets up aliase 'name' for *val*
@@ -171,28 +441,13 @@ class Session(Extensible, DirMixIn):
 
             :return: unchanged val
         """
-        if isinstance(val, Client):
-            url = val.get_url()
-        elif isinstance(val, numbers.Integral) and val in self.index:
-            url = self.index[val]
-        else:
-            url = val
-
-        if url in self._databases:
-            self._db_aliases[name] = url
-        else:
-            raise ValueError("Bad value type: %s" % val)
-
-        return val
+        return self._clients.aliase(name, val)
 
     @property
     def index(self):
         """ Property which returns dict with {index: url}
         """
-        if not self._db_index:
-            for url in self._databases.keys():
-                self._index_url(url)
-        return dict(self._db_index)
+        return self._clients.index
 
     @property
     def index_rev(self):
@@ -200,22 +455,16 @@ class Session(Extensible, DirMixIn):
 
             Property which returns dict with {url: index}
         """
-        if not self._db_index_rev:
-            for url in self._databases.keys():
-                self._index_url(url)
-        return dict(self._db_index_rev)
+        return self._clients.index_rev
 
-    def _index_url(self, url):
-        """ Returns index of specified URL, or adds it to
-            store assigning new index
+    @property
+    def db_list(self):
+        """ Returns list of URLs of databases available in current session
+
+            :return: list of urls of databases from session
+            :rtype: list of strings
         """
-        if self._db_index_rev.get(url, False):
-            return self._db_index_rev[url]
-
-        self._db_index_counter += 1
-        self._db_index[self._db_index_counter] = url
-        self._db_index_rev[url] = self._db_index_counter
-        return self._db_index_counter
+        return self._clients.list
 
     def add_db(self, db):
         """ Add db to session.
@@ -223,11 +472,9 @@ class Session(Extensible, DirMixIn):
             param db: database (client instance) to be added to session
             type db: Client instance
         """
-        url = db.get_url()
-        self._databases[url] = db
-        self._index_url(url)
+        self._clients.add_client(db)
 
-    def get_db(self, url_or_index, **kwargs):
+    def get_db(self, url_or_index):
         """ Returns instance of Client object, that represents single
             Odoo database it connected to, specified by passed index (integer)
             or url (string) of database, previously saved in session.
@@ -236,8 +483,6 @@ class Session(Extensible, DirMixIn):
                                  this parametr specifies database
                                  to get from session
             :type url_or_index: int|string
-            :param kwargs: can contain aditional arguments
-                           to be passed on init of Client
             :return: Client instance
             :raises ValueError: if cannot find database by specified args
 
@@ -247,51 +492,8 @@ class Session(Extensible, DirMixIn):
                 session.get_db('xml-rpc://katyukha@erp.jbm.int:8069/jbm0')
                 session.get_db('my_db')   # using aliase
         """
-        if isinstance(url_or_index, numbers.Integral):
-            url = self.index[url_or_index]
-        else:
-            url = self._db_aliases.get(url_or_index, url_or_index)
-
-        db = self._databases.get(url, False)
-        if not db:
-            raise ValueError("Bad url %s. not found in history or databases"
-                             "" % url)
-
-        if isinstance(db, Client):
-            return db
-
-        ep_args = db.copy()  # DB here is instance of dict
-        ep_args.update(**kwargs)
-
-        if 'pwd' not in ep_args:
-            if self.option('store_passwords') and 'password' in ep_args:
-                import base64
-                encoded_pwd = ep_args.pop('password').encode('utf8')
-                crypter, password = base64.b64decode(encoded_pwd).split(b':')
-                if crypter == b'simplecrypt':  # pragma: no cover
-                    import simplecrypt
-                    ep_args['pwd'] = simplecrypt.decrypt(
-                        Client.to_url(ep_args), base64.b64decode(password))
-                elif crypter == b'plain':
-                    ep_args['pwd'] = password.decode('utf-8')
-                else:  # pragma: no cover
-                    raise Exception("Unknown crypter (%s) used in session"
-                                    "" % repr(crypter))
-            else:
-                ep_args['pwd'] = getpass('Password: ')  # pragma: no cover
-
-        db = Client(**ep_args)
-        self.add_db(db)
-        return db
-
-    @property
-    def db_list(self):
-        """ Returns list of URLs of databases available in current session
-
-            :return: list of urls of databases from session
-            :rtype: list of strings
-        """
-        return self._databases.keys()
+        return self._clients.get_client(url_or_index)
+    # --- End ClientManager proxy methods ---
 
     def connect(self, host=None, dbname=None, user=None, pwd=None, port=8069,
                 protocol='xml-rpc', interactive=True, no_save=False):
@@ -328,52 +530,26 @@ class Session(Extensible, DirMixIn):
                             port=port,
                             protocol=protocol)
 
-        db = self._databases.get(url, False)
-        if isinstance(db, Client):
-            return db
+        if url in self.index_rev:
+            return self.get_db(url)
 
         db = Client(host=host,
                     dbname=dbname,
                     user=user,
                     pwd=pwd,
                     port=port,
-                    protocol=protocol)
+                    protocol=protocol,
+                    no_save=no_save)
         self.add_db(db)
-
-        # if set to True, disalows saving database connection in session
-        db._no_save = no_save
         return db
-
-    def _get_db_init_args(self, database):
-        if isinstance(database, Client):
-            res = database.get_init_args()
-            if self.option('store_passwords') and database._pwd:
-                import base64
-                password = base64.b64encode(
-                    b'plain:' + database._pwd.encode('utf-8')).decode('utf-8')
-                res.update({'password': password})
-            return res
-        elif isinstance(database, dict):
-            return database
-        else:  # pragma: no cover
-            raise ValueError("Bad database instance. "
-                             "It should be dict or Client object")
 
     def save(self):
         """ Saves session on disc
         """
-        databases = {}
-        for url, database in self._databases.items():
-            if not getattr(database, '_no_save', False):
-                init_args = self._get_db_init_args(database)
-                databases[url] = init_args
-
         data = {
-            'databases': databases,
-            'aliases': self._db_aliases,
             'options': self._options,
-            'index': self.index_rev,
         }
+        data.update(self._clients.data)
 
         json_write(self.data_file, data, indent=4)
 
