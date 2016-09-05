@@ -21,8 +21,8 @@ class SessionClientExt(Client):
         used in session
     """
     def __init__(self, *args, **kwargs):
+        self._no_save = kwargs.pop('no_save', False)
         super(SessionClientExt, self).__init__(*args, **kwargs)
-        self._no_save = kwargs.get('no_save', False)
 
     def get_init_args(self):
         res = super(SessionClientExt, self).get_init_args()

@@ -157,12 +157,6 @@ class Test_90_Session(BaseTestCase):
         self.assertNotIn(cl.get_url(), session.db_list)
         self.assertEqual(len(session.db_list), 0)
 
-        with self.assertRaises(ValueError):
-            session.get_db(cl.get_url())
-
-        with self.assertRaises(KeyError):
-            session[cl.get_url()]
-
     def test_25_aliases(self):
         session = Session(self._session_file_path)
 
