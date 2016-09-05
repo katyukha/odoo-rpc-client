@@ -57,6 +57,7 @@ Ability to use Record class as analog to browse_record:
 """
 
 import six
+import re
 from extend_me import Extensible
 
 # project imports
@@ -70,6 +71,12 @@ from . import orm  # noqa
 
 
 __all__ = ('Client',)
+
+RE_CLIENT_URL = re.compile(
+    r"(?:(?P<protocol>[\w\-]+)\:\/\/)?(?:(?P<user>[\w\-]+)?"
+    r"(?:\:(?P<pwd>[\w\-\.\,]+))?\@)?"
+    r"(?P<host>[\w\-\.]+)(?:\:(?P<port>\d{2,4}))?\/"
+    r"(?P<dbname>[\w\-.]+)?$")
 
 
 @six.python_2_unicode_compatible
@@ -372,6 +379,22 @@ class Client(Extensible):
             return url_tmpl % kwargs
         else:
             raise ValueError("inst must be Client instance or dict")
+
+    @classmethod
+    def from_url(cls, url):
+        """ Create Client instance from URL
+
+            :param str url: url of Client
+            :return: Client instance
+            :rtype: Client
+        """
+        m = RE_CLIENT_URL.match(url)
+        if m:
+            data = dict(m.groupdict())
+            data['protocol'] = data.get('protocol', None) or 'xml-rpc'
+            data['port'] = int(data.get('port', None) or '80')
+            return Client(**data)
+        raise ValueError("Cannot parse url")
 
     # TODO: think to reimplement as property
     def get_url(self):

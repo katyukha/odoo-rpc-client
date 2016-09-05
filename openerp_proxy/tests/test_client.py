@@ -19,25 +19,25 @@ class Test_10_Client(BaseTestCase):
                              protocol=self.env.protocol,
                              port=self.env.port)
 
-    def test_20_username(self):
+    def test_120_username(self):
         self.assertEqual(self.client.username, self.env.user)
         self.assertIsInstance(self.client.user, Record)
         self.assertEqual(self.client.user.login, self.env.user)
 
-    def test_22_user_context(self):
+    def test_122_user_context(self):
         uctx = self.client.user_context
         self.assertDictEqual(
             uctx,
             self.client.get_obj('res.users').context_get())
 
-    def test_25_server_version(self):
+    def test_125_server_version(self):
         # Check that server version is wrapped in parse_version. thus allows to
         # compare versions
         self.assertIsInstance(
             self.client.server_version, type(
                 parse_version('1.0.0')))
 
-    def test_30_get_obj(self):
+    def test_130_get_obj(self):
         self.assertIn('res.partner', self.client.registered_objects)
         obj = self.client.get_obj('res.partner')
         self.assertIsInstance(obj, Object)
@@ -45,7 +45,7 @@ class Test_10_Client(BaseTestCase):
         # Check object access in dictionary style
         self.assertIs(obj, self.client['res.partner'])
 
-    def test_42_get_obj_wrong(self):
+    def test_142_get_obj_wrong(self):
         self.assertNotIn(
             'bad.object.name',
             self.client.registered_objects)
@@ -55,7 +55,7 @@ class Test_10_Client(BaseTestCase):
         with self.assertRaises(KeyError):
             self.client['bad.object.name']
 
-    def test_50_to_url(self):
+    def test_150_to_url(self):
         url_tmpl = "%(protocol)s://%(user)s@%(host)s:%(port)s/%(dbname)s"
         cl_url = url_tmpl % self.env
         self.assertEqual(Client.to_url(self.client), cl_url)
@@ -66,14 +66,14 @@ class Test_10_Client(BaseTestCase):
         with self.assertRaises(ValueError):
             Client.to_url('strange thing')
 
-    def test_55_str(self):
+    def test_155_str(self):
         self.assertEqual(str(self.client), u"Client: %s" %
                          self.client.get_url())
 
-    def test_55_repr(self):
+    def test_155_repr(self):
         self.assertEqual(repr(self.client), str(self.client))
 
-    def test_60_plugins(self):
+    def test_160_plugins(self):
         self.assertIn('Test', self.client.plugins.registered_plugins)
         self.assertIn('Test', self.client.plugins)
         self.assertIn(
@@ -108,7 +108,7 @@ class Test_10_Client(BaseTestCase):
             repr(self.client.plugins.Test),
             "<openerp_proxy.plugin.Plugin:Test>")
 
-    def test_62_plugins_wrong_name(self):
+    def test_162_plugins_wrong_name(self):
         self.assertNotIn(
             'Test_Bad',
             self.client.plugins.registered_plugins)
@@ -123,7 +123,7 @@ class Test_10_Client(BaseTestCase):
         with self.assertRaises(AttributeError):
             self.client.plugins.Test_Bad
 
-    def test_70_client_services(self):
+    def test_170_client_services(self):
         self.assertIsInstance(self.client.services, ServiceManager)
         self.assertIn('db', self.client.services)
         self.assertIn('object', self.client.services)
@@ -154,7 +154,7 @@ class Test_10_Client(BaseTestCase):
         with self.assertRaises(AttributeError):
             self.client.services._private_service
 
-    def test_80_execute(self):
+    def test_180_execute(self):
         res = self.client.execute('res.partner', 'read', 1)
         self.assertIsInstance(res, dict)
         self.assertEqual(res['id'], 1)
@@ -165,10 +165,10 @@ class Test_10_Client(BaseTestCase):
         self.assertIsInstance(res[0], dict)
         self.assertEqual(res[0]['id'], 1)
 
-    def test_90_not_equal(self):
+    def test_190_not_equal(self):
         self.assertNotEqual(self.client, 42)
 
-    def test_100_clean_caches(self):
+    def test_200_clean_caches(self):
         self.assertIsNotNone(self.client.user_context)
         self.assertIn('lang', self.client.user_context)
 
@@ -177,3 +177,21 @@ class Test_10_Client(BaseTestCase):
         self.assertIsNone(self.client._user)
         self.assertIsNotNone(self.client._username)
         self.assertIsNone(self.client._user_context)
+
+    def test_210_from_url_host_port(self):
+        cl = Client.from_url("%(host)s:%(port)s/" % self.env)
+        self.assertIsInstance(cl, Client)
+        self.assertEqual(cl.get_url(),
+                         "xml-rpc://None@%(host)s:%(port)s/None" % self.env)
+
+    def test_211_from_url_protocol_host_port_user_db(self):
+        cl = Client.from_url(
+            "%(protocol)s://%(user)s@%(host)s:%(port)s/%(dbname)s" % self.env)
+        self.assertIsInstance(cl, Client)
+
+    def test_212_from_url_protocol_host_port_user_db(self):
+        cl = Client.from_url(
+            "%(protocol)s://%(user)s:%(password)s@%(host)s:%(port)s/"
+            "%(dbname)s" % self.env)
+        self.assertIsInstance(cl, Client)
+        self.assertEqual(cl.user.login, self.env['user'])

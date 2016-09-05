@@ -70,7 +70,7 @@ class ClientManager(object):
         clients = {}
         for url, client in self._clients.items():
             params = self._get_client_params(client)
-            if not params.get('no_save', False):
+            if not params.pop('no_save', False):
                 clients[url] = params
 
         return {
@@ -218,9 +218,10 @@ class ClientManager(object):
             url = self._aliases.get(url_or_index, url_or_index)
 
         cl = self._clients.get(url, False)
+
         if not cl:
-            raise ValueError("Bad url %s. not found in history"
-                             "" % url)
+            cl = Client.from_url(url)
+            self.add_client(cl)
 
         if isinstance(cl, Client):
             return cl
