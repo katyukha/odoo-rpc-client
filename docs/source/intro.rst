@@ -336,7 +336,7 @@ To add aliase to our db do the folowing:
 .. code:: python
 
     >>> session.aliase('my_db', db)
-
+    
 And now to access this database in future (even after restart)
 You can use next code
 

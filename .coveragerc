@@ -4,3 +4,4 @@ source =
 omit = 
     openerp_proxy/tests/*.*
     openerp_proxy/ext/log_execute_console.py
+    openerp_proxy/experimental/*.*
