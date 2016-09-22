@@ -34,7 +34,7 @@ before_script:
   - "sleep 5"
 
 script:
-  - "flake8 openerp_proxy --count --statistics;"  # test code style
+  - "flake8 openerp_proxy --count --exclude=openerp_proxy/experimental --statistics;"  # test code style
   - "openerp_proxy <<< 'print(42);exit';"  # Test that it runs via 'openerp_proxy' command
   - "coverage run -p setup.py test"
   - "coverage combine"
