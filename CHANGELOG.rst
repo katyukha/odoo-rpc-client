@@ -10,9 +10,13 @@ Release 0.7.0
   ``client.services.db.server_base_version() >= pkg_resources.parse_version('9.0')``
 - Added method ``search_read`` to orm.object
 - Drop support of OpenERP 6.0
-- ext.repr: Added ability to pass table format to .as_table method
+- ``ext.repr``: Added ability to pass table format to .as_table method
   tablefmt arg must be suitable for tabulate.tabulate method from
   [Tabulate](https://pypi.python.org/pypi/tabulate) package
+- Added ``openerp_proxy.experimental`` subpackage.
+- Refactored session logic. Logic related to database / client connection
+  management moved to separate class ``openerp_proxy.session.ClientManager``
+  which can be used outside session logic.
 
 Release 0.6.9
 -------------

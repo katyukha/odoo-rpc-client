@@ -65,8 +65,12 @@ class ClientManager(object):
                 self._cl_index_counter = max(self._cl_index_counter,
                                              index)
 
-    @property
-    def data(self):
+    def _get_data(self):
+        """ Return client manager's data, suitable (for example)
+            to be written to json file
+
+            :rtype: dict
+        """
         clients = {}
         for url, client in self._clients.items():
             params = self._get_client_params(client)
@@ -78,6 +82,15 @@ class ClientManager(object):
             'aliases': self.aliases,
             'index': self.index_rev,
         }
+
+    @property
+    def data(self):
+        """ Return client manager's data, suitable (for example)
+            to be written to json file
+
+            :rtype: dict
+        """
+        return self._get_data()
 
     def _get_client_params(self, client):
         """ Returns dictionary with params that could be used to
@@ -240,6 +253,8 @@ class ClientManager(object):
         return self._clients.keys()
 
     def __contains__(self, name):
+        """ Test if database url is in this manager
+        """
         return name in self._clients
 
 
@@ -305,6 +320,33 @@ class SessionClientManager(ClientManager):
         return params
 
 
+class SessionClientManagerCompat(SessionClientManager):
+    """ Client manager for sessions
+
+        Used for backward compatability with old session formats
+    """
+
+    def _parse_data(self, data):
+        """ Parse initial data
+
+            If there is old 'databases' section in data,
+            replace it with new 'clients' section
+        """
+        if 'clients' not in data and 'databases' in data:
+            # Backward compatability
+            data = data.copy()
+            data['clients'] = data.pop('databases', {})
+        return super(SessionClientManagerCompat, self)._parse_data(data)
+
+    def _get_data(self):
+        """ Modify data to be suitable for old format
+            :rtype: dict
+        """
+        res = super(SessionClientManagerCompat, self)._get_data()
+        res['databases'] = res.pop('clients', {})
+        return res
+
+
 class Session(Extensible, DirMixIn):
 
     """ Simple session manager which allows to manage databases easier
@@ -334,11 +376,6 @@ class Session(Extensible, DirMixIn):
         data = None
         if os.path.exists(self.data_file):
             data = json_read(self.data_file)
-
-            if 'clients' not in data and 'databases' in data:
-                # Backward compatability
-                data['clients'] = data.get('databases', {})
-
             self._options = data.get('options', {})
 
             for path in self.extra_paths:
@@ -351,7 +388,7 @@ class Session(Extensible, DirMixIn):
                     # TODO: implement some logging
                     pass
 
-        self._clients = SessionClientManager(self, data)
+        self._clients = SessionClientManagerCompat(self, data)
 
     @property
     def extra_paths(self):
