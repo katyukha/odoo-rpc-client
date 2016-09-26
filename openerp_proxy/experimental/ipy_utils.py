@@ -34,7 +34,6 @@ def in_progress(seq, msg="Progress: [%(processed)d / %(total)d]", length=None):
     from IPython.display import display
     from ipywidgets import IntProgress
 
-
     if length is None:
         length = len(seq)
 

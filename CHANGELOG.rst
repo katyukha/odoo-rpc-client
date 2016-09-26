@@ -17,6 +17,8 @@ Release 0.7.0
 - Refactored session logic. Logic related to database / client connection
   management moved to separate class ``openerp_proxy.session.ClientManager``
   which can be used outside session logic.
+- Added ``Client.ref`` method, then returns ``Record`` instance for
+  specified *xmlid*
 
 Release 0.6.9
 -------------

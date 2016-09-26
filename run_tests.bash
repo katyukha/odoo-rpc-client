@@ -85,7 +85,7 @@ fi
 
 function run_flake_8 {
     if [ ! -z $TEST_FLAKE8 ]; then
-        flake8 --count --exclude=openerp_proxy/experimental --statistics openerp_proxy;
+        flake8 --count --statistics openerp_proxy;
     fi
 }
 

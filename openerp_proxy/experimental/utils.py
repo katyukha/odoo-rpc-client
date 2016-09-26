@@ -29,15 +29,17 @@ class ObjectUtils(Object):
         def convert_x2many(field, value):
             """ Convert many2many or one2many value
 
-                many2many field value is just list of following commands:
+                many2many field value is just list of following commands::
 
                     (0, 0,  { fields })    create
                     (1, ID, { fields })    update (write fields to ID)
                     (2, ID)                remove (calls unlink on ID,
-                                        that will also delete the relationship
-                                        because of the ondelete)
-                    (3, ID)                unlink (delete the relationship between
-                                        the two objects but does not delete ID)
+                                           that will also delete
+                                           the relationship
+                                           because of the ondelete)
+                    (3, ID)                unlink (delete the relationship
+                                           between the two objects but
+                                           does not delete ID)
                     (4, ID)                link (add a relationship)
                     (5, ID)                unlink all
                     (6, ?, ids)            set a list of links
@@ -50,8 +52,8 @@ class ObjectUtils(Object):
                 if command[0] in (0, 1):
                     t_res.append(
                         (command[0],
-                        command[1],
-                        comodel.convert_to_write(command[2]))
+                         command[1],
+                         comodel.convert_to_write(command[2]))
                     )
                 else:
                     t_res.append(command)
@@ -71,7 +73,6 @@ class ObjectUtils(Object):
             else:
                 res[field] = value
         return res
-
 
     def get_view_info(self, view_id=None):
         """ Get view_info for specified model (result of ``fields_view_get``)

@@ -339,6 +339,27 @@ class Client(Extensible):
         """
         return self.services['object'].get_obj(object_name)
 
+    def ref(self, xmlid):
+        """ Return record for specified xmlid
+
+            :param str xmlid: string representing xmlid to get record for.
+                              xmlid must be *fully qualified*
+                              (with module name)
+            :return: Record for that xmlid or False
+            :rtype: openerp_proxy.orm.record.Record
+        """
+        try:
+            module, name = xmlid.split('.')
+        except ValueError:
+            raise ValueError(
+                "Fully qualified xmlid required! (Ex. 'module_name.xmlid'")
+        res = self['ir.model.data'].search_records(
+            [('module', '=', module), ('name', '=', name)],
+            limit=1)
+        if res:
+            return res[0]
+        return False
+
     def __getitem__(self, name):
         """ Returns instance of Object with name 'name'
         """

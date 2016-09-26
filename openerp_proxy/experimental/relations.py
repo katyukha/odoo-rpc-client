@@ -3,7 +3,7 @@ This module contains functions and classes that could be used to get
 information abour record relations
 """
 
-from ..ext import sugar
+from ..ext import sugar  # noqa
 from ..orm.object import Object
 from ..orm.record import (Record, RecordList)
 
@@ -48,6 +48,7 @@ class RelationsObject(Object):
             cache[cache_key] = related_model_fields
         return related_model_fields
 
+
 class RecordRelations(Record):
 
     def get_rel_data_domain(self, field):
@@ -79,26 +80,14 @@ class RecordRelations(Record):
             for field in related_model_fields[model]:
                 rel_data_domain = self.get_rel_data_domain(field)
                 if model_cl.search(rel_data_domain, count=1):
-                    model_fields_data[field.name] = model_cl.search_records(rel_data_domain)
+                    model_fields_data[field.name] = model_cl.search_records(
+                        rel_data_domain)
 
             if model_fields_data:
                 model_fields[model.model] = model_fields_data
 
         return model_fields
 
-
-        # return {
-            # m: res for m, res in
-            # {
-                # model.model: {
-                    # field.name: cl[model.model](self.get_rel_data_domain(field))
-                    # for field in related_model_fields[model]
-                    # if cl[model.model].search(self.get_rel_data_domain(field), count=1)
-                # } for model in related_model_fields
-                # if model.model not in skip_models
-            # }.items()
-            # if res
-        # }
 
 class RecordListRelations(RecordList):
 

@@ -195,3 +195,16 @@ class Test_10_Client(BaseTestCase):
             "%(dbname)s" % self.env)
         self.assertIsInstance(cl, Client)
         self.assertEqual(cl.user.login, self.env['user'])
+
+    def test_220_ref_existing(self):
+        partner = self.client.ref('base.main_partner')
+        self.assertIsInstance(partner, Record)
+
+    def test_221_ref_un_existing(self):
+        partner = self.client.ref('base.unexisting_partner_id')
+        self.assertIsInstance(partner, bool)
+        self.assertFalse(partner)
+
+    def test_222_ref_no_module_spec(self):
+        with self.assertRaises(ValueError):
+            self.client.ref('main_partner')  # no module specified
