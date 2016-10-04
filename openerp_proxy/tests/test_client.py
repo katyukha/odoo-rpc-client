@@ -37,6 +37,24 @@ class Test_10_Client(BaseTestCase):
             self.client.server_version, type(
                 parse_version('1.0.0')))
 
+    def test_126_database_version_full(self):
+        # Check that database full version is wrapped in parse_version.
+        # thus allows to compare versions
+        self.assertIsInstance(
+            self.client.database_version_full, type(
+                parse_version('1.0.0')))
+
+    def test_127_database_version(self):
+        # Check that database version is wrapped in parse_version.
+        # thus allows to compare versions
+        self.assertIsInstance(
+            self.client.database_version, type(
+                parse_version('1.0.0')))
+
+    def test_128_database_version_eq_server_version(self):
+        self.assertEqual(self.client.server_version,
+                         self.client.database_version)
+
     def test_130_get_obj(self):
         self.assertIn('res.partner', self.client.registered_objects)
         obj = self.client.get_obj('res.partner')

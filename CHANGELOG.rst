@@ -19,6 +19,8 @@ Release 0.7.0
   which can be used outside session logic.
 - Added ``Client.ref`` method, then returns ``Record`` instance for
   specified *xmlid*
+- Added ``Client.database_version_full`` and ``Client.database_version``
+  properties
 
 Release 0.6.9
 -------------

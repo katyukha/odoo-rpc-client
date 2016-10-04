@@ -59,6 +59,7 @@ Ability to use Record class as analog to browse_record:
 import six
 import re
 from extend_me import Extensible
+from pkg_resources import parse_version
 
 # project imports
 from .connection import get_connector
@@ -121,6 +122,7 @@ class Client(Extensible):
         self._uid = None
         self._user = None
         self._user_context = None
+        self._database_version_full = None
 
     @property
     def dbname(self):
@@ -223,9 +225,32 @@ class Client(Extensible):
     def server_version(self):
         """ Server base version  ('8.0', '9.0', etc)
 
-            (Already parsed with pkg_resources.parse_version)
+            (Already parsed with ``pkg_resources.parse_version``)
         """
         return self.services.db.server_base_version()
+
+    @property
+    def database_version_full(self):
+        """ Full database base version ('9.0.1.3', etc)
+
+            (Already parsed with ``pkg_resources.parse_version``)
+        """
+        if self._database_version_full is None:
+            base_module = self.get_obj('ir.module.module').search_records(
+                [('name', '=', 'base')])[0]
+            self._database_version_full = parse_version(
+                base_module.installed_version)
+        return self._database_version_full
+
+    @property
+    def database_version(self):
+        """ Base database version ('8.0', '9.0', etc)
+
+            (Already parsed with ``pkg_resources.parse_version``)
+        """
+        return parse_version(
+            '.'.join(
+                self.database_version_full.base_version.split('.', 2)[:2]))
 
     @property
     def registered_objects(self):
@@ -294,7 +319,6 @@ class Client(Extensible):
         """
         self.services.clean_cache()
         self._uid = None
-        self._user = None
         self._uid = self.connect()
         return self._uid
 
@@ -432,6 +456,7 @@ class Client(Extensible):
         self.plugins.refresh()
         self._user_context = None
         self._user = None
+        self._database_version_full = None
 
     def __str__(self):
         return u"Client: %s" % self.get_url()
