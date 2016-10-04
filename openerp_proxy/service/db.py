@@ -1,4 +1,5 @@
 import six
+import re
 from pkg_resources import parse_version
 
 from ..service.service import ServiceBase
@@ -126,7 +127,11 @@ class DBService(ServiceBase):
             parsed via pkg_resources.parse_version.
             No info about comunity / enterprise here
         """
-        return parse_version(self.server_version().base_version)
+        base_version = self.server_version().base_version
+
+        # Remove 'rc.*' suffix
+        base_version = re.sub(r'rc.+', '', base_version)
+        return parse_version(base_version)
 
     def server_version_str(self):
         """ Return server version (not wrapped by pkg.parse_version)

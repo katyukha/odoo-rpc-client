@@ -1,4 +1,5 @@
-from pkg_resources import parse_version
+import unittest
+import pkg_resources
 
 from . import BaseTestCase
 from ..core import Client
@@ -6,6 +7,9 @@ from ..orm.object import Object
 from ..orm.record import Record
 from ..service.service import ServiceManager
 from ..plugin import Plugin
+
+VERSION_CLASSES = (pkg_resources.SetuptoolsLegacyVersion,
+                   pkg_resources.SetuptoolsVersion)
 
 
 class Test_10_Client(BaseTestCase):
@@ -33,23 +37,19 @@ class Test_10_Client(BaseTestCase):
     def test_125_server_version(self):
         # Check that server version is wrapped in parse_version. thus allows to
         # compare versions
-        self.assertIsInstance(
-            self.client.server_version, type(
-                parse_version('1.0.0')))
+        self.assertIsInstance(self.client.server_version, VERSION_CLASSES)
 
     def test_126_database_version_full(self):
         # Check that database full version is wrapped in parse_version.
         # thus allows to compare versions
-        self.assertIsInstance(
-            self.client.database_version_full, type(
-                parse_version('1.0.0')))
+        self.assertIsInstance(self.client.database_version_full,
+                              VERSION_CLASSES)
 
     def test_127_database_version(self):
         # Check that database version is wrapped in parse_version.
         # thus allows to compare versions
         self.assertIsInstance(
-            self.client.database_version, type(
-                parse_version('1.0.0')))
+            self.client.database_version, VERSION_CLASSES)
 
     def test_128_database_version_eq_server_version(self):
         self.assertEqual(self.client.server_version,
@@ -172,10 +172,30 @@ class Test_10_Client(BaseTestCase):
         with self.assertRaises(AttributeError):
             self.client.services._private_service
 
-    def test_180_execute(self):
+    def test_180_execute_lt_v10(self):
+        if self.client.server_version >= pkg_resources.parse_version('10.0'):
+            raise unittest.SkipTest('Not applicable to Odoo 10.0')
+
         res = self.client.execute('res.partner', 'read', 1)
         self.assertIsInstance(res, dict)
         self.assertEqual(res['id'], 1)
+
+        res = self.client.execute('res.partner', 'read', [1])
+        self.assertIsInstance(res, list)
+        self.assertEqual(len(res), 1)
+        self.assertIsInstance(res[0], dict)
+        self.assertEqual(res[0]['id'], 1)
+
+    def test_181_execute_gte_v10(self):
+        if self.client.server_version < pkg_resources.parse_version('10.0'):
+            raise unittest.SkipTest(
+                'Not applicable to Odoo version less then 10.0')
+
+        res = self.client.execute('res.partner', 'read', 1)
+        self.assertIsInstance(res, list)
+        self.assertEqual(len(res), 1)
+        self.assertIsInstance(res[0], dict)
+        self.assertEqual(res[0]['id'], 1)
 
         res = self.client.execute('res.partner', 'read', [1])
         self.assertIsInstance(res, list)

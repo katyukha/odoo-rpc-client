@@ -389,7 +389,9 @@ class Test_22_RecordList(BaseTestCase):
                              protocol=self.env.protocol,
                              port=self.env.port)
         self.object = self.client.get_obj('res.partner')
-        self.obj_ids = self.object.search([], limit=10)
+        self.all_obj_ids = self.object.search([])
+        self.obj_ids = self.object.search([],
+                                          limit=len(self.all_obj_ids) - 2)
         self.recordlist = self.object.read_records(self.obj_ids)
 
     def test_dir(self):
@@ -413,7 +415,8 @@ class Test_22_RecordList(BaseTestCase):
 
     def test_str(self):
         self.assertEqual(
-            str(self.recordlist), u"RecordList(res.partner): length=10")
+            str(self.recordlist),
+            u"RecordList(res.partner): length=%d" % len(self.obj_ids))
 
     def test_repr(self):
         self.assertEqual(repr(self.recordlist), str(self.recordlist))
@@ -449,11 +452,11 @@ class Test_22_RecordList(BaseTestCase):
 
     def test_delitem(self):
         r = self.recordlist[5]
-        self.assertEqual(len(self.recordlist), 10)
+        self.assertEqual(len(self.recordlist), len(self.obj_ids))
 
         del self.recordlist[5]
 
-        self.assertEqual(len(self.recordlist), 9)
+        self.assertEqual(len(self.recordlist), len(self.obj_ids) - 1)
         self.assertNotIn(r, self.recordlist)
 
     def test_setitem(self):
@@ -462,13 +465,13 @@ class Test_22_RecordList(BaseTestCase):
 
         old_rec = self.recordlist[8]
 
-        self.assertEqual(len(self.recordlist), 10)
+        self.assertEqual(len(self.recordlist), len(self.obj_ids))
         self.assertNotIn(rec, self.recordlist)
         self.assertIn(old_rec, self.recordlist)
 
         self.recordlist[8] = rec
 
-        self.assertEqual(len(self.recordlist), 10)
+        self.assertEqual(len(self.recordlist), len(self.obj_ids))
         self.assertIn(rec, self.recordlist)
         self.assertNotIn(old_rec, self.recordlist)
 
@@ -494,12 +497,12 @@ class Test_22_RecordList(BaseTestCase):
         rec = self.object.search_records(
             [('id', 'not in', self.recordlist.ids)], limit=1)[0]
 
-        self.assertEqual(len(self.recordlist), 10)
+        self.assertEqual(len(self.recordlist), len(self.obj_ids))
         self.assertNotIn(rec, self.recordlist)
 
         self.recordlist.insert(1, rec)
 
-        self.assertEqual(len(self.recordlist), 11)
+        self.assertEqual(len(self.recordlist), len(self.obj_ids) + 1)
         self.assertIn(rec, self.recordlist)
         self.assertEqual(self.recordlist[1], rec)
 
@@ -507,12 +510,12 @@ class Test_22_RecordList(BaseTestCase):
         rec = self.object.search_records(
             [('id', 'not in', self.recordlist.ids)], limit=1)[0]
 
-        self.assertEqual(len(self.recordlist), 10)
+        self.assertEqual(len(self.recordlist), len(self.obj_ids))
         self.assertNotIn(rec, self.recordlist)
 
         self.recordlist.insert(1, rec.id)
 
-        self.assertEqual(len(self.recordlist), 11)
+        self.assertEqual(len(self.recordlist), len(self.obj_ids) + 1)
         self.assertIn(rec, self.recordlist)
         self.assertEqual(self.recordlist[1], rec)
 
@@ -520,7 +523,7 @@ class Test_22_RecordList(BaseTestCase):
         rec = self.object.search_records(
             [('id', 'not in', self.recordlist.ids)], limit=1)[0]
 
-        self.assertEqual(len(self.recordlist), 10)
+        self.assertEqual(len(self.recordlist), len(self.obj_ids))
         self.assertNotIn(rec, self.recordlist)
 
         with self.assertRaises(AssertionError):
@@ -545,6 +548,7 @@ class Test_22_RecordList(BaseTestCase):
     def test_mapped_3_m2o_dot_char_field(self):
         res = self.recordlist.mapped('parent_id.name')
         self.assertIsInstance(res, list)
+        self.assertGreaterEqual(len(res), 1)
         self.assertIsInstance(res[0], six.string_types)
 
         # TODO: rewrite this to test that items was uniquifyed
@@ -556,6 +560,7 @@ class Test_22_RecordList(BaseTestCase):
     def test_mapped_4_m2o_dot_char_field(self):
         res = self.recordlist.mapped('country_id.code')
         self.assertIsInstance(res, list)
+        self.assertGreaterEqual(len(res), 1)
         self.assertIsInstance(res[0], six.string_types)
 
         # TODO: rewrite this to test that items was uniquifyed
@@ -567,6 +572,7 @@ class Test_22_RecordList(BaseTestCase):
     def test_mapped_5_m2o_dot_o2m_field(self):
         res = self.recordlist.mapped('user_ids')
         self.assertIsInstance(res, RecordList)
+        self.assertGreaterEqual(len(res), 1)
         self.assertIsInstance(res[0], Record)
         self.assertEqual(res[0]._object.name, 'res.users')
         # TODO: implement some additional checks

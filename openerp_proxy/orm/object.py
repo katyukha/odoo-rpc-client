@@ -186,7 +186,15 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
             :rtype: list
         """
         args, kwargs = preprocess_args(ids, fields, context=context)
-        return self.service.execute(self.name, 'read', *args, **kwargs)
+        res = self.service.execute(self.name, 'read', *args, **kwargs)
+
+        # Odoo 10 compatability fix.
+        # In Odoo 10, ``model.read(<id>)`` will return list, NOT dict as in
+        # previous Odoo versions. So fix it to make api compatible with older
+        # versions
+        if res and isinstance(ids, int) and isinstance(res, list):
+            res = res[0]
+        return res
 
     @stdcall
     def write(self, ids, vals, context=None):
