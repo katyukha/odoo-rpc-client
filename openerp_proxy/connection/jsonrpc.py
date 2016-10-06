@@ -59,7 +59,9 @@ class JSONRPCMethod(object):
         }
 
     def __call__(self, *args):
-        data = json.dumps(self.prepare_method_data(*args))
+        method_data = self.prepare_method_data(*args)
+        data = json.dumps(method_data)
+
         # Call rpc
         try:
             res = requests.post(self.__url, data=data, headers={
@@ -80,6 +82,7 @@ class JSONRPCMethod(object):
                 "url": res.url,
                 "code": res.status_code,
                 "content": res.text[:2000],
+                "method_data": method_data,
             }
             logger.error("Cannot decode JSON")
             raise JSONRPCError("Cannot decode JSON: %s" % info)

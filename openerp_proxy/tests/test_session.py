@@ -241,7 +241,6 @@ class Test_90_Session(BaseTestCase):
         session.save()
         del session
 
-
         # recreate session
         session = Session(self._session_file_path)
 
