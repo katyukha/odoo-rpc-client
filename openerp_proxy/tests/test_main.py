@@ -5,7 +5,9 @@ import os
 import os.path
 
 from ..main import (generate_header_aliases,
-                    generate_header_databases)
+                    generate_header_databases,
+                    prepare_shell_env,
+                    HELP_HEADER)
 
 
 class Test_95_Main(BaseTestCase):
@@ -65,3 +67,28 @@ class Test_95_Main(BaseTestCase):
                          generate_header_aliases(session))
         self.assertEqual(expected_header_databases,
                          generate_header_databases(session))
+
+    def test_30_prepare_shell_env(self):
+        session = Session(self._session_file_path)
+        cl = session.connect(self.env.host,
+                             dbname=self.env.dbname,
+                             user=self.env.user,
+                             pwd=self.env.password,
+                             protocol=self.env.protocol,
+                             port=self.env.port,
+                             interactive=False)
+        aliase = 'my_aliase'
+        session.aliase(aliase, cl)
+
+        env, header = prepare_shell_env(session)
+
+        gen_header = HELP_HEADER % {
+            'databases': generate_header_databases(session),
+            'aliases': generate_header_aliases(session),
+        }
+        self.assertEqual(gen_header, header)
+
+        self.assertIn('Client', env)
+        self.assertIn('session', env)
+        self.assertIs(env['session'], session)
+        self.assertIn('getpass', env)

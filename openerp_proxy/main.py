@@ -61,14 +61,11 @@ def generate_header_aliases(session):
     return header_aliases
 
 
-def main():
-    """ Entry point for running as standalone APP
+def prepare_shell_env(session):
+    """ Prepare shell environment
     """
-    from .session import Session
     from .core import Client
     from getpass import getpass
-
-    session = Session()
 
     # generate header
     header_databases = generate_header_databases(session)
@@ -81,20 +78,43 @@ def main():
         'session': session,
         'getpass': getpass
     }
+
+    return _locals, header
+
+
+def embed(env, header):
+    """ Embed into shell
+
+        Just a simple wrapper around IPython embed with fallback to Python's
+        interact
+    """
     try:
         from IPython import embed
         try:
             from IPython.terminal.ipapp import load_default_config
             ip_config = load_default_config()
-        except:
+        except:  # TODO: handle correct exception?
             ip_config = None
 
-        embed(user_ns=_locals, header=header, config=ip_config)
+        embed(user_ns=env, header=header, config=ip_config)
     except ImportError:
         from code import interact
-        interact(local=_locals, banner=header)
+        interact(local=env, banner=header)
+
+
+def main():
+    """ Entry point for running as standalone APP
+    """
+    from .session import Session
+
+    session = Session()
+
+    # Start embeded shell
+    env, header = prepare_shell_env(session)
+    embed(env, header)
 
     session.save()
+
 
 if __name__ == '__main__':
     main()

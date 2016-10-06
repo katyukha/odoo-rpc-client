@@ -1,5 +1,4 @@
 # python imports
-import six
 import json
 import random
 import requests
@@ -14,22 +13,38 @@ from ..utils import ustr
 logger = logging.getLogger(__name__)
 
 
-@six.python_2_unicode_compatible
 class JSONRPCError(exceptions.ConnectorError):
+    """ JSON-RPC error wrapper
+    """
     def __init__(self, message, code=None, data=None):
         self.message = message
         self.code = code
         self.data = data
 
-    def __str__(self):
-        if self.data is None:
-            return self.message
+        if self.data_message and self.data_debug:
+            msg = u"""%(message)s\n%(debug)s\n""" % self.data
+        elif self.data:
+            msg = ustr(self.data)
+        else:
+            msg = self.message
 
-        if self.data.get('message', False) and self.data.get('debug', False):
-            res_tmpl = u"""%(message)s\n%(debug)s\n"""
-            return res_tmpl % self.data
+        super(JSONRPCError, self).__init__(msg)
 
-        return ustr(self.data)
+    @property
+    def data_message(self):
+        """ Error message got from Odoo server
+        """
+        if self.data:
+            return self.data.get('message', None)
+
+    @property
+    def data_debug(self):
+        """ Debug information got from Odoo server
+
+            Usualy traceback
+        """
+        if self.data:
+            return self.data.get('debug', None)
 
 
 # TODO: think, may be it is a good idea to reimplement this via functions

@@ -1034,3 +1034,28 @@ class Test_23_Cache(BaseTestCase):
         self.assertEqual(rel_cache[7]['__name_get_result'], 'Super Admin')
 
         # TODO: add tests for many2many and one2many field types
+
+    def test_cache_update_context(self):
+        cache = self.cache['res.partner']  # get object cache
+        self.assertFalse(bool(cache.context))
+        self.assertIs(cache.context, None)
+
+        d = {'a': 5}
+        ctx = cache.update_context(d)
+        self.assertIsInstance(d, dict)
+        self.assertDictEqual(ctx, d)
+        self.assertIsNot(ctx, d)
+
+        d.update({'b': 42})
+
+        self.assertNotEqual(ctx, d)
+        self.assertNotIn('b', ctx)
+        self.assertIs(ctx, cache.context)
+
+        ctx2 = cache.update_context({'c': 78})
+        self.assertIs(cache.context, ctx2)
+        self.assertIs(ctx2, ctx)
+        self.assertIn('c', cache.context)
+        self.assertIs(cache.context['c'], 78)
+        self.assertIn('a', cache.context)
+        self.assertNotIn('b', cache.context)

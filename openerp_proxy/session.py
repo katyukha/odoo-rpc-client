@@ -212,7 +212,7 @@ class ClientManager(object):
         del self._cl_index[index]
         del self._clients[url]
 
-        for aliase, a_url in self._aliases.items():
+        for aliase, a_url in dict(self._aliases).items():
             if a_url == url:
                 del self._aliases[aliase]
 

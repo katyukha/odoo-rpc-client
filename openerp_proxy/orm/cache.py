@@ -53,7 +53,7 @@ class ObjectCache(dict):
         """
         if new_context is not None:
             if self.context is None:
-                self._context = new_context
+                self._context = dict(new_context)
             else:
                 self._context.update(new_context)
         return self.context
@@ -115,7 +115,7 @@ class ObjectCache(dict):
                 dictionary of form:
                 ``{'related.object': ['relatedfield1', 'relatedfield2.relatedfield']}``
             :rtype: tuple
-        """
+        """  # noqa
         rel_fields = collections.defaultdict(list)
         prefetch_fields = set()
         for field in fields:
@@ -183,6 +183,8 @@ class Cache(dict):
             obj = self._client.get_obj(key)
         except ValueError:
             raise KeyError("There is no object with such name: %s" % key)
+
+        # TODO: FIX: Object caches generated without context
         self[key] = ObjectCache(self, obj)
         return self[key]
 

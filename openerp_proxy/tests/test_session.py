@@ -4,6 +4,7 @@ from .. import (Client,
 import sys
 import os
 import os.path
+import pprint
 
 
 class Test_90_Session(BaseTestCase):
@@ -218,6 +219,9 @@ class Test_90_Session(BaseTestCase):
         with self.assertRaises(AttributeError):
             session.unexistent_aliase
 
+        with self.assertRaises(KeyError):
+            session['unexistent_aliase']
+
         self.assertIn('cl1', dir(session))
 
     def test_30_del_client(self):
@@ -236,6 +240,8 @@ class Test_90_Session(BaseTestCase):
 
         # Ensure that there is only one db connection in session now
         self.assertEqual(len(session.db_list), 1)
+
+        session.aliase('cl123', cl)
 
         # save session
         session.save()
@@ -267,3 +273,51 @@ class Test_90_Session(BaseTestCase):
         self.assertFalse(bool(session.index))
         self.assertFalse(bool(session.index_rev))
         self.assertFalse(bool(session.aliases))
+
+    def test_35_client_from_url(self):
+        session = Session(self._session_file_path)
+
+        # set store_passwords to true, to avoid password promt during tests
+        session.option('store_passwords', True)
+
+        cl = Client(self.env.host,
+                    dbname=self.env.dbname,
+                    user=self.env.user,
+                    pwd=self.env.password,
+                    protocol=self.env.protocol,
+                    port=self.env.port)
+        cl_url = ("%(protocol)s://%(user)s:%(pwd)s@%(host)s:%(port)s/"
+                  "%(dbname)s" % dict(host=self.env.host,
+                                      dbname=self.env.dbname,
+                                      user=self.env.user,
+                                      pwd=self.env.password,
+                                      protocol=self.env.protocol,
+                                      port=self.env.port))
+
+        cl2 = session[cl_url]
+
+        # Test that both clients have same url
+        self.assertEqual(cl2.get_url(), cl.get_url())
+
+        # Test that client connected from URL can successfully login
+        self.assertTrue(bool(cl2.uid))
+
+    def test_40_session_str(self):
+        session = Session(self._session_file_path)
+
+        # set store_passwords to true, to avoid password promt during tests
+        session.option('store_passwords', True)
+
+        # Add connection to session
+        session.connect(self.env.host,
+                        dbname=self.env.dbname,
+                        user=self.env.user,
+                        pwd=self.env.password,
+                        protocol=self.env.protocol,
+                        port=self.env.port,
+                        interactive=False)
+
+        # Test that session have some connections
+        self.assertEqual(len(session.db_list), 1)
+
+        self.assertEqual(str(session), pprint.pformat(session.index))
