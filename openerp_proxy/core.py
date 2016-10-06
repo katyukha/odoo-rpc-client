@@ -127,18 +127,24 @@ class Client(Extensible):
     @property
     def dbname(self):
         """ Name of database to connect to
+
+            :rtype: str
         """
         return self._dbname
 
     @property
     def username(self):
         """ User login used to access DB
+
+            :rtype: str
         """
         return self._username
 
     @property
     def host(self):
         """ Server host
+
+            :rtype: str
         """
         return self._connection.host
 
@@ -151,6 +157,8 @@ class Client(Extensible):
     @property
     def protocol(self):
         """ Server protocol
+
+            :rtype: str
         """
         return self._connection.Meta.name
 
@@ -179,6 +187,12 @@ class Client(Extensible):
         """ Plugins associated with this Client instance
 
             :rtype: openerp_proxy.plugin.PluginManager
+
+            Usage examples::
+
+                db.plugins.module_utils    # access module_utils plugin
+                db.plugins['module_utils]  # access module_utils plugin
+
         """
         return self._plugins
 
@@ -398,6 +412,8 @@ class Client(Extensible):
     def get_init_args(self):
         """ Returns dictionary with init arguments which can be safely passed
             to class constructor
+
+            :rtype: dict
         """
         return dict(user=self.username,
                     host=self.host,

@@ -103,7 +103,7 @@ Quick example
 Supported Odoo server versions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tested with Odoo 7.0, 8.0, 9.0
+Tested with Odoo *7.0*, *8.0*, *9.0*, *10.0rc1c*
 
 Also shoud work with Odoo 6.1
 

@@ -32,6 +32,8 @@ class ObjectCache(dict):
         """ Add new IDs to cache.
 
             :param list keys: list of new IDs to be added to cache
+            :return: self
+            :rtype: ObjectCache
         """
         if not self:
             # for large amounts of data, this may be faster (no need for set
@@ -107,11 +109,12 @@ class ObjectCache(dict):
             Used internaly
 
             :param list fields: list of fields to prefetch
-            :return: tuple(prefetch_fields, related_fields),
-                     where prefetch_fields is list of fields, to be read for
-                     current object, and related_fields is dictionary of form
-                     ``{'related.object': ['relatedfield1',
-                                           'relatedfield2.relatedfield']}``
+            :return: returns ``tuple(prefetch_fields, related_fields)``,
+                where ``prefetch_fields`` is list of fields,
+                to be read for current object, and ``related_fields`` is
+                dictionary of form:
+                ``{'related.object': ['relatedfield1', 'relatedfield2.relatedfield']}``
+            :rtype: tuple
         """
         rel_fields = collections.defaultdict(list)
         prefetch_fields = set()

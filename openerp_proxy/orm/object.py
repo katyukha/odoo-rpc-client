@@ -59,6 +59,8 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
     @property
     def name(self):
         """ Name of the object
+
+            :rtype: str
         """
         return self._obj_name
 
@@ -71,6 +73,8 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
     @property
     def client(self):
         """ Client instance, this object is relatedto
+
+            :rtype: openerp_proxy.core.Client
         """
         return self.service.client
 
