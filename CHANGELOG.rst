@@ -21,6 +21,8 @@ Release 0.7.0
   specified *xmlid*
 - Added ``Client.database_version_full`` and ``Client.database_version``
   properties
+- Added ``Session.del_db`` and ``ClientManager.del_client`` methods
+- Added ``client.services.db.db_exist`` method wrapper
 
 Release 0.6.9
 -------------

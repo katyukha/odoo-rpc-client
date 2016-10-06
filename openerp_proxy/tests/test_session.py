@@ -219,3 +219,52 @@ class Test_90_Session(BaseTestCase):
             session.unexistent_aliase
 
         self.assertIn('cl1', dir(session))
+
+    def test_30_del_client(self):
+        session = Session(self._session_file_path)
+
+        # set store_passwords to true, to avoid password promt during tests
+        session.option('store_passwords', True)
+
+        cl = session.connect(self.env.host,
+                             dbname=self.env.dbname,
+                             user=self.env.user,
+                             pwd=self.env.password,
+                             protocol=self.env.protocol,
+                             port=self.env.port,
+                             interactive=False)
+
+        # Ensure that there is only one db connection in session now
+        self.assertEqual(len(session.db_list), 1)
+
+        # save session
+        session.save()
+        del session
+
+
+        # recreate session
+        session = Session(self._session_file_path)
+
+        # Ensure that there is one db connection in session
+        self.assertEqual(len(session.db_list), 1)
+
+        # delete db connection from session
+        session.del_db(cl)
+
+        # ensure that session now is empty:
+        self.assertEqual(len(session.db_list), 0)
+        self.assertFalse(bool(session.index))
+        self.assertFalse(bool(session.index_rev))
+        self.assertFalse(bool(session.aliases))
+
+        # save session
+        session.save()
+        del session
+
+        # recreate session and test that it is empty
+        session = Session(self._session_file_path)
+
+        self.assertEqual(len(session.db_list), 0)
+        self.assertFalse(bool(session.index))
+        self.assertFalse(bool(session.index_rev))
+        self.assertFalse(bool(session.aliases))

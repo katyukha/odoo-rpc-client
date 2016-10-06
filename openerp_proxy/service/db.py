@@ -36,6 +36,16 @@ class DBService(ServiceBase):
         """
         return self._service.list()
 
+    def db_exist(self, db):
+        """ Check if database exists
+
+            :param str|Client db: name of database or *Client* instance
+                                  with *client.dbname is not None*
+            :return: True if database exists else False
+            :rtype: bool
+        """
+        return self._service.db_exist(to_dbname(db))
+
     def create_db(self, password, dbname, demo=False, lang='en_US',
                   admin_password='admin'):
         """ Create new database on server, named *dbname*

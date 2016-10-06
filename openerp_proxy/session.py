@@ -192,12 +192,29 @@ class ClientManager(object):
     def add_client(self, client):
         """ Add db to session.
 
-            param client: client instance to be added to session
-            type client: openerp_proxy.core.Client
+            :param client: client instance to be added to session
+            :type client: openerp_proxy.core.Client
         """
         url = client.get_url()
         self._clients[url] = client
         self._index_url(url)
+
+    def del_client(self, client):
+        """ Remove db from session.
+
+            :param client: client instance to be removed from session
+            :type client: openerp_proxy.core.Client
+        """
+        url = client.get_url()
+        index = self.index_rev[url]
+
+        del self._cl_index_rev[url]
+        del self._cl_index[index]
+        del self._clients[url]
+
+        for aliase, a_url in self._aliases.items():
+            if a_url == url:
+                del self._aliases[aliase]
 
     def _create_client(self, data):
         """ Creates client from data
@@ -506,10 +523,18 @@ class Session(Extensible, DirMixIn):
     def add_db(self, db):
         """ Add db to session.
 
-            param db: database (client instance) to be added to session
-            type db: Client instance
+            :param db: database (client instance) to be added to session
+            :type db: openerp_proxy.core.Client
         """
         self._clients.add_client(db)
+
+    def del_db(self, db):
+        """ Remove database from session
+
+            :param db: database (client instance) to be removed from session
+            :type db: openerp_proxy.core.Client
+        """
+        self._clients.del_client(db)
 
     def get_db(self, url_or_index):
         """ Returns instance of Client object, that represents single

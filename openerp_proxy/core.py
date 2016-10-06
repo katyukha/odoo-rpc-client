@@ -76,7 +76,7 @@ __all__ = ('Client',)
 RE_CLIENT_URL = re.compile(
     r"(?:(?P<protocol>[\w\-]+)\:\/\/)?(?:(?P<user>[\w\-]+)?"
     r"(?:\:(?P<pwd>[\w\-\.\,]+))?\@)?"
-    r"(?P<host>[\w\-\.]+)(?:\:(?P<port>\d{2,4}))?\/"
+    r"(?P<host>[\w\-\.]+)(?:\:(?P<port>\d{2,5}))?\/"
     r"(?P<dbname>[\w\-.]+)?$")
 
 
