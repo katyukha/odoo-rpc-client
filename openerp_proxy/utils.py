@@ -85,6 +85,7 @@ def preprocess_args(*args, **kwargs):
     """
     kwargs = {key: val for key, val in kwargs.items() if val is not None}
 
+    # TODO: review this! It may bring errors
     xargs = list(args[:])
     while xargs and xargs[-1] is None:
         xargs.pop()

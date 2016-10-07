@@ -10,3 +10,4 @@ OpenERP Proxy Modules
    openerp_proxy.orm
    openerp_proxy.ext
    openerp_proxy.plugins
+   openerp_proxy.experimental

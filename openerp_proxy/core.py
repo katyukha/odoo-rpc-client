@@ -57,7 +57,9 @@ Ability to use Record class as analog to browse_record:
 """
 
 import six
+import re
 from extend_me import Extensible
+from pkg_resources import parse_version
 
 # project imports
 from .connection import get_connector
@@ -70,6 +72,12 @@ from . import orm  # noqa
 
 
 __all__ = ('Client',)
+
+RE_CLIENT_URL = re.compile(
+    r"(?:(?P<protocol>[\w\-]+)\:\/\/)?(?:(?P<user>[\w\-]+)?"
+    r"(?:\:(?P<pwd>[\w\-\.\,]+))?\@)?"
+    r"(?P<host>[\w\-\.]+)(?:\:(?P<port>\d{2,5}))?\/"
+    r"(?P<dbname>[\w\-.]+)?$")
 
 
 @six.python_2_unicode_compatible
@@ -114,22 +122,29 @@ class Client(Extensible):
         self._uid = None
         self._user = None
         self._user_context = None
+        self._database_version_full = None
 
     @property
     def dbname(self):
         """ Name of database to connect to
+
+            :rtype: str
         """
         return self._dbname
 
     @property
     def username(self):
         """ User login used to access DB
+
+            :rtype: str
         """
         return self._username
 
     @property
     def host(self):
         """ Server host
+
+            :rtype: str
         """
         return self._connection.host
 
@@ -142,6 +157,8 @@ class Client(Extensible):
     @property
     def protocol(self):
         """ Server protocol
+
+            :rtype: str
         """
         return self._connection.Meta.name
 
@@ -170,6 +187,12 @@ class Client(Extensible):
         """ Plugins associated with this Client instance
 
             :rtype: openerp_proxy.plugin.PluginManager
+
+            Usage examples::
+
+                db.plugins.module_utils    # access module_utils plugin
+                db.plugins['module_utils]  # access module_utils plugin
+
         """
         return self._plugins
 
@@ -214,11 +237,34 @@ class Client(Extensible):
 
     @property
     def server_version(self):
-        """ Server version
+        """ Server base version  ('8.0', '9.0', etc)
 
-            (Already parsed with pkg_resources.parse_version)
+            (Already parsed with ``pkg_resources.parse_version``)
         """
-        return self.services.db.server_version()
+        return self.services.db.server_base_version()
+
+    @property
+    def database_version_full(self):
+        """ Full database base version ('9.0.1.3', etc)
+
+            (Already parsed with ``pkg_resources.parse_version``)
+        """
+        if self._database_version_full is None:
+            base_module = self.get_obj('ir.module.module').search_records(
+                [('name', '=', 'base')])[0]
+            self._database_version_full = parse_version(
+                base_module.installed_version)
+        return self._database_version_full
+
+    @property
+    def database_version(self):
+        """ Base database version ('8.0', '9.0', etc)
+
+            (Already parsed with ``pkg_resources.parse_version``)
+        """
+        return parse_version(
+            '.'.join(
+                self.database_version_full.base_version.split('.', 2)[:2]))
 
     @property
     def registered_objects(self):
@@ -287,7 +333,6 @@ class Client(Extensible):
         """
         self.services.clean_cache()
         self._uid = None
-        self._user = None
         self._uid = self.connect()
         return self._uid
 
@@ -332,6 +377,27 @@ class Client(Extensible):
         """
         return self.services['object'].get_obj(object_name)
 
+    def ref(self, xmlid):
+        """ Return record for specified xmlid
+
+            :param str xmlid: string representing xmlid to get record for.
+                              xmlid must be *fully qualified*
+                              (with module name)
+            :return: Record for that xmlid or False
+            :rtype: openerp_proxy.orm.record.Record
+        """
+        try:
+            module, name = xmlid.split('.')
+        except ValueError:
+            raise ValueError(
+                "Fully qualified xmlid required! (Ex. 'module_name.xmlid'")
+        res = self['ir.model.data'].search_records(
+            [('module', '=', module), ('name', '=', name)],
+            limit=1)
+        if res:
+            return res[0]
+        return False
+
     def __getitem__(self, name):
         """ Returns instance of Object with name 'name'
         """
@@ -346,6 +412,8 @@ class Client(Extensible):
     def get_init_args(self):
         """ Returns dictionary with init arguments which can be safely passed
             to class constructor
+
+            :rtype: dict
         """
         return dict(user=self.username,
                     host=self.host,
@@ -373,6 +441,22 @@ class Client(Extensible):
         else:
             raise ValueError("inst must be Client instance or dict")
 
+    @classmethod
+    def from_url(cls, url):
+        """ Create Client instance from URL
+
+            :param str url: url of Client
+            :return: Client instance
+            :rtype: Client
+        """
+        m = RE_CLIENT_URL.match(url)
+        if m:
+            data = dict(m.groupdict())
+            data['protocol'] = data.get('protocol', None) or 'xml-rpc'
+            data['port'] = int(data.get('port', None) or '80')
+            return Client(**data)
+        raise ValueError("Cannot parse url")
+
     # TODO: think to reimplement as property
     def get_url(self):
         """ Returns dabase URL
@@ -388,6 +472,7 @@ class Client(Extensible):
         self.plugins.refresh()
         self._user_context = None
         self._user = None
+        self._database_version_full = None
 
     def __str__(self):
         return u"Client: %s" % self.get_url()

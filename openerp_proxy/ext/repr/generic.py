@@ -327,11 +327,15 @@ class BaseTable(object):
                        of one argument (record instance) or *HField* instance
                        or tuple(field_path|callable, field_name)
         :type fields: list(str | callable | HField | tuple(field, name))
+        :param str tablefmt: (optional) table format param passed
+                             directly to tabulate.tabulate() method
+                             in _pretty_repr_ logic.
     """
 
-    def __init__(self, data, fields):
+    def __init__(self, data, fields, tablefmt='simple'):
         self._data = data
         self._fields = []
+        self._tablefmt = tablefmt
         self.update(fields=fields)
 
     def update(self, fields=None):
@@ -416,7 +420,9 @@ class BaseTable(object):
             os.path.join(CSV_PATH, os.path.split(tmp_file.name)[-1]))
 
     def _repr_pretty_(self, printer, cycle):
-        return printer.text(PrettyTable(self, headers=self.fields).table)
+        return printer.text(PrettyTable(self,
+                                        headers=self.fields,
+                                        tablefmt=self._tablefmt).table)
 
 
 # TODO: also implement vertical table orientation, which could be usefult for
@@ -444,6 +450,9 @@ class HTMLTable(BaseTable):
                                   by this color
         :param bool display_help: if set to False,
                                   then no help message will be displayed
+        :param str tablefmt: (optional) table format param passed
+                             directly to tabulate.tabulate() method
+                             in _pretty_repr_ logic.
     """
 
     _template = Template("""
@@ -488,13 +497,14 @@ class HTMLTable(BaseTable):
     """)
 
     def __init__(self, data, fields, caption=None,
-                 highlighters=None, display_help=True, **kwargs):
+                 highlighters=None, display_help=True,
+                 tablefmt='simple', **kwargs):
         self._caption = u"HTMLTable"
         self._highlighters = {}
         self._display_help = display_help
         self._nested = False
 
-        super(HTMLTable, self).__init__(data, fields)
+        super(HTMLTable, self).__init__(data, fields, tablefmt=tablefmt)
         # Note: Fields already updated by base class
         self.update(caption=caption, highlighters=highlighters, **kwargs)
 

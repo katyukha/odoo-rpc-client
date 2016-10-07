@@ -47,7 +47,7 @@ class Test_31_ExtSugar(BaseTestCase):
         # name_search by name. only one record with this name
         res = self.object('admin')
         self.assertIsInstance(res, Record)
-        self.assertEqual(res._name, 'Administrator')
+        self.assertEqual(res.name, 'Administrator')
 
         res = self.object('Bank')
         self.assertIsInstance(res, RecordList)

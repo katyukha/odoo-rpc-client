@@ -1,8 +1,31 @@
 Last changes
 ============
 
+Release 0.7.0
+-------------
+
+- ``client.server_version`` now is aliase to
+  ``client.services.db.server_base_version``
+- Added ``services.db.server_base_version()`` which could be safely compared like:
+  ``client.services.db.server_base_version() >= pkg_resources.parse_version('9.0')``
+- Added method ``search_read`` to orm.object
+- Drop support of OpenERP 6.0
+- ``ext.repr``: Added ability to pass table format to .as_table method
+  tablefmt arg must be suitable for tabulate.tabulate method from
+  [Tabulate](https://pypi.python.org/pypi/tabulate) package
+- Added ``openerp_proxy.experimental`` subpackage.
+- Refactored session logic. Logic related to database / client connection
+  management moved to separate class ``openerp_proxy.session.ClientManager``
+  which can be used outside session logic.
+- Added ``Client.ref`` method, then returns ``Record`` instance for
+  specified *xmlid*
+- Added ``Client.database_version_full`` and ``Client.database_version``
+  properties
+- Added ``Session.del_db`` and ``ClientManager.del_client`` methods
+- Added ``client.services.db.db_exist`` method wrapper
+
 Release 0.6.9
-------------------
+-------------
 
 - ``external_ids`` plugin now adds ``Record.as_xmlid`` method
 - bugfix: ensure thet record is present in cache on init of Record class

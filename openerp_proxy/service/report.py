@@ -2,9 +2,16 @@
 
 Best way to generate report is::
 
-    data_records = db['res.partner'].search_records([], limit=10)
-    report = db.services.report['res.partner'].generate(data_records)
+    data_records = client['res.partner'].search_records([], limit=10)
+    report = client.services.report['res.partner'].generate(data_records)
     report.content
+
+Or if it is desired to save it on disk::
+
+    data_records = client['res.partner'].search_records([], limit=10)
+    report = client.services.report['res.partner'].generate(data_records)
+    report.save('filename to save report with')
+
 
 where *report* is instance of *ReportResult* and *report.content*
 returns already *base64* decoded content of report,
@@ -12,9 +19,7 @@ which could be directly written to file (or
 just use *report.save(path)* method)
 """
 
-import time
 import numbers
-from pkg_resources import parse_version
 from extend_me import Extensible
 
 from .service import ServiceBase
@@ -141,9 +146,9 @@ class Report(Extensible):
     def generate(self, model_data, report_type='pdf', context=None):
         """ Generate report
 
-            :param report_data: RecordList or Record or list of obj_ids.
-                                represent document or documents
-                                to generate report for
+            :param model_data: RecordList or Record or list of obj_ids.
+                               represent document or documents
+                               to generate report for
             :param str report_type: Type of report to generate.
                                     default is 'pdf'.
             :param dict context: Aditional info. Optional.
@@ -186,6 +191,10 @@ class ReportService(ServiceBase):
 
     def _prepare_report_data(self, model, ids, report_type):
         """ Performs preparation of data
+
+            :param str model: model name to generate report for
+            :param ids: ID or list of IDs to generate report for
+            :param str report_type: Type of report.
         """
         ids = [ids] if isinstance(ids, numbers.Integral) else ids
         return {
@@ -310,30 +319,11 @@ class ReportService(ServiceBase):
 
         report_model = self[report_name].report_action.model
 
-        if self.client.server_version >= parse_version('6.1'):
-            report_result = self.render_report(report_name,
-                                               report_model,
-                                               obj_ids,
-                                               report_type=report_type,
-                                               context=context)
-        else:  # pragma: no cover
-            # server < 6.1
-            report_id = self.report(report_name,
-                                    report_model,
-                                    obj_ids,
-                                    report_type=report_type,
-                                    context=context)
-            attempt = 0
-            while True:
-                report_result = self.report_get(report_id)
-                if report_result['state']:
-                    break
-                else:
-                    time.sleep(1)
-                    attempt += 1
-
-                if attempt > 200:
-                    raise ReportError("Report download timeout!")
+        report_result = self.render_report(report_name,
+                                           report_model,
+                                           obj_ids,
+                                           report_type=report_type,
+                                           context=context)
 
         return ReportResult(self.available_reports[report_name],
                             report_result)

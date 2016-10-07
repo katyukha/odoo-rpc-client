@@ -103,12 +103,9 @@ Quick example
 Supported Odoo server versions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tested with Odoo 7.0, 8.0, 9.0
+Tested with Odoo *7.0*, *8.0*, *9.0*, *10.0rc1c*
 
 Also shoud work with Odoo 6.1
-
-Also it should work with Odoo version 6.0, except the things related to passing named parametrs
-to server methods, such as using context in `openerp_proxy.orm <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html>`_ package
 
 
 Examples

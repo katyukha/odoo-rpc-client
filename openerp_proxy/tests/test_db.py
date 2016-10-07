@@ -21,7 +21,7 @@ class Test_999_DB(BaseTestCase):
 
     def test_00_create_db(self):
         # create database if it was not created yet
-        if self.env.dbname not in self.client.services.db.list_db():
+        if not self.client.services.db.db_exist(self.env.dbname):
             self.client.services.db.create_db(self.env.super_password,
                                               self.env.dbname, demo=True,
                                               admin_password=self.env.password)

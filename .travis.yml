@@ -1,3 +1,5 @@
+sudo: required
+dist: trusty
 language: python
 python:
   - "2.7"
@@ -5,33 +7,70 @@ python:
   - "3.4"
   - "3.5"
 
+cache:
+  pip: true
+  apt: true
+
 env:
   global:
     - TEST_DB_SERVICE=1 TEST_WITH_EXTENSIONS=1
   matrix:
  
-    - ODOO_VERSION="7.0" ODOO_PACKAGE="openerp" ODOO_TEST_PROTOCOL='xml-rpc'
+    - ODOO_VERSION="7.0"
+      ODOO_RELEASE="7.0"
+      ODOO_PACKAGE="openerp"
+      ODOO_TEST_PROTOCOL='xml-rpc'
 
-    - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='json-rpc'
-    - ODOO_VERSION="8.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='xml-rpc'
+    - ODOO_VERSION="8.0"
+      ODOO_RELEASE="8.0"
+      ODOO_PACKAGE="odoo"
+      ODOO_TEST_PROTOCOL='json-rpc'
 
-    - ODOO_VERSION="9.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='json-rpc' TEST_SKIP_WORKFLOW=1
-    - ODOO_VERSION="9.0" ODOO_PACKAGE="odoo" ODOO_TEST_PROTOCOL='xml-rpc' TEST_SKIP_WORKFLOW=1
+    - ODOO_VERSION="8.0"
+      ODOO_RELEASE="8.0"
+      ODOO_PACKAGE="odoo"
+      ODOO_TEST_PROTOCOL='xml-rpc'
+
+    - ODOO_VERSION="9.0"
+      ODOO_RELEASE="9.0"
+      ODOO_PACKAGE="odoo"
+      ODOO_TEST_PROTOCOL='json-rpc'
+      TEST_SKIP_WORKFLOW=1
+
+    - ODOO_VERSION="9.0"
+      ODOO_RELEASE="9.0"
+      ODOO_PACKAGE="odoo"
+      ODOO_TEST_PROTOCOL='xml-rpc'
+      TEST_SKIP_WORKFLOW=1
+
+    - ODOO_VERSION="10.0"
+      ODOO_RELEASE="10.0rc1c"
+      ODOO_PACKAGE="odoo"
+      ODOO_TEST_PROTOCOL='xml-rpc'
+      TEST_SKIP_WORKFLOW=1
+
+    # There is a bug in Odoo 10.0rc1c on drop database via JSON-RPC
+    # So temporary disable tests for json-rpc on odoo-10.0
+    # Odoo issue: https://github.com/odoo/odoo/issues/13694
+    #- ODOO_VERSION="10.0"
+      #ODOO_RELEASE="10.0rc1c"
+      #ODOO_PACKAGE="odoo"
+      #ODOO_TEST_PROTOCOL='json-rpc'
+      #TEST_SKIP_WORKFLOW=1
 
 install:
-  - "wget http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/${ODOO_PACKAGE}_${ODOO_VERSION}.latest_all.deb -O odoo.deb"
-  - "wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-trusty-amd64.deb -O wkhtmltox.deb"
-  - "sudo dpkg --force-depends -i wkhtmltox.deb"
+  - "wget http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/${ODOO_PACKAGE}_${ODOO_RELEASE}.latest_all.deb -O odoo.deb"
+  - "! command -v wkhtmltopdf >/dev/null 2>&1 && wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-trusty-amd64.deb -O wkhtmltox.deb"
+  - "! command -v wkhtmltopdf >/dev/null 2>&1 && sudo dpkg --force-depends -i wkhtmltox.deb"
   - "sudo apt-get update && sudo apt-get install -f -y"
-  - "sudo apt-get install aptitude"
-  - "sudo aptitude install -y $(dpkg -I odoo.deb | grep -o -P 'Depends: \\K(.*)' | tr ',' ' ') || true"
+  - "sudo apt-get install -y $(dpkg -I odoo.deb | grep -o -P 'Depends: \\K(.*)' | tr ',' ' ') || true"
   - "sudo dpkg --force-depends -i odoo.deb || true"
-  - "pip install --upgrade coveralls ipython[notebook] setuptools>=18 pip pbr anyfield>=0.1.2 flake8"
+  - "pip install --upgrade 'coveralls>=1.1' 'ipython[notebook]>=4' 'setuptools>=18' pip pbr 'anyfield>=0.1.2' 'flake8>=3'"
   - "python setup.py develop"
 
 before_script:
   - "sudo invoke-rc.d ${ODOO_PACKAGE} restart"
-  - "sleep 5"
+  - "sleep 3"
 
 script:
   - "flake8 openerp_proxy --count --statistics;"  # test code style

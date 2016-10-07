@@ -32,6 +32,8 @@ class ObjectCache(dict):
         """ Add new IDs to cache.
 
             :param list keys: list of new IDs to be added to cache
+            :return: self
+            :rtype: ObjectCache
         """
         if not self:
             # for large amounts of data, this may be faster (no need for set
@@ -51,7 +53,7 @@ class ObjectCache(dict):
         """
         if new_context is not None:
             if self.context is None:
-                self._context = new_context
+                self._context = dict(new_context)
             else:
                 self._context.update(new_context)
         return self.context
@@ -107,12 +109,13 @@ class ObjectCache(dict):
             Used internaly
 
             :param list fields: list of fields to prefetch
-            :return: tuple(prefetch_fields, related_fields),
-                     where prefetch_fields is list of fields, to be read for
-                     current object, and related_fields is dictionary of form
-                     ``{'related.object': ['relatedfield1',
-                                           'relatedfield2.relatedfield']}``
-        """
+            :return: returns ``tuple(prefetch_fields, related_fields)``,
+                where ``prefetch_fields`` is list of fields,
+                to be read for current object, and ``related_fields`` is
+                dictionary of form:
+                ``{'related.object': ['relatedfield1', 'relatedfield2.relatedfield']}``
+            :rtype: tuple
+        """  # noqa
         rel_fields = collections.defaultdict(list)
         prefetch_fields = set()
         for field in fields:
@@ -180,6 +183,8 @@ class Cache(dict):
             obj = self._client.get_obj(key)
         except ValueError:
             raise KeyError("There is no object with such name: %s" % key)
+
+        # TODO: FIX: Object caches generated without context
         self[key] = ObjectCache(self, obj)
         return self[key]
 

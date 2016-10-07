@@ -19,6 +19,7 @@ usage="
         --test-index           - upload to test pypi site
         --py2                  - use python 2
         --py3                  - use python 3 (default)
+        --reuse-venv           - do not remove virtual environment, and reusse it on next call
 
 "
 
@@ -44,6 +45,9 @@ do
         --py3)
             USE_PY_VERSION='python3';
         ;;
+        --reuse-venv)
+            REUSE_VENV=1;
+        ;;
         *)
             echo "Unknown option $key";
             exit 1;
@@ -60,12 +64,14 @@ function make_venv {
     local py_version=$1;
     local dest_dir=$2;
 
-    if [ -d $dest_dir ]; then
+    if [ -d $dest_dir ] && [ -z $REUSE_VENV ]; then
         echo "Removing dest dir '$dest_dir'...";
         rm -rf $dest_dir;
+        virtualenv -p $py_version $dest_dir;
+    elif [ ! -d $dest_dir ]; then
+        virtualenv -p $py_version $dest_dir;
     fi
 
-    virtualenv -p $py_version $dest_dir;
     $dest_dir/bin/easy_install --upgrade setuptools pip;
 
     $dest_dir/bin/pip install --upgrade ipython;
@@ -113,7 +119,9 @@ function release_python_2 {
     release_implementation;
     deactivate;
 
-    rm -r $venv_dir;
+    if [ -z $REUSE_VENV ]; then
+        rm -r $venv_dir;
+    fi
 }
 
 function release_python_3 {
@@ -126,7 +134,9 @@ function release_python_3 {
     release_implementation;
     deactivate;
 
-    rm -r $venv_dir;
+    if [ -z $REUSE_VENV ]; then
+        rm -r $venv_dir;
+    fi
 }
 
 function do_release {

@@ -1,6 +1,7 @@
 from . import BaseTestCase
 from ..core import Client
-from ..exceptions import LoginException
+from ..exceptions import (LoginException,
+                          ConnectorError)
 from ..connection import get_connector_names
 
 
@@ -21,7 +22,7 @@ class Test_00_Connection(BaseTestCase):
         with self.assertRaises(LoginException):
             client.uid
 
-        # access to uid with out credentials provided, should cause error
+        # access to user with out credentials provided, should cause error
         with self.assertRaises(LoginException):
             client.user
 
@@ -98,3 +99,17 @@ class Test_00_Connection(BaseTestCase):
     def test_06_get_connector_names(self):
         self.assertItemsEqual(get_connector_names(),
                               ['json-rpc', 'json-rpcs', 'xml-rpc', 'xml-rpcs'])
+
+    def test_10_call_unexistint_method(self):
+        cl = self.client.login(self.env.dbname,
+                               self.env.user,
+                               self.env.password)
+        with self.assertRaises(ConnectorError):
+            cl.execute('res.partner', 'some_unexistent_method__42')
+
+    def test_15_call_unexistent_service_method(self):
+        cl = self.client.login(self.env.dbname,
+                               self.env.user,
+                               self.env.password)
+        with self.assertRaises(ConnectorError):
+            cl.services['unexistent_service_42'].call_unexistent_method_78()

@@ -4,6 +4,7 @@ from .. import (Client,
 import sys
 import os
 import os.path
+import pprint
 
 
 class Test_90_Session(BaseTestCase):
@@ -66,7 +67,7 @@ class Test_90_Session(BaseTestCase):
                              interactive=False)
 
         self.assertIsInstance(cl, Client)
-        self.assertIn(cl.get_url(), session._databases)
+        self.assertIn(cl.get_url(), session._clients)
         self.assertIn(cl.get_url(), session.db_list)
         self.assertEqual(len(session.db_list), 1)
         self.assertIs(session.get_db(cl.get_url()), cl)
@@ -97,7 +98,7 @@ class Test_90_Session(BaseTestCase):
         session = Session(self._session_file_path)
 
         # and test again
-        self.assertIn(cl.get_url(), session._databases)
+        self.assertIn(cl.get_url(), session._clients)
         self.assertIn(cl.get_url(), session.db_list)
         self.assertEqual(len(session.db_list), 1)
         self.assertIsNot(session.get_db(cl.get_url()), cl)
@@ -113,7 +114,7 @@ class Test_90_Session(BaseTestCase):
 
         # test situation when session just started and saved, without changes
         # this code is aimed mostly to increase test coverage. In this case in
-        # ._databases all values will be dict when saveing
+        # ._clients all values will be dict when saveing
         session = Session(self._session_file_path)
         session.save()
 
@@ -133,7 +134,7 @@ class Test_90_Session(BaseTestCase):
                              no_save=True)   # diff from previous test
 
         self.assertIsInstance(cl, Client)
-        self.assertIn(cl.get_url(), session._databases)
+        self.assertIn(cl.get_url(), session._clients)
         self.assertIn(cl.get_url(), session.db_list)
         self.assertEqual(len(session.db_list), 1)
         self.assertIs(session.get_db(cl.get_url()), cl)
@@ -153,15 +154,9 @@ class Test_90_Session(BaseTestCase):
         session = Session(self._session_file_path)
 
         # and test again
-        self.assertNotIn(cl.get_url(), session._databases)
+        self.assertNotIn(cl.get_url(), session._clients)
         self.assertNotIn(cl.get_url(), session.db_list)
         self.assertEqual(len(session.db_list), 0)
-
-        with self.assertRaises(ValueError):
-            session.get_db(cl.get_url())
-
-        with self.assertRaises(KeyError):
-            session[cl.get_url()]
 
     def test_25_aliases(self):
         session = Session(self._session_file_path)
@@ -224,4 +219,105 @@ class Test_90_Session(BaseTestCase):
         with self.assertRaises(AttributeError):
             session.unexistent_aliase
 
+        with self.assertRaises(KeyError):
+            session['unexistent_aliase']
+
         self.assertIn('cl1', dir(session))
+
+    def test_30_del_client(self):
+        session = Session(self._session_file_path)
+
+        # set store_passwords to true, to avoid password promt during tests
+        session.option('store_passwords', True)
+
+        cl = session.connect(self.env.host,
+                             dbname=self.env.dbname,
+                             user=self.env.user,
+                             pwd=self.env.password,
+                             protocol=self.env.protocol,
+                             port=self.env.port,
+                             interactive=False)
+
+        # Ensure that there is only one db connection in session now
+        self.assertEqual(len(session.db_list), 1)
+
+        session.aliase('cl123', cl)
+
+        # save session
+        session.save()
+        del session
+
+        # recreate session
+        session = Session(self._session_file_path)
+
+        # Ensure that there is one db connection in session
+        self.assertEqual(len(session.db_list), 1)
+
+        # delete db connection from session
+        session.del_db(cl)
+
+        # ensure that session now is empty:
+        self.assertEqual(len(session.db_list), 0)
+        self.assertFalse(bool(session.index))
+        self.assertFalse(bool(session.index_rev))
+        self.assertFalse(bool(session.aliases))
+
+        # save session
+        session.save()
+        del session
+
+        # recreate session and test that it is empty
+        session = Session(self._session_file_path)
+
+        self.assertEqual(len(session.db_list), 0)
+        self.assertFalse(bool(session.index))
+        self.assertFalse(bool(session.index_rev))
+        self.assertFalse(bool(session.aliases))
+
+    def test_35_client_from_url(self):
+        session = Session(self._session_file_path)
+
+        # set store_passwords to true, to avoid password promt during tests
+        session.option('store_passwords', True)
+
+        cl = Client(self.env.host,
+                    dbname=self.env.dbname,
+                    user=self.env.user,
+                    pwd=self.env.password,
+                    protocol=self.env.protocol,
+                    port=self.env.port)
+        cl_url = ("%(protocol)s://%(user)s:%(pwd)s@%(host)s:%(port)s/"
+                  "%(dbname)s" % dict(host=self.env.host,
+                                      dbname=self.env.dbname,
+                                      user=self.env.user,
+                                      pwd=self.env.password,
+                                      protocol=self.env.protocol,
+                                      port=self.env.port))
+
+        cl2 = session[cl_url]
+
+        # Test that both clients have same url
+        self.assertEqual(cl2.get_url(), cl.get_url())
+
+        # Test that client connected from URL can successfully login
+        self.assertTrue(bool(cl2.uid))
+
+    def test_40_session_str(self):
+        session = Session(self._session_file_path)
+
+        # set store_passwords to true, to avoid password promt during tests
+        session.option('store_passwords', True)
+
+        # Add connection to session
+        session.connect(self.env.host,
+                        dbname=self.env.dbname,
+                        user=self.env.user,
+                        pwd=self.env.password,
+                        protocol=self.env.protocol,
+                        port=self.env.port,
+                        interactive=False)
+
+        # Test that session have some connections
+        self.assertEqual(len(session.db_list), 1)
+
+        self.assertEqual(str(session), pprint.pformat(session.index))

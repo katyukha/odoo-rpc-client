@@ -1,5 +1,6 @@
+from pkg_resources import parse_version
+
 from ..service.service import ServiceBase
-from ..exceptions import ConnectorError
 
 
 class ObjectService(ServiceBase):
@@ -13,27 +14,7 @@ class ObjectService(ServiceBase):
 
     def __init__(self, *args, **kwargs):
         super(ObjectService, self).__init__(*args, **kwargs)
-        self.__use_execute_kw = None
         self._registered_objects = None
-
-    @property
-    def use_execute_kw(self):
-        """ Checks whether 'execute_kw' method is available or not
-        """
-        if self.__use_execute_kw is None:
-            try:
-                self._service.execute_kw(self.client.dbname,
-                                         self.client.uid,
-                                         self.client._pwd,
-                                         'ir.model',
-                                         'search',
-                                         ([],),
-                                         dict(limit=1))
-                self.__use_execute_kw = True
-            except ConnectorError:  # pragma: no cover
-                # Odoo version < 6.1
-                self.__use_execute_kw = False
-        return self.__use_execute_kw
 
     def execute(self, obj, method, *args, **kwargs):
         """First arguments should be 'object' and 'method' and next
@@ -45,23 +26,13 @@ class ObjectService(ServiceBase):
             kwargs = kwargs.copy()
             del kwargs['context']
 
-        if self.use_execute_kw:
-            result = self._service.execute_kw(self.client.dbname,
-                                              self.client.uid,
-                                              self.client._pwd,
-                                              obj,
-                                              method,
-                                              args,
-                                              kwargs)
-        else:  # pragma: no cover
-            result = self._service.execute(self.client.dbname,
-                                           self.client.uid,
-                                           self.client._pwd,
-                                           obj,
-                                           method,
-                                           *args,
-                                           **kwargs)
-
+        result = self._service.execute_kw(self.client.dbname,
+                                          self.client.uid,
+                                          self.client._pwd,
+                                          obj,
+                                          method,
+                                          args,
+                                          kwargs)
         return result
 
     def execute_wkf(self, object_name, signal, object_id):
@@ -83,8 +54,12 @@ class ObjectService(ServiceBase):
         """ Implementation of get registered models (objects)
             Could be overridden by extensions
         """
-        ids = self.execute('ir.model', 'search', [])
-        read = self.execute('ir.model', 'read', ids, ['model'])
+        if self.client.server_version > parse_version('8.0'):
+            read = self.execute('ir.model', 'search_read',
+                                domain=[], fields=['model'])
+        else:
+            ids = self.execute('ir.model', 'search', [])
+            read = self.execute('ir.model', 'read', ids, ['model'])
         return [x['model'] for x in read]
 
     def get_registered_objects(self):
@@ -99,5 +74,4 @@ class ObjectService(ServiceBase):
         """ Cleans service cache, to fill them with fresh data
             on next call of related methods
         """
-        self.__use_execute_kw = None
         self._registered_objects = None
