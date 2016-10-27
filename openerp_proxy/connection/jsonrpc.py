@@ -113,8 +113,7 @@ class JSONRPCMethod(object):
 
 
 class JSONRPCProxy(object):
-    """ Wrapper class around XML-RPC's ServerProxy to wrap method's errors
-        into XMLRPCError class
+    """ Simple Odoo service proxy wrapper
     """
     def __init__(self, host, port, service, ssl=False, ssl_verify=True):
         self.host = host

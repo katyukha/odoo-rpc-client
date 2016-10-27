@@ -311,8 +311,8 @@ class Client(Extensible):
             return Client(**init_kwargs)
 
         # Get the uid
-        if self._pwd is None or self.username is None or self.dbname is None:
-            raise LoginException("User login and password required "
+        if not self._pwd or not self.username or not self.dbname:
+            raise LoginException("User login and password and dbname required "
                                  "for this operation")
 
         uid = self.services['common'].login(self.dbname,
