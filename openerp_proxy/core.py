@@ -395,7 +395,9 @@ class Client(Extensible):
             [('module', '=', module), ('name', '=', name)],
             limit=1)
         if res:
-            return res[0]
+            res = res[0]
+            return self[res.model].read_records(res.res_id)
+
         return False
 
     def __getitem__(self, name):

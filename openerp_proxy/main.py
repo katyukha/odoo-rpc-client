@@ -28,6 +28,8 @@ HELP_HEADER = """
                   and other unneccesary information
         getpass - getpass.getpass functon from standard python library.
                   useful, if you do not want live passwords in ipython history.
+        anyfield - only if ``anyfield`` package is installed
+        F        - ``anyfield.F``. (only if ``anyfiled`` package is installed)
 
     Databases You previously worked with: %(databases)s
 
@@ -78,6 +80,16 @@ def prepare_shell_env(session):
         'session': session,
         'getpass': getpass
     }
+
+    try:
+        import anyfield
+    except ImportError:
+        pass
+    else:
+        _locals.update({
+            'anyfield': anyfield,
+            'F': anyfield.F,
+        })
 
     return _locals, header
 
