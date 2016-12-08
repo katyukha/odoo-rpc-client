@@ -116,13 +116,27 @@ class IPYSession(Session):
             u"</ul>"
         )
 
+        def _get_aliases_for_url(url):
+            """ Get list of aliases for url
+            """
+            return u", ".join((
+                _(aliase)
+                for aliase, aliase_url in self.aliases.items()
+                if aliase_url == url
+            ))
+
+        def _gen_description_data():
+            """ Generator for tuples (index, url, aliases)
+            """
+            for url in self.db_list:
+                yield (
+                    self.index_rev[url],
+                    url,
+                    _get_aliases_for_url(url),
+                )
+
         return describe_object_html(
-            ((self._index_url(url),
-              url,
-              u", ".join((_(al)
-                          for al, aurl in self.aliases.items()
-                          if aurl == url)))
-             for url in self._databases.keys()),
+            _gen_description_data(),
             caption='Previous connections',
             help=help_text,
-            headers=[u'DB Index', u'DB URL', u'DB Aliases'])
+            headers=[u'Index', u'URL', u'Aliases'])

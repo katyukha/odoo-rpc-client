@@ -161,6 +161,7 @@ class UConverter(object):
 
         raise UnicodeError('unable to convert to unicode %r' % (value,))
 
+
 # default converter instance
 ustr = UConverter()
 
