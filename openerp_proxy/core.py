@@ -311,8 +311,8 @@ class Client(Extensible):
             return Client(**init_kwargs)
 
         # Get the uid
-        if self._pwd is None or self.username is None or self.dbname is None:
-            raise LoginException("User login and password required "
+        if not self._pwd or not self.username or not self.dbname:
+            raise LoginException("User login and password and dbname required "
                                  "for this operation")
 
         uid = self.services['common'].login(self.dbname,
@@ -395,7 +395,9 @@ class Client(Extensible):
             [('module', '=', module), ('name', '=', name)],
             limit=1)
         if res:
-            return res[0]
+            res = res[0]
+            return self[res.model].read_records(res.res_id)
+
         return False
 
     def __getitem__(self, name):

@@ -377,6 +377,18 @@ class Test_21_Record(BaseTestCase):
         self.assertNotEqual(res.ref, self.record.ref)
         self.assertEqual(res.ref, 'My Test Copy Partner Ref')
 
+    def test_get_existing_field(self):
+        rec = self.record
+        self.assertEqual(rec.get('name'), self.record.name)
+        self.assertEqual(rec.get('name', 'default'), self.record.name)
+
+    def test_get_unexisting_field(self):
+        rec = self.record
+        with self.assertRaises(KeyError):
+            rec.get('unexisting_name')
+
+        self.assertEqual(rec.get('unexisting_name', 'default'), 'default')
+
 
 class Test_22_RecordList(BaseTestCase):
 

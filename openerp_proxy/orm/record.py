@@ -394,6 +394,30 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
                           cache=self._cache,
                           context=self.context)
 
+    def get(self, field_name, default=None):
+        """ Try to get field *field_name*, if if field name is not available
+            return *default* value for it
+
+            if *default* is None and it is not possible to get field value,
+            then raises *KeyErro*
+
+            :param str field_name: name of field to get value for
+            :param default: default value for case when no such field
+            :return: field value
+            :raises KeyError: if cannot get field value
+
+            Note: This may be useful for code that expected to be working for
+            different Odoo versions which have different database schemes.
+        """
+        try:
+            res = self[field_name]
+        except KeyError:
+            if default is None:
+                raise
+            else:
+                res = default
+        return res
+
 
 RecordListMeta = ExtensibleType._('RecordList', with_meta=abc.ABCMeta)
 

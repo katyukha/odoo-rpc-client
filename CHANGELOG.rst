@@ -1,6 +1,13 @@
 Last changes
 ============
 
+Release 0.7.1
+-------------
+
+- Bugfix in ``Client.ref`` method. now it returns ``Record`` instance,
+  as mentioned in documentation
+- Added ``Record.get(field_name, default)`` method.
+
 Release 0.7.0
 -------------
 

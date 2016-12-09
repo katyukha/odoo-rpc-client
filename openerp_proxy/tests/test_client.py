@@ -237,6 +237,7 @@ class Test_10_Client(BaseTestCase):
     def test_220_ref_existing(self):
         partner = self.client.ref('base.main_partner')
         self.assertIsInstance(partner, Record)
+        self.assertEqual(partner._object.name, 'res.partner')
 
     def test_221_ref_un_existing(self):
         partner = self.client.ref('base.unexisting_partner_id')
