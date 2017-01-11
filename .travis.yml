@@ -21,6 +21,11 @@ env:
       ODOO_PACKAGE="openerp"
       ODOO_TEST_PROTOCOL='xml-rpc'
 
+    - ODOO_VERSION="7.0"
+      ODOO_RELEASE="7.0"
+      ODOO_PACKAGE="openerp"
+      ODOO_TEST_PROTOCOL='local'
+
     - ODOO_VERSION="8.0"
       ODOO_RELEASE="8.0"
       ODOO_PACKAGE="odoo"
@@ -31,6 +36,11 @@ env:
       ODOO_PACKAGE="odoo"
       ODOO_TEST_PROTOCOL='xml-rpc'
 
+    - ODOO_VERSION="8.0"
+      ODOO_RELEASE="8.0"
+      ODOO_PACKAGE="odoo"
+      ODOO_TEST_PROTOCOL='local'
+
     - ODOO_VERSION="9.0"
       ODOO_RELEASE="9.0"
       ODOO_PACKAGE="odoo"
@@ -39,6 +49,18 @@ env:
 
     - ODOO_VERSION="9.0"
       ODOO_RELEASE="9.0"
+      ODOO_PACKAGE="odoo"
+      ODOO_TEST_PROTOCOL='xml-rpc'
+      TEST_SKIP_WORKFLOW=1
+
+    - ODOO_VERSION="9.0"
+      ODOO_RELEASE="9.0"
+      ODOO_PACKAGE="odoo"
+      ODOO_TEST_PROTOCOL='local'
+      TEST_SKIP_WORKFLOW=1
+
+    - ODOO_VERSION="10.0"
+      ODOO_RELEASE="10.0rc1c"
       ODOO_PACKAGE="odoo"
       ODOO_TEST_PROTOCOL='xml-rpc'
       TEST_SKIP_WORKFLOW=1
@@ -46,7 +68,7 @@ env:
     - ODOO_VERSION="10.0"
       ODOO_RELEASE="10.0rc1c"
       ODOO_PACKAGE="odoo"
-      ODOO_TEST_PROTOCOL='xml-rpc'
+      ODOO_TEST_PROTOCOL='local'
       TEST_SKIP_WORKFLOW=1
 
     # There is a bug in Odoo 10.0rc1c on drop database via JSON-RPC
@@ -73,8 +95,7 @@ before_script:
   - "sleep 3"
 
 script:
-  - "flake8 openerp_proxy --count --statistics;"  # test code style
-  - "openerp_proxy <<< 'print(42);exit';"  # Test that it runs via 'openerp_proxy' command
+  - "flake8 odoo_rpc_client --count --statistics;"  # test code style
   - "coverage run -p setup.py test"
   - "coverage combine"
 

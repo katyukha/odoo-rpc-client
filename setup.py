@@ -9,8 +9,10 @@ import multiprocessing  # noqa
 
 # load version info
 version_file = os.path.join(os.path.dirname(__file__),
-                            'openerp_proxy',
+                            'odoo_rpc_client',
                             'version.py')
+readme_file = os.path.join(os.path.dirname(__file__), 'README.rst')
+
 if sys.version_info < (3,):
     execfile(version_file)
 else:
@@ -18,27 +20,24 @@ else:
         exec(compile(f.read(), version_file, 'exec'))
 
 
-setup(name='openerp_proxy',
+setup(name='odoo_rpc_client',
       version=version,
-      description='Odoo/OpenERP CLI interface and library for RPC',
+      description='Odoo/OpenERP library for RPC',
       author='Dmytro Katyukha',
       author_email='firemage.dima@gmail.com',
-      url='https://github.com/katyukha/openerp-proxy',
-      long_description=open('README.rst').read(),
-      packages=['openerp_proxy',
-                'openerp_proxy.connection',
-                'openerp_proxy.service',
-                'openerp_proxy.orm',
-                'openerp_proxy.ext',
-                'openerp_proxy.ext.repr',
-                'openerp_proxy.tests',
-                'openerp_proxy.plugins',
-                'openerp_proxy.experimental',
-                'openerp_proxy.plugins.diagraming'],
-      scripts=['bin/openerp_proxy'],
+      url='https://github.com/katyukha/odoo-rpc-client',
+      long_description=open(readme_file).read(),
+      packages=['odoo_rpc_client',
+                'odoo_rpc_client.connection',
+                'odoo_rpc_client.service',
+                'odoo_rpc_client.orm',
+                'odoo_rpc_client.tests',
+                'odoo_rpc_client.plugins',
+                ],
       license="GPL",
       classifiers=[
-          'Development Status :: 4 - Beta',
+          'Development Status :: 3 - Alpha',
+          # 'Development Status :: 4 - Beta',
           'Environment :: Console',
           'Intended Audience :: Developers',
           'License :: OSI Approved :: GNU General Public License (GPL)',
@@ -57,22 +56,18 @@ setup(name='openerp_proxy',
       keywords=['openerp', 'odoo', 'odoo-rpc', 'rpc', 'xmlrpc',
                 'xml-rpc', 'json-rpc', 'jsonrpc', 'odoo-client', 'ipython'],
       extras_require={
-          'all': ['ipython[all]', 'anyfield'],
+          'all': ['anyfield'],
       },
       install_requires=[
-          'tabulate>=0.7.5',  # repr extension
           'six>=1.10',
           'extend_me>=1.1.3',
           'setuptools>=18',
           'requests>=2.7',
-          'ipython>=4',       # repr extension
-          'Jinja2',
       ],
       tests_require=[
           'mock',
-          'ipython[notebook]',
           'coverage',
           'anyfield',
       ],
-      test_suite='openerp_proxy.tests.all',
+      test_suite='odoo_rpc_client.tests.all',
 )

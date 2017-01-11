@@ -1,4 +1,4 @@
-OpenERP-proxy - RPC Shell and lib for Odoo / OpenERP
+OpenERP-proxy - RPC client lib for Odoo / OpenERP
 Copyright (C) 2015  Dmytro Katyukha
 
 This program is free software: you can redistribute it and/or modify

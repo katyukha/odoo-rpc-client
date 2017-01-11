@@ -1,24 +1,19 @@
 OpenERP / Odoo proxy
 ====================
 
-
-.. image:: https://travis-ci.org/katyukha/openerp-proxy.svg?branch=master
-    :target: https://travis-ci.org/katyukha/openerp-proxy
-
-.. image:: https://coveralls.io/repos/katyukha/openerp-proxy/badge.svg?branch=master&service=github
-    :target: https://coveralls.io/github/katyukha/openerp-proxy?branch=master
-    
-.. image:: https://img.shields.io/pypi/v/openerp_proxy.svg
-    :target: https://pypi.python.org/pypi/openerp_proxy/
-
-.. image:: https://img.shields.io/pypi/l/openerp_proxy.svg
-    :target: https://pypi.python.org/pypi/openerp_proxy/
-
-.. image:: https://img.shields.io/pypi/pyversions/openerp_proxy.svg
-    :target: https://pypi.python.org/pypi/openerp_proxy/
-
-.. image:: https://img.shields.io/pypi/format/openerp_proxy.svg
-    :target: https://pypi.python.org/pypi/openerp_proxy/
+..
+    .. image:: https://travis-ci.org/katyukha/openerp-proxy.svg?branch=master
+        :target: https://travis-ci.org/katyukha/openerp-proxy
+    .. image:: https://coveralls.io/repos/katyukha/openerp-proxy/badge.svg?branch=master&service=github
+        :target: https://coveralls.io/github/katyukha/openerp-proxy?branch=master
+    .. image:: https://img.shields.io/pypi/v/openerp_proxy.svg
+        :target: https://pypi.python.org/pypi/openerp_proxy/
+    .. image:: https://img.shields.io/pypi/l/openerp_proxy.svg
+        :target: https://pypi.python.org/pypi/openerp_proxy/
+    .. image:: https://img.shields.io/pypi/pyversions/openerp_proxy.svg
+        :target: https://pypi.python.org/pypi/openerp_proxy/
+    .. image:: https://img.shields.io/pypi/format/openerp_proxy.svg
+        :target: https://pypi.python.org/pypi/openerp_proxy/
 
 -------------------
 
@@ -29,15 +24,12 @@ OpenERP / Odoo proxy
 Overview
 --------
 
+This is core part of `OpenERP Proxy <https://github.com/katyukha/openerp-proxy>`__
+
 This project is just **RPC client** for Odoo.
-It aims to ease access to openerp data via shell and used
-mostly for data debuging purposes. This project provides interface similar to
+This project provides interface similar to
 Odoo internal code to perform operations on **OpenERP** / **Odoo** objects hiding
 **XML-RPC** or **JSON-RPC** behind.
-
-
-    - Are You still using pgAdmin for quering Odoo database?
-    - Try this package (especialy with IPython Notebook), and You will forget about pgAdmin!
 
 
 Features
@@ -49,12 +41,6 @@ Features
 -  Have *a lot of speed optimizations* (caching, read only requested fields,
    read data for all records in current set (cache), by one RPC call, etc)
 -  Desinged to take as more benefits of **IPython autocomplete** as posible
--  Works nice in `Jupyter Notebook <https://jupyter.org/>`__ providing **HTML
-   representation** for a most of objects.
--  Ability to export HTML table recordlist representation to *CSV file*
--  Ability to save connections to different databases in session.
-   (By default password is not saved, and will be asked, but if You need to save it, just do this:
-   ``session.option('store_passwords', True); session.save()``)
 -  Provides *browse\_record* like interface, allowing to browse related
    models too. Supports `browse <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html#openerp_proxy.orm.record.ObjectRecords.browse>`__ method.
    Also adds method `search_records <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html#openerp_proxy.orm.record.ObjectRecords.search_records>`__ to simplify
@@ -67,10 +53,9 @@ Features
    and `openerp_proxy/plugin.py <https://github.com/katyukha/openerp-proxy/blob/master/openerp_proxy/plugin.py>`__ 
 -  Support of **JSON-RPC** for *version 8+* of Odoo
 -  Support of using **named parametrs** in RPC method calls (server version 6.1 and higher).
--  `Sugar extension <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html#module-openerp_proxy.ext.sugar>`__ which simplifys code a lot.
 -  *Experimental* integration with `AnyField <https://pypi.python.org/pypi/anyfield>`__
 
--  Missed feature? ask in `Project Issues <https://github.com/katyukha/openerp-proxy/issues>`__
+-  Missed feature? ask in `Project Issues <https://github.com/katyukha/odoo-rpc-client/issues>`__
 
 
 Quick example
@@ -78,7 +63,7 @@ Quick example
 
 .. code:: python
 
-    from openerp_proxy import Client
+    from odoo_rpc_client import Client
 
     client = Client('localhost', 'my_db', 'user', 'password')
 

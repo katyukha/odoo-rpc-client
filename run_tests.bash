@@ -5,7 +5,7 @@
 # 
 # Following environment variables could be used to configure test run:
 #   - TEST_MODULE - python module name to look for test cases in
-#                   (default: openerp_proxy.tests.all)
+#                   (default: odoo_rpc_client.tests.all)
 #   - PY_VERSIONS - string that contains space separated python versions to test app on
 
 
@@ -19,7 +19,6 @@ usage="
         run_tests.bash [options]
     Available options:
         --py-version v1         - use specific python version. may be present multiple times
-        --with-extensions       - test extensions also
         --with-db               - perform database related tests (create, dump, drop, restore)
         --recreate-db           - recreate test database at start
         --test-module <module>  - run specific test suit (python module that contains test cases)
@@ -43,9 +42,6 @@ do
         --py-version)
             PY_VERSIONS="$PY_VERSIONS $2";
             shift;
-        ;;
-        --with-extensions)
-            export TEST_WITH_EXTENSIONS=1;
         ;;
         --with-db)
             export TEST_DB_SERVICE=1;
@@ -113,7 +109,7 @@ function run_single_test {
     # if virtualenv was [re]created then we need to install packages
     if [ ! -z $venv_created ]; then
         pip install --upgrade pip setuptools pbr flake8
-        pip install --upgrade coverage tabulate six extend_me requests mock pudb jupyter ipython[notebook] anyfield
+        pip install --upgrade coverage six extend_me requests mock anyfield
     fi
 
     # install in develop mode
@@ -123,7 +119,6 @@ function run_single_test {
 
     # Run tests
     run_flake_8 && \
-        openerp_proxy <<< "print('It runs');exit;" && \
         coverage run -p setup.py test $TEST_MODULE_OPT
     res=$?;  # save test results
 

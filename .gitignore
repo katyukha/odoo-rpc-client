@@ -8,8 +8,7 @@
 /.ropeproject/
 /build/
 /dist/
-/OpenERP_Proxy.egg-info/
-/openerp_proxy.egg-info/
+/odoo_rpc_client.egg-info/
 /docs/build/
 /venv/
 .ropeproject
@@ -19,4 +18,5 @@
 .ipynb_checkpoints/
 /examples/tmp
 .eggs/
+/venv_*/
 
