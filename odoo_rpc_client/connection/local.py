@@ -58,15 +58,17 @@ class LocalService(object):
 class ConnectorLocal(ConnectorBase):
     """ Connect to local odoo instal.
 
-        NOTE: To use this connector, odoo must be importable as 'odoo' or 'openerp'
-        This connector will automaticaly determine Odoo version,
-        and organize correct bechavior
+        NOTE: To use this connector, odoo must be importable as 'odoo' or
+              'openerp'. This connector will automaticaly determine
+              Odoo version, and organize correct bechavior
 
-        NOTE2: This connector tested only on **python2.7** because Odoo uses this version of python
+        NOTE2: This connector tested only on **python2.7** because
+               Odoo uses this version of python
 
-        NOTE3: Because, standard params have no sense for this connector, it ignores them,
-               but instead, it looks in extra_args for argument 'local_args',
-               which must be a list of command_line args to run odoo with
+        NOTE3: Because, standard params have no sense for this connector,
+               it ignores them, but instead, it looks in extra_args
+               for argument 'local_args', which must be a list of command_line
+               args to run odoo with
     """
     class Meta:
         name = 'local'
@@ -96,11 +98,11 @@ class ConnectorLocal(ConnectorBase):
                 # Odoo 9.0 and less versions
                 import openerp as odoo
             except ImportError:
-                logger.error("Cannot import odoo")
                 raise
 
         if odoo.release.version_info < (7,):
-            raise ConnectorError("Unsupported Odoo version: %s" % odoo.release.version_info)
+            raise ConnectorError(
+                "Unsupported Odoo version: %s" % odoo.release.version_info)
 
         odoo._api_v7 = odoo.release.version_info < (8,)
         os.putenv('TZ', 'UTC')

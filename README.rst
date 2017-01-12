@@ -1,9 +1,15 @@
 OpenERP / Odoo proxy
 ====================
 
+
+.. image:: https://travis-ci.org/katyukha/odoo-rpc-client.svg?branch=master
+    :target: https://travis-ci.org/katyukha/odoo-rpc-client
+
+.. image:: https://coveralls.io/repos/github/katyukha/odoo-rpc-client/badge.svg?branch=master
+ :target: https://coveralls.io/github/katyukha/odoo-rpc-client?branch=master
+
+
 ..
-    .. image:: https://travis-ci.org/katyukha/openerp-proxy.svg?branch=master
-        :target: https://travis-ci.org/katyukha/openerp-proxy
     .. image:: https://coveralls.io/repos/katyukha/openerp-proxy/badge.svg?branch=master&service=github
         :target: https://coveralls.io/github/katyukha/openerp-proxy?branch=master
     .. image:: https://img.shields.io/pypi/v/openerp_proxy.svg

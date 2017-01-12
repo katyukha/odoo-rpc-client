@@ -13,75 +13,78 @@ cache:
 
 env:
   global:
-    - TEST_DB_SERVICE=1 TEST_WITH_EXTENSIONS=1
+    - TEST_DB_SERVICE=1
   matrix:
- 
     - ODOO_VERSION="7.0"
       ODOO_RELEASE="7.0"
       ODOO_PACKAGE="openerp"
       ODOO_TEST_PROTOCOL='xml-rpc'
 
-    - ODOO_VERSION="7.0"
-      ODOO_RELEASE="7.0"
-      ODOO_PACKAGE="openerp"
-      ODOO_TEST_PROTOCOL='local'
+    #- ODOO_VERSION="8.0"
+      #ODOO_RELEASE="8.0"
+      #ODOO_PACKAGE="odoo"
+      #ODOO_TEST_PROTOCOL='json-rpc'
 
-    - ODOO_VERSION="8.0"
-      ODOO_RELEASE="8.0"
-      ODOO_PACKAGE="odoo"
-      ODOO_TEST_PROTOCOL='json-rpc'
+    #- ODOO_VERSION="8.0"
+      #ODOO_RELEASE="8.0"
+      #ODOO_PACKAGE="odoo"
+      #ODOO_TEST_PROTOCOL='xml-rpc'
 
-    - ODOO_VERSION="8.0"
-      ODOO_RELEASE="8.0"
-      ODOO_PACKAGE="odoo"
-      ODOO_TEST_PROTOCOL='xml-rpc'
+    #- ODOO_VERSION="9.0"
+      #ODOO_RELEASE="9.0"
+      #ODOO_PACKAGE="odoo"
+      #ODOO_TEST_PROTOCOL='json-rpc'
 
-    - ODOO_VERSION="8.0"
-      ODOO_RELEASE="8.0"
-      ODOO_PACKAGE="odoo"
-      ODOO_TEST_PROTOCOL='local'
+    #- ODOO_VERSION="9.0"
+      #ODOO_RELEASE="9.0"
+      #ODOO_PACKAGE="odoo"
+      #ODOO_TEST_PROTOCOL='xml-rpc'
 
-    - ODOO_VERSION="9.0"
-      ODOO_RELEASE="9.0"
-      ODOO_PACKAGE="odoo"
-      ODOO_TEST_PROTOCOL='json-rpc'
+    #- ODOO_VERSION="10.0"
+      #ODOO_RELEASE="10.0"
+      #ODOO_PACKAGE="odoo"
+      #ODOO_TEST_PROTOCOL='xml-rpc'
 
-    - ODOO_VERSION="9.0"
-      ODOO_RELEASE="9.0"
-      ODOO_PACKAGE="odoo"
-      ODOO_TEST_PROTOCOL='xml-rpc'
+    ## There is a bug in Odoo 10.0rc1c on drop database via JSON-RPC
+    ## So temporary disable tests for json-rpc on odoo-10.0
+    ## Odoo issue: https://github.com/odoo/odoo/issues/13694
+    #- ODOO_VERSION="10.0"
+      #ODOO_RELEASE="10.0"
+      #ODOO_PACKAGE="odoo"
+      #ODOO_TEST_PROTOCOL='json-rpc'
 
-    - ODOO_VERSION="9.0"
-      ODOO_RELEASE="9.0"
-      ODOO_PACKAGE="odoo"
-      ODOO_TEST_PROTOCOL='local'
+matrix: 
+    include:
+        - python: 2.7
+          env: ODOO_VERSION="7.0"
+               ODOO_RELEASE="7.0"
+               ODOO_PACKAGE="openerp"
+               ODOO_TEST_PROTOCOL='local'
+        #- python: 2.7
+          #env: ODOO_VERSION="8.0"
+               #ODOO_RELEASE="8.0"
+               #ODOO_PACKAGE="odoo"
+               #ODOO_TEST_PROTOCOL='local'
+        #- python: 2.7
+          #env: ODOO_VERSION="9.0"
+               #ODOO_RELEASE="9.0"
+               #ODOO_PACKAGE="odoo"
+               #ODOO_TEST_PROTOCOL='local'
+        #- python: 2.7
+          #env: ODOO_VERSION="10.0"
+               #ODOO_RELEASE="10.0"
+               #ODOO_PACKAGE="odoo"
+               #ODOO_TEST_PROTOCOL='local'
 
-    - ODOO_VERSION="10.0"
-      ODOO_RELEASE="10.0"
-      ODOO_PACKAGE="odoo"
-      ODOO_TEST_PROTOCOL='xml-rpc'
-
-    - ODOO_VERSION="10.0"
-      ODOO_RELEASE="10.0"
-      ODOO_PACKAGE="odoo"
-      ODOO_TEST_PROTOCOL='local'
-
-    # There is a bug in Odoo 10.0rc1c on drop database via JSON-RPC
-    # So temporary disable tests for json-rpc on odoo-10.0
-    # Odoo issue: https://github.com/odoo/odoo/issues/13694
-    - ODOO_VERSION="10.0"
-      ODOO_RELEASE="10.0"
-      ODOO_PACKAGE="odoo"
-      ODOO_TEST_PROTOCOL='json-rpc'
 
 install:
+  - "sudo apt-get update && sudo apt-get install postgresql-client postgresql adduser python-support locate"
   - "wget http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/${ODOO_PACKAGE}_${ODOO_RELEASE}.latest_all.deb -O odoo.deb"
   - "! command -v wkhtmltopdf >/dev/null 2>&1 && wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-trusty-amd64.deb -O wkhtmltox.deb"
   - "! command -v wkhtmltopdf >/dev/null 2>&1 && sudo dpkg --force-depends -i wkhtmltox.deb"
-  - "sudo apt-get update && sudo apt-get install -f -y"
-  - "sudo apt-get install -y $(dpkg -I odoo.deb | grep -o -P 'Depends: \\K(.*)' | tr ',' ' ') || true"
-  - "sudo dpkg --force-depends -i odoo.deb || true"
-  - "pip install --upgrade 'coveralls>=1.1' 'ipython[notebook]>=4' 'setuptools>=18' pip pbr 'anyfield>=0.1.2' 'flake8>=3'"
+  - "sudo dpkg --force-depends -i odoo.deb"
+  - "sudo apt-get install -f -y"
+  - "pip install --upgrade 'coveralls>=1.1' 'setuptools>=18' pip pbr 'anyfield>=0.1.2' 'flake8>=3'"
   - "python setup.py develop"
 
 before_script:
@@ -90,6 +93,7 @@ before_script:
 
 script:
   - "flake8 odoo_rpc_client --count --statistics;"  # test code style
+  - "[ $ODOO_TEST_PROTOCOL == 'local' ] && echo 'import sys; sys.path.append(\"/usr/lib/python2.7/dist-packages/\")' >> ${VIRTUAL_ENV}/lib/python2.7/site.py || true"
   - "coverage run -p setup.py test"
   - "coverage combine"
 
