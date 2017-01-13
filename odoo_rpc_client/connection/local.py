@@ -7,9 +7,18 @@ import functools
 # project imports
 from .connection import ConnectorBase
 from ..exceptions import ConnectorError
+from ..utils import ustr
 
 
 logger = logging.getLogger(__name__)
+
+
+class LocalConnectorError(ConnectorError):
+    """ Local connector error wrapper
+    """
+    def __init__(self, exc):
+        self.exc = exc
+        super(LocalConnectorError, self).__init__(ustr(exc))
 
 
 class LocalMethod(object):
@@ -33,7 +42,11 @@ class LocalMethod(object):
                 self.name)
 
     def __call__(self, *args):
-        return self._method(args)
+        try:
+            res = self._method(args)
+        except Exception as exc:
+            raise LocalConnectorError(exc)
+        return res
 
 
 class LocalService(object):
@@ -50,7 +63,16 @@ class LocalService(object):
     def __getattr__(self, name):
         meth = self._methods.get(name, None)
         if meth is None:
-            self._methods[name] = meth = LocalMethod(self, name)
+            try:
+                meth = LocalMethod(self, name)
+            except KeyError as exc:
+                raise LocalConnectorError(exc)
+            except AttributeError as exc:
+                raise LocalConnectorError(exc)
+            except Exception as exc:
+                raise LocalConnectorError(exc)
+            else:
+                self._methods[name] = meth
 
         return meth
 
@@ -72,7 +94,6 @@ class ConnectorLocal(ConnectorBase):
     """
     class Meta:
         name = 'local'
-        use_ssl = False
 
     # Need for backward compatability, because there 'verbose' keyword argument
     # may be present in extra_args due to old sessions saved with this arg

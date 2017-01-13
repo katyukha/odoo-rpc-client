@@ -184,7 +184,7 @@ class Test_20_Object(BaseTestCase):
     def test_create_write_unlink(self):
         new_partner_id = self.object.create({'name': 'New Partner'})
 
-        self.assertIsInstance(new_partner_id, int)
+        self.assertIsInstance(new_partner_id, six.integer_types)
 
         self.object.write([new_partner_id], {'name': 'New Partner Name'})
 

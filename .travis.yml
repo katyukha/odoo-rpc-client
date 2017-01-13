@@ -60,6 +60,9 @@ matrix:
                ODOO_RELEASE="7.0"
                ODOO_PACKAGE="openerp"
                ODOO_TEST_PROTOCOL='local'
+               WITH_SUDO="sudo"
+               ODOO_TEST_LOCAL_ARGS="['-c', '/etc/openerp/openerp-server.conf']"
+
         #- python: 2.7
           #env: ODOO_VERSION="8.0"
                #ODOO_RELEASE="8.0"
@@ -84,18 +87,20 @@ install:
   - "! command -v wkhtmltopdf >/dev/null 2>&1 && sudo dpkg --force-depends -i wkhtmltox.deb"
   - "sudo dpkg --force-depends -i odoo.deb"
   - "sudo apt-get install -f -y"
-  - "pip install --upgrade 'coveralls>=1.1' 'setuptools>=18' pip pbr 'anyfield>=0.1.2' 'flake8>=3'"
-  - "python setup.py develop"
+
+  # Normal install
+  - "$WITH_SUDO pip install --upgrade 'coveralls>=1.1' 'setuptools>=18' pip pbr 'anyfield>=0.1.2' 'flake8>=3'"
+  - "$WITH_SUDO python setup.py develop"
+
 
 before_script:
   - "sudo invoke-rc.d ${ODOO_PACKAGE} restart"
   - "sleep 3"
 
 script:
-  - "flake8 odoo_rpc_client --count --statistics;"  # test code style
-  - "[ $ODOO_TEST_PROTOCOL == 'local' ] && echo 'import sys; sys.path.append(\"/usr/lib/python2.7/dist-packages/\")' >> ${VIRTUAL_ENV}/lib/python2.7/site.py || true"
-  - "coverage run -p setup.py test"
-  - "coverage combine"
+  - "$WITH_SUDO flake8 odoo_rpc_client --count --statistics;"  # test code style
+  - "$WITH_SUDO coverage run -p setup.py test"
+  - "$WITH_SUDO coverage combine"
 
 after_success:
-  - coveralls
+  - "$WITH_SUDO coveralls"
