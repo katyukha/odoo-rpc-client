@@ -168,6 +168,12 @@ class Test_10_Client(BaseTestCase):
         self.assertEqual(
             repr(self.client.services.db), u"<Service 'db' of %s>" %
             self.client)
+        self.assertEqual(
+            str(self.client.services.report), u"Service 'report' of %s" %
+            self.client)
+        self.assertEqual(
+            repr(self.client.services.report), u"<Service 'report' of %s>" %
+            self.client)
 
         with self.assertRaises(AttributeError):
             self.client.services._private_service

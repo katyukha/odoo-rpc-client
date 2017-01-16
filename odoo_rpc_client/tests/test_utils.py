@@ -128,3 +128,8 @@ class Test_102_Utils_AttrDict(BaseTestCase):
 
         with self.assertRaises(KeyError):
             self.attr_dict['c']
+
+    def test_dir(self):
+        self.assertIn('a', dir(self.attr_dict))
+        self.assertIn('b', dir(self.attr_dict))
+        self.assertNotIn('c', dir(self.attr_dict))

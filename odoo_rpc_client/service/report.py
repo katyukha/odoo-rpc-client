@@ -48,6 +48,10 @@ class ReportResult(Extensible):
         self._content = None
         self._path = path
 
+        # fix result
+        if self._result:
+            self._result = self._result.encode('utf-8')
+
     @property
     def state(self):
         """ Result status. only if True, other fields are available
@@ -80,7 +84,7 @@ class ReportResult(Extensible):
         """
         if self._content is None:
             import base64
-            self._content = base64.b64decode(self.result.encode('utf-8'))
+            self._content = base64.b64decode(self.result)
         return self._content
 
     @property
