@@ -6,7 +6,7 @@ from . import BaseTestCase
 from .. import utils
 
 
-class Test_100_Utils(BaseTestCase):
+class Test_100_Utils_ustr(BaseTestCase):
 
     def setUp(self):
         super(self.__class__, self).setUp()
@@ -103,3 +103,28 @@ class Test_100_Utils(BaseTestCase):
 
         self.assertIsInstance(ustr(self.bobj), six.text_type)
         self.assertEqual(ustr(self.bobj), u"Юнікод")
+
+
+class Test_102_Utils_AttrDict(BaseTestCase):
+
+    def setUp(self):
+        super(self.__class__, self).setUp()
+        self.attr_dict = utils.AttrDict(a=42, b=78)
+
+    def test_isinstance(self):
+        self.assertIsInstance(self.attr_dict, dict)
+        self.assertIsInstance(self.attr_dict, utils.AttrDict)
+
+    def test_getattr(self):
+        self.assertIs(self.attr_dict.a, 42)
+        self.assertIs(self.attr_dict.b, 78)
+
+        with self.assertRaises(AttributeError):
+            self.attr_dict.c
+
+    def test_getitem(self):
+        self.assertIs(self.attr_dict['a'], 42)
+        self.assertIs(self.attr_dict['b'], 78)
+
+        with self.assertRaises(KeyError):
+            self.attr_dict['c']

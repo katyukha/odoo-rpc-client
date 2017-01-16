@@ -3,7 +3,7 @@ dist: trusty
 language: python
 python:
   - "2.7"
-  - "3.3"
+  #- "3.3"
   - "3.4"
   - "3.5"
 
@@ -20,38 +20,38 @@ env:
       ODOO_PACKAGE="openerp"
       ODOO_TEST_PROTOCOL='xml-rpc'
 
-    #- ODOO_VERSION="8.0"
-      #ODOO_RELEASE="8.0"
-      #ODOO_PACKAGE="odoo"
-      #ODOO_TEST_PROTOCOL='json-rpc'
+    - ODOO_VERSION="8.0"
+      ODOO_RELEASE="8.0"
+      ODOO_PACKAGE="odoo"
+      ODOO_TEST_PROTOCOL='json-rpc'
 
-    #- ODOO_VERSION="8.0"
-      #ODOO_RELEASE="8.0"
-      #ODOO_PACKAGE="odoo"
-      #ODOO_TEST_PROTOCOL='xml-rpc'
+    - ODOO_VERSION="8.0"
+      ODOO_RELEASE="8.0"
+      ODOO_PACKAGE="odoo"
+      ODOO_TEST_PROTOCOL='xml-rpc'
 
-    #- ODOO_VERSION="9.0"
-      #ODOO_RELEASE="9.0"
-      #ODOO_PACKAGE="odoo"
-      #ODOO_TEST_PROTOCOL='json-rpc'
+    - ODOO_VERSION="9.0"
+      ODOO_RELEASE="9.0"
+      ODOO_PACKAGE="odoo"
+      ODOO_TEST_PROTOCOL='json-rpc'
 
-    #- ODOO_VERSION="9.0"
-      #ODOO_RELEASE="9.0"
-      #ODOO_PACKAGE="odoo"
-      #ODOO_TEST_PROTOCOL='xml-rpc'
+    - ODOO_VERSION="9.0"
+      ODOO_RELEASE="9.0"
+      ODOO_PACKAGE="odoo"
+      ODOO_TEST_PROTOCOL='xml-rpc'
 
-    #- ODOO_VERSION="10.0"
-      #ODOO_RELEASE="10.0"
-      #ODOO_PACKAGE="odoo"
-      #ODOO_TEST_PROTOCOL='xml-rpc'
+    - ODOO_VERSION="10.0"
+      ODOO_RELEASE="10.0"
+      ODOO_PACKAGE="odoo"
+      ODOO_TEST_PROTOCOL='xml-rpc'
 
-    ## There is a bug in Odoo 10.0rc1c on drop database via JSON-RPC
-    ## So temporary disable tests for json-rpc on odoo-10.0
-    ## Odoo issue: https://github.com/odoo/odoo/issues/13694
-    #- ODOO_VERSION="10.0"
-      #ODOO_RELEASE="10.0"
-      #ODOO_PACKAGE="odoo"
-      #ODOO_TEST_PROTOCOL='json-rpc'
+    # There is a bug in Odoo 10.0rc1c on drop database via JSON-RPC
+    # So temporary disable tests for json-rpc on odoo-10.0
+    # Odoo issue: https://github.com/odoo/odoo/issues/13694
+    - ODOO_VERSION="10.0"
+      ODOO_RELEASE="10.0"
+      ODOO_PACKAGE="odoo"
+      ODOO_TEST_PROTOCOL='json-rpc'
 
 matrix: 
     include:
@@ -63,21 +63,29 @@ matrix:
                WITH_SUDO="sudo"
                ODOO_TEST_LOCAL_ARGS="['-c', '/etc/openerp/openerp-server.conf']"
 
-        #- python: 2.7
-          #env: ODOO_VERSION="8.0"
-               #ODOO_RELEASE="8.0"
-               #ODOO_PACKAGE="odoo"
-               #ODOO_TEST_PROTOCOL='local'
-        #- python: 2.7
-          #env: ODOO_VERSION="9.0"
-               #ODOO_RELEASE="9.0"
-               #ODOO_PACKAGE="odoo"
-               #ODOO_TEST_PROTOCOL='local'
-        #- python: 2.7
-          #env: ODOO_VERSION="10.0"
-               #ODOO_RELEASE="10.0"
-               #ODOO_PACKAGE="odoo"
-               #ODOO_TEST_PROTOCOL='local'
+        - python: 2.7
+          env: ODOO_VERSION="8.0"
+               ODOO_RELEASE="8.0"
+               ODOO_PACKAGE="odoo"
+               ODOO_TEST_PROTOCOL='local'
+               WITH_SUDO="sudo"
+               ODOO_TEST_LOCAL_ARGS="['-c', '/etc/odoo/openerp-server.conf']"
+
+        - python: 2.7
+          env: ODOO_VERSION="9.0"
+               ODOO_RELEASE="9.0"
+               ODOO_PACKAGE="odoo"
+               ODOO_TEST_PROTOCOL='local'
+               WITH_SUDO="sudo"
+               ODOO_TEST_LOCAL_ARGS="['-c', '/etc/odoo/openerp-server.conf']"
+
+        - python: 2.7
+          env: ODOO_VERSION="10.0"
+               ODOO_RELEASE="10.0"
+               ODOO_PACKAGE="odoo"
+               ODOO_TEST_PROTOCOL='local'
+               WITH_SUDO="sudo"
+               ODOO_TEST_LOCAL_ARGS="['-c', '/etc/odoo/odoo.conf']"
 
 
 install:

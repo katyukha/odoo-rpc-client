@@ -121,6 +121,10 @@ class ConnectorLocal(ConnectorBase):
             except ImportError:
                 raise
 
+        if getattr(odoo, '_odoo_services_started', False):
+            # If odoo services already started, just return odoo instance
+            return odoo
+
         if odoo.release.version_info < (7,):
             raise ConnectorError(
                 "Unsupported Odoo version: %s" % odoo.release.version_info)
@@ -142,6 +146,9 @@ class ConnectorLocal(ConnectorBase):
             for db in odoo.modules.registry.RegistryManager.registries.keys():
                 odoo.sql_db.close_db(db)
         atexit.register(close_all)
+
+        # Mark odoo, that it have services started
+        odoo._odoo_services_started = True
 
         return odoo
 

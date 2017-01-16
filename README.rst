@@ -10,8 +10,6 @@ OpenERP / Odoo proxy
 
 
 ..
-    .. image:: https://coveralls.io/repos/katyukha/openerp-proxy/badge.svg?branch=master&service=github
-        :target: https://coveralls.io/github/katyukha/openerp-proxy?branch=master
     .. image:: https://img.shields.io/pypi/v/openerp_proxy.svg
         :target: https://pypi.python.org/pypi/openerp_proxy/
     .. image:: https://img.shields.io/pypi/l/openerp_proxy.svg
@@ -36,6 +34,11 @@ This project is just **RPC client** for Odoo.
 This project provides interface similar to
 Odoo internal code to perform operations on **OpenERP** / **Odoo** objects hiding
 **XML-RPC** or **JSON-RPC** behind.
+
+
+***Note***: documentation now is "Work in Progress" state, so here is documentation from openerp_proxy project.
+in most cases it compatible, except extensions, which are not in this project.
+
 
 
 Features
@@ -110,61 +113,17 @@ Examples
 Install
 -------
 
-This project is present on `PyPI <https://pypi.python.org/pypi/openerp_proxy/>`_
+This project is present on `PyPI <https://pypi.python.org/pypi/odoo_rpc_client/>`_
 so it could be installed via PIP::
 
-    pip install openerp_proxy
+    pip install odoo_rpc_client
     
-this will make available python package *openerp\_proxy* and shell command ``openerp_proxy``
-See `Usage`_ for more details
-
-If You want to install development version of *OpenERP Proxy* you can do it via::
-
-    pip install -e git+https://github.com/katyukha/openerp-proxy.git@dev#egg=openerp_proxy
-
-or (faster way)::
-
-    pip install https://github.com/katyukha/openerp-proxy/archive/dev.zip
-
-Also it is recommened to install at `Jupyter <https://jupyter.org/>`_ (formely `IPython <http://ipython.org/>`_ notebook)
-to get all benefits of `Jupyter <https://jupyter.org/>`_ integration, provided by this project.
-To install it just type::
-
-    pip install jupyter
-
 
 Usage
 -----
 
-Use as shell
-~~~~~~~~~~~~
-
-After instalation run in shell:
-
-::
-
-       openerp_proxy
-
-And You will get the openerp_proxy shell. If *IPython* is installed then IPython shell
-will be used, else usual python shell will be used. There is
-*session* variable present in locals. It is instance of `Session <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session>`_ class and
-represents current session and usualy is starting point of any shell work.
-See `documentation <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session>`__ for more details
-
-Next You have to get connection to some Odoo database.
-It is realy easy, just use `connect <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session.connect>`_ method of session
-
-.. code:: python
-
-    >>> db = session.connect()
-
-This will ask You for host, port, database, etc to connect to
-and return `Client <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.core.Client>`_ instance
-which represents database connection.
-
-
-Use as library
-~~~~~~~~~~~~~~
+Connect to server / database
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The one diference betwen using as lib and using as shell is the way
 connection to database is created. When using as shell the primary object
@@ -177,69 +136,13 @@ So here is a way to create connection
 
 .. code:: python
 
-    from openerp_proxy.core import Client
+    from odoo_rpc_client import Client
     db = Client(host='my_host.int',
                 dbname='my_db',
                 user='my_db_user',
                 pwd='my_password here')
 
 And next all there same, no more differences betwen shell and lib usage.
-
-
-Use in Jupyter notebook
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-`Jupyter <https://jupyter.org/>`_ integration is implemented as extension
-`openerp_proxy.ext.repr <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html#module-openerp_proxy.ext.repr>`_,
-so to use it, first, this extension should be enabled (just by importing extension).
-As a shortcut, there is `openerp_proxy.ext.all <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html#module-openerp_proxy.ext.all>`_ module,
-which imports default set of extensions, including
-`openerp_proxy.ext.repr <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html#module-openerp_proxy.ext.repr>`_ extension.
-To better suit for HTML capable notebook You would like to use IPython's version of *session*
-object and *openerp_proxy.ext.repr* extension.
-So in first cell of notebook import session and extensions/plugins You want:
-
-.. code:: python
-
-    # also You may import all standard extensions in one line:
-    from openerp_proxy.ext.all import *
-
-    # note that extensions were imported before session,
-    # because some of them modify Session class
-    from openerp_proxy.session import Session
-    from openerp_proxy.core import Client
-
-    session = Session()
-
-Now most things same as for shell usage, but...
-In some old versions of IPython's notebook heve no patched version of *getpass* func/module,
-so if You not provide password when getting database (*connect*, *get_db* methods, You would be asked
-for it, but this prompt will be displayed in shell where notebook server is running, not on webpage.
-To solve this, it is recommended to uses *store_passwords* option
-
-.. code:: python
-    
-    session.option('store_passwords', True)
-    session.save()
-
-Next use it like shell, but *do not forget to save session, after new connection*
-
-.. code:: python
-
-    db = session.connect()
-    session.save()
-    
-or like lib
-
-.. code:: python
-
-    db = Client(host='my_host.int',
-                dbname='my_db',
-                user='my_db_user',
-                pwd='my_password here')
-
-*Note*: in old version of IPython getpass was not work correctly,
-so maybe You will need to pass password directly to *session.connect* method.
 
 
 General usage
@@ -314,81 +217,6 @@ to lazily fetch related fields.
 Additional features
 -------------------
 
-Session: db aliases
-~~~~~~~~~~~~~~~~~~~
-
-Session provides ability to add aliases to databases, which will simplify access to them.
-For this feature `Session <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session>`_ class
-provides method `aliase <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session.aliase>`_ and
-property `aliases <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session.aliases>`_
-which allows to get all registered aliases in session.
-To add aliase to our db do the folowing:
-
-.. code:: python
-
-    >>> session.aliase('my_db', db)
-    
-And now to access this database in future (even after restart)
-You can use next code
-
-.. code:: python
-
-    >>> db = session.my_db
-
-this allows to faster get connection to database Your with which You are working very often
-
-
-Sugar extension
-~~~~~~~~~~~~~~~
-
-This extension provides some syntax sugar to ease access to objects
-To enable it, just import `openerp_proxy.ext.sugar <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html#module-openerp_proxy.ext.sugar>`_ module.
-By default this extension will also be enabled on import of `openerp_proxy.ext.all <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html#module-openerp_proxy.ext.all>`_
-
-So to start use it just import this extension **just after start**
-
-.. code:: python
-
-    import openerp_proxy.ext.sugar
-
-And after that You will have folowing features working
-
-.. code:: python
-
-    db['sale.order'][5]       # fetches sale order with ID=5
-    db['sale_order']('0050')  # result in name_search for '0050' on sale order
-                              # result may be Record if one record found
-                              # or RecordList if there some set of records found
-    db['sale.order']([('state','=','done')])    # Same as 'search_records' method
-    db['sale.order'](state='done')              # simplified search
-
-    # Automatic object aliaces. Also supports autocompletition
-    # via implementation of __dir__ method
-    db._sale_order == db['sale.order'] == db['sale_order']   # => True
-
-
-For other extensions look at `openerp_proxy/ext code <https://github.com/katyukha/openerp-proxy/tree/master/openerp_proxy/ext>`_
-or `documentation <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.ext.html>`__
-
-
-Session: Start-up imports
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If You want some modules (extensions/plugins) to be automatiacly loaded/imported
-at start-up, there are `session.start_up_imports <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.html#openerp_proxy.session.Session.start_up_imports>`_
-property, that points to list that holds names of modules to be imported at session creation time.
-
-For example, if You want *Sugar extension* to be automaticaly imported, just
-add it to ``session.start_up_imports`` list
-
-.. code:: python
-
-    session.start_up_imports.append('openerp_proxy.ext.sugar')
-
-After this, when You will start new openerp_proxy shell, *sugar extension*
-will be automaticaly enable.
-
-
 Plugins
 ~~~~~~~
 
@@ -462,5 +290,5 @@ As You see above, to use plugin (or extension), just import it's module (better 
 --------------
 
 For more information see `source
-code <https://github.com/katyukha/openerp-proxy>`_ or
+code <https://github.com/katyukha/odoo-rpc-client>`_ or
 `documentation <http://pythonhosted.org/openerp_proxy/>`__.
