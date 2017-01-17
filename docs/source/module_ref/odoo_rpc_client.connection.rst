@@ -3,7 +3,7 @@
 :mod:`connection` Package
 =========================
 
-.. automodule:: openerp_proxy.connection
+.. automodule:: odoo_rpc_client.connection
     :members:
     :undoc-members:
     :show-inheritance:
@@ -11,7 +11,7 @@
 :mod:`connection` Module
 ------------------------
 
-.. automodule:: openerp_proxy.connection.connection
+.. automodule:: odoo_rpc_client.connection.connection
     :members:
     :undoc-members:
     :show-inheritance:
@@ -19,7 +19,7 @@
 :mod:`jsonrpc` Module
 ---------------------
 
-.. automodule:: openerp_proxy.connection.jsonrpc
+.. automodule:: odoo_rpc_client.connection.jsonrpc
     :members:
     :undoc-members:
     :show-inheritance:
@@ -27,7 +27,15 @@
 :mod:`xmlrpc` Module
 --------------------
 
-.. automodule:: openerp_proxy.connection.xmlrpc
+.. automodule:: odoo_rpc_client.connection.xmlrpc
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`local` Module
+--------------------
+
+.. automodule:: odoo_rpc_client.connection.local
     :members:
     :undoc-members:
     :show-inheritance:

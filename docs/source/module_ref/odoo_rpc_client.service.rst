@@ -1,9 +1,17 @@
-.. _package-orm:
+.. _package-service:
 
-:mod:`orm` Package
-==================
+:mod:`service` Package
+======================
 
-.. automodule:: openerp_proxy.orm
+.. automodule:: odoo_rpc_client.service
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`db` Module
+--------------------
+
+.. automodule:: odoo_rpc_client.service.db
     :members:
     :undoc-members:
     :show-inheritance:
@@ -11,23 +19,15 @@
 :mod:`object` Module
 --------------------
 
-.. automodule:: openerp_proxy.orm.object
+.. automodule:: odoo_rpc_client.service.object
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`cache` Module
+:mod:`report` Module
 --------------------
 
-.. automodule:: openerp_proxy.orm.cache
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`record` Module
---------------------
-
-.. automodule:: openerp_proxy.orm.record
+.. automodule:: odoo_rpc_client.service.report
     :members:
     :undoc-members:
     :show-inheritance:
@@ -35,7 +35,7 @@
 :mod:`service` Module
 ---------------------
 
-.. automodule:: openerp_proxy.orm.service
+.. automodule:: odoo_rpc_client.service.service
     :members:
     :undoc-members:
     :show-inheritance:

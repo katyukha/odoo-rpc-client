@@ -1,25 +1,17 @@
-.. _package-openerp_proxy:
+.. _package-odoo_rpc_client:
 
-:mod:`openerp_proxy` Package
+:mod:`odoo_rpc_client` Package
 ============================
 
-.. automodule:: openerp_proxy.__init__
+.. automodule:: odoo_rpc_client.__init__
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`core` Module
+:mod:`client` Module
 ------------------
 
-.. automodule:: openerp_proxy.core
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`session` Module
----------------------
-
-.. automodule:: openerp_proxy.session
+.. automodule:: odoo_rpc_client.client
     :members:
     :undoc-members:
     :show-inheritance:
@@ -27,7 +19,7 @@
 :mod:`exceptions` Module
 ------------------------
 
-.. automodule:: openerp_proxy.exceptions
+.. automodule:: odoo_rpc_client.exceptions
     :members:
     :undoc-members:
     :show-inheritance:
@@ -35,7 +27,7 @@
 :mod:`plugin` Module
 --------------------
 
-.. automodule:: openerp_proxy.plugin
+.. automodule:: odoo_rpc_client.plugin
     :members:
     :undoc-members:
     :show-inheritance:
@@ -43,7 +35,7 @@
 :mod:`utils` Module
 -------------------
 
-.. automodule:: openerp_proxy.utils
+.. automodule:: odoo_rpc_client.utils
     :members:
     :undoc-members:
     :show-inheritance:
@@ -54,8 +46,7 @@ Subpackages
 
 .. toctree::
 
-    openerp_proxy.connection
-    openerp_proxy.service
-    openerp_proxy.orm
-    openerp_proxy.ext
+    odoo_rpc_client.connection
+    odoo_rpc_client.service
+    odoo_rpc_client.orm
 

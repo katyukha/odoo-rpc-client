@@ -4,10 +4,8 @@ OpenERP Proxy Modules
 .. toctree::
    :maxdepth: 2
 
-   openerp_proxy
-   openerp_proxy.connection
-   openerp_proxy.service
-   openerp_proxy.orm
-   openerp_proxy.ext
-   openerp_proxy.plugins
-   openerp_proxy.experimental
+   odoo_rpc_client
+   odoo_rpc_client.connection
+   odoo_rpc_client.service
+   odoo_rpc_client.orm
+   odoo_rpc_client.plugins
