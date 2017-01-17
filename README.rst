@@ -10,14 +10,6 @@ OpenERP / Odoo proxy
 
 
 ..
-    .. image:: https://img.shields.io/pypi/v/openerp_proxy.svg
-        :target: https://pypi.python.org/pypi/openerp_proxy/
-    .. image:: https://img.shields.io/pypi/l/openerp_proxy.svg
-        :target: https://pypi.python.org/pypi/openerp_proxy/
-    .. image:: https://img.shields.io/pypi/pyversions/openerp_proxy.svg
-        :target: https://pypi.python.org/pypi/openerp_proxy/
-    .. image:: https://img.shields.io/pypi/format/openerp_proxy.svg
-        :target: https://pypi.python.org/pypi/openerp_proxy/
 
 -------------------
 
@@ -36,8 +28,10 @@ Odoo internal code to perform operations on **OpenERP** / **Odoo** objects hidin
 **XML-RPC** or **JSON-RPC** behind.
 
 
-***Note***: documentation now is "Work in Progress" state, so here is documentation from openerp_proxy project.
-in most cases it compatible, except extensions, which are not in this project.
+***Note***: documentation now is "Work in Progress" state,
+so here is documentation from *openerp_proxy* project.
+In most cases it is compatible, except extensions, which are not part of this project.
+Thats why there are a lot of links to *openerp_proxy* documentation.
 
 
 
@@ -51,19 +45,18 @@ Features
    read data for all records in current set (cache), by one RPC call, etc)
 -  Desinged to take as more benefits of **IPython autocomplete** as posible
 -  Provides *browse\_record* like interface, allowing to browse related
-   models too. Supports `browse <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html#openerp_proxy.orm.record.ObjectRecords.browse>`__ method.
-   Also adds method `search_records <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html#openerp_proxy.orm.record.ObjectRecords.search_records>`__ to simplify
+   models too. Supports `browse` method.
+   Also adds method `search_records` to simplify
    search-and-read operations.
 -  *Extension support*. You can easily modify most of components of this app/lib
    creating Your own extensions and plugins. It is realy simple. See for examples in
    `openerp_proxy/ext/ <https://github.com/katyukha/openerp-proxy/tree/master/openerp_proxy/ext>`__ directory.
 -  *Plugin Support*. Plugins are same as extensions, but aimed to implement additional logic.
-   For example look at `openerp_proxy/plugins <https://github.com/katyukha/openerp-proxy/tree/master/openerp_proxy/plugins>`__
-   and `openerp_proxy/plugin.py <https://github.com/katyukha/openerp-proxy/blob/master/openerp_proxy/plugin.py>`__ 
+   For example look at `odoo_rpc_client/plugins <https://github.com/katyukha/odoo-rpc-client/tree/master/odoo_rpc_client/plugins>`__
+   and `odoo_rpc_client/plugin.py <https://github.com/katyukha/odoo-rpc-client/blob/master/odoo_rpc_client/plugin.py>`__ 
 -  Support of **JSON-RPC** for *version 8+* of Odoo
 -  Support of using **named parametrs** in RPC method calls (server version 6.1 and higher).
 -  *Experimental* integration with `AnyField <https://pypi.python.org/pypi/anyfield>`__
-
 -  Missed feature? ask in `Project Issues <https://github.com/katyukha/odoo-rpc-client/issues>`__
 
 
@@ -97,17 +90,7 @@ Quick example
 Supported Odoo server versions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tested with Odoo *7.0*, *8.0*, *9.0*, *10.0rc1c*
-
-Also shoud work with Odoo 6.1
-
-
-Examples
-~~~~~~~~
-
--  `Basics <http://nbviewer.ipython.org/github/katyukha/openerp-proxy/blob/master/examples/Basics.ipynb>`_
--  `Examples & HTML tests <http://nbviewer.ipython.org/github/katyukha/openerp-proxy/blob/master/examples/Examples%20&%20HTML%20tests.ipynb>`_
--  `RecordList Representation <http://nbviewer.ipython.org/github/katyukha/openerp-proxy/blob/master/examples/RecordList%20Representation.ipynb>`_
+Tested with Odoo *7.0*, *8.0*, *9.0*, *10.0*
 
 
 Install
@@ -182,13 +165,13 @@ As we see reading data in such way allows us to get list of dictionaries
 where each contain fields have been read
 
 Another way to read data is to use
-`search_records <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html#openerp_proxy.orm.record.ObjectRecords.search_records>`_
+`search_records`
 or
-`read_records <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html#openerp_proxy.orm.record.ObjectRecords.read_records>`_
+`read_lecords`
 method. Each of these methods receives same aguments as ``search`` or
 ``read`` method respectively. But passing ``count`` argument for
 ``search\_records`` will cause error. Main difference betwen these methods
-in using `Record <http://pythonhosted.org/openerp_proxy/module_ref/openerp_proxy.orm.html#openerp_proxy.orm.record.Record>`_ class
+in using `Record` class
 instead of *dict* for each record had been read. Record class provides some orm-like abilities for records,
 allowing for example access fields as attributes and provide mechanisms
 to lazily fetch related fields.
@@ -227,68 +210,12 @@ library to build extensions and plugins easily.
 Plugins are usual classes that provides functionality that should be available
 at ``db.plugins.*`` point, implementing logic not related to core system.
 
-To ilustrate what is plugins and what they can do we will create a simplest one.
-So let's start
-
-1. create some directory to place plugins in:
-   
-   ``mkdir ~/oerp_proxy_plugins/``
-   
-   ``cd ~/oerp_proxy_plugins/``
-
-2. next create simple file called ``attendance.py`` and edit it
-   
-   ``vim attendance.py``
-
-3. write folowing code there (note that this example works and tested for Odoo version 6.0 only)
-
-    ::
-
-        from openerp_proxy.plugin import Plugin
-
-        class AttandanceUtils(Plugin):
-
-            # This is required to register Your plugin
-            # *name* - is for db.plugins.<name>
-            class Meta:
-                name = "attendance"
-
-            def get_sign_state(self):
-                # Note: folowing code works on version 6 of Openerp/Odoo
-                emp_obj = self.client['hr.employee']
-                emp_id = emp_obj.search([('user_id', '=', self.client.uid)])
-                emp = emp_obj.read(emp_id, ['state'])
-                return emp[0]['state']
-                
-4. Now your plugin is completed, but it is not on python path.
-   There is ability to add additional paths to session, so
-   when session starts, ``sys.path`` will be patched with that paths.
-   To add your extra path to session You need do folowing::
-   
-       >>> session.add_path('~/oerp_proxy_plugins/')
-       >>> session.save()
-       
-   Now, each time session created, this path will be added to python path
-
-5. Now we cat test our plugin.
-   Run ``openerp_proxy`` and try to import it::
-
-        >>> #import our plugin
-        >>> import attendance
-
-        >>> # and use it
-        >>> db = session.connect()
-        >>> db.plugin.attendance.get_sign_state()
-        'present'
-
-        >>> # If You want some plugins or extensions or other
-        >>> # modules imported at start-up of session, do this
-        >>> session.start_up_imports.add('attendance')
-
-As You see above, to use plugin (or extension), just import it's module (better at startu-up)
-
 --------------
 
 For more information see `source
-code <https://github.com/katyukha/odoo-rpc-client>`_ or
-`documentation <http://pythonhosted.org/openerp_proxy/>`__.
+code <https://github.com/katyukha/odoo-rpc-client>`_
+
+Documentation for this project, is in "Work in progress state", so look for
+`openerp_proxy documentation <http://pythonhosted.org/openerp_proxy/>`__,
+In basic things this project is compatible. For more compatability info
+look in `CHANGELOG <https://github.com/katyukha/odoo-rpc-client/blob/master/CHANGELOG.rst>`__

@@ -8,7 +8,7 @@ Big split: odoo_rpc_client 0.8.0
   to avoid bringing lot of unneccessary dependencies.
 - This project contains core features, aiming to minimize dependencies.
 - Features, not included here, all this features will be still available
-  in openerp_proxy project, which will depend on this one:
+  in openerp_proxy project, which will depend on this one in feature:
     - Extensions (especialy repr extension)
     - Sessions
     - Shell
