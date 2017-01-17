@@ -20,6 +20,7 @@ usage="
         --py2                  - use python 2
         --py3                  - use python 3 (default)
         --reuse-venv           - do not remove virtual environment, and reusse it on next call
+        --no-docs              - do not generate and upload docs
 
 "
 
@@ -44,6 +45,9 @@ do
         ;;
         --py3)
             USE_PY_VERSION='python3';
+        ;;
+        --no-docs)
+            NO_DOCS=1;
         ;;
         --reuse-venv)
             REUSE_VENV=1;
@@ -102,9 +106,8 @@ function release_implementation {
     # Build [and upload to pypi] project
     python $SCRIPTPATH/setup.py $setup_options;
 
-    build_docs;
-
-    if [ -z $DRY_RUN ] && [ -z $TEST_PYPI_INDEX ]; then
+    if [ -z $DRY_RUN ] && [ -z $TEST_PYPI_INDEX ] && [ -z $NO_DOCS ]; then
+        build_docs;
         python setup.py upload_docs;
     fi
 }
