@@ -9,13 +9,13 @@ Big split: odoo_rpc_client 0.8.0
 - This project contains core features, aiming to minimize dependencies.
 - Features, not included here, all this features will be still available
   in openerp_proxy project, which will depend on this one:
-  - Extensions (especialy repr extension)
-  - Sessions
-  - Shell
-  - Experimental code (introduced in openerp_proxy 0.7.0)
-  - Plugin - Diagraming
+    - Extensions (especialy repr extension)
+    - Sessions
+    - Shell
+    - Experimental code (introduced in openerp_proxy 0.7.0)
+    - Plugin - Diagraming
 - New features added:
-  - Connector: 'local'. It allows to connect to local odoo instalce, without http;
+    - Connector: 'local'. It allows to connect to local odoo instalce, without http;
 
 Release 0.7.1
 -------------
