@@ -1,6 +1,12 @@
 Last changes
 ============
 
+Release 0.8.1
+=============
+
+- Fix local connector for odoo-9.0 when odoo.py is on python path
+
+
 Big split: odoo_rpc_client 0.8.0
 =============================
 

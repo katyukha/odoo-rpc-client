@@ -114,6 +114,7 @@ class ConnectorLocal(ConnectorBase):
         try:
             # Odoo 10.0+
             import odoo
+            import odoo.release  # to avoid 9.0 with odoo.py on path
         except ImportError:
             try:
                 # Odoo 9.0 and less versions

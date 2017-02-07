@@ -1,5 +1,4 @@
 # -*- encoding: utf-8 -*-
-import os
 import six
 import functools
 
@@ -8,16 +7,7 @@ __all__ = ('ustr',
            'DirMixIn',
            'UConverter',
            'wpartial',
-           'makedirs',
-           'xinput',
            )
-
-
-# Python 2/3 workaround in raw_input
-try:
-    xinput = raw_input
-except NameError:
-    xinput = input
 
 # Check if anyfield is installed
 # and import function which converts SField instances to functions
@@ -26,17 +16,6 @@ try:
 except ImportError:
     def normalizeSField(fn):
         return fn
-
-
-def makedirs(path):
-    """ os.makedirs wrapper. No errors raised if directory already exists
-
-        :param str path: directory path to create
-    """
-    try:
-        os.makedirs(path)
-    except os.error:
-        pass
 
 
 def wpartial(func, *args, **kwargs):
