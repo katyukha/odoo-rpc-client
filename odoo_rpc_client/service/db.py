@@ -90,7 +90,7 @@ class DBService(ServiceBase):
                                   with *client.dbname is not None*
             :param str format: (only odoo 9.0) (default: zip)
             :raise: `ValueError` (unsupported value of *db* argument)
-            :return: bytestring with base64 encoded data
+            :return: byte-string with base64 encoded data
             :rtype: bytes
         """
         # format argument available only for odoo version 9.0
@@ -99,7 +99,11 @@ class DBService(ServiceBase):
         else:
             args = []
 
-        dump_data = self.dump(password, to_dbname(db), *args).encode()
+        dump_data = self.dump(password, to_dbname(db), *args)
+
+        # Ensure returned data is not unicode, but bytes
+        if isinstance(dump_data, six.text_type):
+            dump_data = dump_data.encode()
 
         return dump_data
 
@@ -123,7 +127,7 @@ class DBService(ServiceBase):
         else:
             args = []
 
-        return self.restore(password, dbname, data.decode(), *args)
+        return self.restore(password, dbname, data, *args)
 
     def server_version(self):
         """ Returns server version.

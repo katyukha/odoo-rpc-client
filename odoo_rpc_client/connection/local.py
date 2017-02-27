@@ -143,10 +143,10 @@ class ConnectorLocal(ConnectorBase):
             except AttributeError:
                 pass
 
+        @atexit.register
         def close_all():
             for db in odoo.modules.registry.RegistryManager.registries.keys():
                 odoo.sql_db.close_db(db)
-        atexit.register(close_all)
 
         # Mark odoo, that it have services started
         odoo._odoo_services_started = True
