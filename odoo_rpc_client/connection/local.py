@@ -145,7 +145,14 @@ class ConnectorLocal(ConnectorBase):
 
         @atexit.register
         def close_all():
-            for db in odoo.modules.registry.RegistryManager.registries.keys():
+            if odoo.release.version_info < (10,):
+                # Odoo 8-9
+                RegistryManager = odoo.modules.registry.RegistryManager
+            else:
+                # Odoo 10+
+                RegistryManager = odoo.modules.registry.Registry
+
+            for db in RegistryManager.registries.keys():
                 odoo.sql_db.close_db(db)
 
         # Mark odoo, that it have services started
