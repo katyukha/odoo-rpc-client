@@ -62,6 +62,7 @@ setup(name='odoo_rpc_client',
           'extend_me>=1.1.3',
           'setuptools>=18',
           'requests>=2.7',
+          'simplejson',
       ],
       tests_require=[
           'mock',
