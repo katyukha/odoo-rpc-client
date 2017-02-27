@@ -129,7 +129,10 @@ class DBService(ServiceBase):
 
         # data passed to restore should be Unicode, otherwise it dumps it as
         # binary data on python3
-        return self.restore(password, dbname, data.decode(), *args)
+        if six.PY3 and isinstance(data, six.binary_type):
+            data = data.decode()
+
+        return self.restore(password, dbname, data, *args)
 
     def server_version(self):
         """ Returns server version.
