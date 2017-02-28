@@ -6,6 +6,7 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
+  - "3.6"
 
 cache:
   pip: true
@@ -45,9 +46,6 @@ env:
       ODOO_PACKAGE="odoo"
       ODOO_TEST_PROTOCOL='xml-rpc'
 
-    # There is a bug in Odoo 10.0rc1c on drop database via JSON-RPC
-    # So temporary disable tests for json-rpc on odoo-10.0
-    # Odoo issue: https://github.com/odoo/odoo/issues/13694
     - ODOO_VERSION="10.0"
       ODOO_RELEASE="10.0"
       ODOO_PACKAGE="odoo"

@@ -50,7 +50,7 @@ class Test_999_DB(BaseTestCase):
         # dump db
         dump_data = self.client.services.db.dump_db(self.env.super_password,
                                                     self.env.dbname)
-        self.assertIsInstance(dump_data, bytes)
+        self.assertIsInstance(dump_data, six.binary_type)
 
         # drop it
         self.client.services.db.drop_db(self.env.super_password,

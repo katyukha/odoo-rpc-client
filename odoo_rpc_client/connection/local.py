@@ -91,6 +91,8 @@ class ConnectorLocal(ConnectorBase):
                it ignores them, but instead, it looks in extra_args
                for argument 'local_args', which must be a list of command_line
                args to run odoo with
+        NOTE4: This connector still in alpha stage, so it may introduce some
+               bugs
     """
     class Meta:
         name = 'local'
@@ -143,10 +145,17 @@ class ConnectorLocal(ConnectorBase):
             except AttributeError:
                 pass
 
+        @atexit.register
         def close_all():
-            for db in odoo.modules.registry.RegistryManager.registries.keys():
+            if odoo.release.version_info < (10,):
+                # Odoo 8-9
+                RegistryManager = odoo.modules.registry.RegistryManager
+            else:
+                # Odoo 10+
+                RegistryManager = odoo.modules.registry.Registry
+
+            for db in RegistryManager.registries.keys():
                 odoo.sql_db.close_db(db)
-        atexit.register(close_all)
 
         # Mark odoo, that it have services started
         odoo._odoo_services_started = True

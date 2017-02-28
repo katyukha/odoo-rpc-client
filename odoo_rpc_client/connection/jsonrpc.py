@@ -1,5 +1,5 @@
 # python imports
-import json
+import simplejson  # Standard json cannot dump bytes on py3
 import random
 import requests
 import logging
@@ -75,7 +75,7 @@ class JSONRPCMethod(object):
 
     def __call__(self, *args):
         method_data = self.prepare_method_data(*args)
-        data = json.dumps(method_data)
+        data = simplejson.dumps(method_data)
 
         # Call rpc
         try:
@@ -90,7 +90,7 @@ class JSONRPCMethod(object):
 
         # Process results
         try:
-            result = json.loads(res.text)
+            result = simplejson.loads(res.text)
         except ValueError:
             info = {
                 "original_url": self.__url,

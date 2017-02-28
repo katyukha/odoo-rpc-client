@@ -77,8 +77,6 @@ function make_venv {
     fi
 
     $dest_dir/bin/easy_install --upgrade setuptools pip;
-
-    $dest_dir/bin/pip install --upgrade ipython;
 }
 
 function build_docs {

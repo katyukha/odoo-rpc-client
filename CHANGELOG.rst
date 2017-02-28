@@ -1,6 +1,14 @@
 Last changes
 ============
 
+Release 0.8.2
+=============
+
+- Avoid unneccesary encode/decode in db dump/restore logic
+- Use simplejson for jsonrpc
+- Odoo 10 local connector: correcly close db connections on exit
+
+
 Release 0.8.1
 =============
 
