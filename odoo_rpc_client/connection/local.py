@@ -91,6 +91,8 @@ class ConnectorLocal(ConnectorBase):
                it ignores them, but instead, it looks in extra_args
                for argument 'local_args', which must be a list of command_line
                args to run odoo with
+        NOTE4: This connector still in alpha stage, so it may introduce some
+               bugs
     """
     class Meta:
         name = 'local'
