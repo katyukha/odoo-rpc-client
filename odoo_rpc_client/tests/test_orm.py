@@ -206,6 +206,16 @@ class Test_20_Object(BaseTestCase):
                                             count=True),
                          0)
 
+    def test_create_record(self):
+        john = self.object.create_record({'name': 'John'})
+
+        self.assertIsInstance(john, Record)
+        self.assertEqual(john.name, 'John')
+
+        # remove john
+        john.unlink()
+        self.assertFalse(john.exists())
+
 
 class Test_21_Record(BaseTestCase):
 

@@ -22,7 +22,6 @@ from extend_me import (ExtensibleType,
 
 __all__ = (
     'Record',
-    'RecordRelations',
     'ObjectRecords',
     'RecordList',
     'get_record',
@@ -1009,14 +1008,39 @@ class ObjectRecords(Object):
                         order.write({'note': 'order data is %s'%order.data})
         """
         if isinstance(ids, numbers.Integral):
-            record = get_record(self, ids, context=context)
+            record = get_record(self, ids, cache=cache, context=context)
             if fields is not None:
                 record.read(fields)  # read specified fields
             return record
         if isinstance(ids, collections.Iterable):
-            return get_record_list(self, ids, fields=fields, context=context)
+            return get_record_list(self, ids, fields=fields,
+                                   cache=cache, context=context)
 
         raise ValueError("Wrong type for ids argument: %s" % type(ids))
+
+    def create_record(self, vals, context=None, cache=None):
+        """ Create new record in database and return Record instance.
+            Same as *create* method, but returns Record instance instead of ID.
+
+            :param dict vals: values to create record with
+            :param dict context: extra context to pass to *create* method
+            :param Cache cache: cache to add created record to.
+                                if None is passed, then new cache
+                                will be created.
+            :return: Record instance of created record
+            :rtype: odoo_rpc_client.orm.record.Record
+
+            For example:
+
+            .. code:: python
+
+                >>> partner_obj = db['res.partner']
+                >>> john = partner_obj.create_record({'name': 'John'})
+                >>> john.name
+                John
+        """
+        record_id = self.create(vals, context=context)
+        return self.read_records(record_id, context=context, cache=cache)
 
     def browse(self, *args, **kwargs):
         """ Aliase to *read_records* method.

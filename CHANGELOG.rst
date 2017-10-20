@@ -5,7 +5,9 @@ Last changes
 Release 0.8.3
 -------------
 
-- Added *search_count* method to objects
+- Removed old alias *odoo_rpc_client.orm.record.RecordRelations
+- Added *search_count* method to objects (models)
+- Added *create_record* method to objects (models)
 - Added tests for Odoo 11
 
 
