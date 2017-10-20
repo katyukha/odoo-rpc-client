@@ -2,6 +2,13 @@ Last changes
 ============
 
 
+Release 0.8.3
+-------------
+
+- Added *search_count* method to objects
+- Added tests for Odoo 11
+
+
 Release 0.8.2
 -------------
 

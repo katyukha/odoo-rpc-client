@@ -84,6 +84,12 @@ class Test_20_Object(BaseTestCase):
         self.assertIn('name', res[0])
         self.assertEqual(res[0]['id'], 1)
 
+    def test_search_count(self):
+        self.assertIs(self.object.search_count([('id', '=', -1)]), 0)
+        self.assertIs(self.object.search_count([('id', '=', 1)]), 1)
+        self.assertIs(self.object.search_count([]),
+                      self.object.search([], count=1))
+
     def test_search_records(self):
         res = self.object.search_records([('id', '=', 1)])
         self.assertIsInstance(res, RecordList)

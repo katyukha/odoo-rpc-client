@@ -51,6 +51,16 @@ env:
       ODOO_PACKAGE="odoo"
       ODOO_TEST_PROTOCOL='json-rpc'
 
+    - ODOO_VERSION="11.0"
+      ODOO_RELEASE="11.0"
+      ODOO_PACKAGE="odoo"
+      ODOO_TEST_PROTOCOL='xml-rpc'
+
+    - ODOO_VERSION="11.0"
+      ODOO_RELEASE="11.0"
+      ODOO_PACKAGE="odoo"
+      ODOO_TEST_PROTOCOL='json-rpc'
+
 matrix: 
     include:
         - python: 2.7

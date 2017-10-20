@@ -885,10 +885,6 @@ class RecordList(six.with_metaclass(RecordListMeta,
         return self.object.read(self.ids, *args, **kwargs)
 
 
-# For backward compatability
-RecordRelations = Record
-
-
 class ObjectRecords(Object):
     """ Adds support to use records from Object classes
     """
@@ -901,6 +897,9 @@ class ObjectRecords(Object):
     def model(self):
         """ Returns Record instance of model related to this object.
             Useful to get additional info on object.
+
+            :return: Record('ir.model')
+            :rtype: odoo_rpc_client.orm.record.Record
         """
         if self._model is None:
             model_obj = self.client.get_obj('ir.model')

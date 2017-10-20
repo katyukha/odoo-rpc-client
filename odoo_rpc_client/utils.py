@@ -49,7 +49,7 @@ def stdcall(fn):
 
         If method supports call like
         ``method(ids, <args>, context=context, <kwargs>)``,
-        then it may be decrated by this decorator to appear in
+        then it may be decorated by this decorator to appear in
         dir(record) and dir(recordlist) calls, thus making it available
         for autocompletition in ipython or other python shells
     """

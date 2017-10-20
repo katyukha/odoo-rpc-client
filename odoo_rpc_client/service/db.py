@@ -46,6 +46,7 @@ class DBService(ServiceBase):
         """
         return self._service.db_exist(to_dbname(db))
 
+    # TODO: add `user` kwarg
     def create_db(self, password, dbname, demo=False, lang='en_US',
                   admin_password='admin'):
         """ Create new database on server, named *dbname*
