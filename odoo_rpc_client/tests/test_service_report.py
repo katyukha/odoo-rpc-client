@@ -1,6 +1,9 @@
-import six
+import os
 import os.path
 from pkg_resources import parse_version as V
+
+import six
+import unittest
 
 from . import BaseTestCase
 from ..client import Client
@@ -20,6 +23,9 @@ class Test_Service_Report(BaseTestCase):
                              port=self.env.port)
         if self.client.server_version == V('7.0'):
             self.report_name = 'sale.order'
+        elif self.client.server_version >= V('11.0'):
+            raise unittest.SkipTest(
+                'reports service was removed in Odoo 11.0+')
         else:  # >7.0
             self.report_name = 'sale.report_saleorder'
 
@@ -73,9 +79,11 @@ class Test_Service_Report(BaseTestCase):
         self.assertFalse(os.path.exists(result.path))
         result.save()
         self.assertTrue(os.path.exists(result.path))
+        os.unlink(result.path)
 
         # save to specified path
         my_path = './my-test-report.pdf'
         self.assertFalse(os.path.exists(my_path))
         result.save(my_path)
         self.assertTrue(os.path.exists(my_path))
+        os.unlink(result.path)
