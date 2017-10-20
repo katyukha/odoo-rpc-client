@@ -1,3 +1,4 @@
+import os
 import six
 import unittest
 from ..utils import AttrDict
@@ -23,7 +24,6 @@ class ConnectorLocalTestExt(ConnectorLocal):
 
     def _start_odoo_services(self):
         if not self.odoo_args:
-            import os
             self.odoo_args = eval(
                 os.environ.get('ODOO_TEST_LOCAL_ARGS', '[]'))
         return super(ConnectorLocalTestExt, self)._start_odoo_services()
@@ -32,11 +32,11 @@ class ConnectorLocalTestExt(ConnectorLocal):
 class BaseTestCase(unittest.TestCase):
     """Instanciates an ``odoorpc.ODOO`` object, nothing more."""
     def setUp(self):
-        import os
         try:
             port = int(os.environ.get('ODOO_TEST_PORT', 8069))
         except ValueError:
             raise ValueError("The port must be an integer")
+
         self.env = AttrDict({
             'protocol': os.environ.get('ODOO_TEST_PROTOCOL', 'xml-rpc'),
             'host': os.environ.get('ODOO_TEST_HOST', 'localhost'),
