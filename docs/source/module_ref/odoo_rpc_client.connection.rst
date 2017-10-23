@@ -31,12 +31,3 @@
     :members:
     :undoc-members:
     :show-inheritance:
-
-:mod:`local` Module
---------------------
-
-.. automodule:: odoo_rpc_client.connection.local
-    :members:
-    :undoc-members:
-    :show-inheritance:
-

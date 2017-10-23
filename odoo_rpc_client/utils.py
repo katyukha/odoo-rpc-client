@@ -96,7 +96,7 @@ class UConverter(object):
                 # to binary, and that try diferent encoding to it
                 try:
                     value = six.binary_type(value)
-                except:
+                except Exception:
                     raise UnicodeError('unable to convert to unicode %r'
                                        '' % (value,))
             else:
