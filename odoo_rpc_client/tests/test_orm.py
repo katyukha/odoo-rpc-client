@@ -437,7 +437,7 @@ class Test_22_RecordList(BaseTestCase):
         self.assertEqual(self.recordlist.length, len(self.obj_ids))
         self.assertEqual(len(self.recordlist), len(self.obj_ids))
 
-    def test_recods(self):
+    def test_records(self):
         self.assertIsInstance(self.recordlist.records, list)
         self.assertIsInstance(self.recordlist.records[0], Record)
 
@@ -807,6 +807,40 @@ class Test_22_RecordList(BaseTestCase):
         elist = rlist.existing(uniqify=False)
         self.assertEqual(len(elist), 15)
         self.assertItemsEqual(elist.ids, all_obj_ids[:10] + all_obj_ids[:5])
+
+    def test_operator_add(self):
+        rlist1 = self.object.search_records([], limit=2)
+        rlist2 = self.object.search_records([], offset=2, limit=3)
+        rec = self.object.search_records([], offset=5, limit=1)[0]
+
+        self.assertEqual(rlist1.length, 2)
+        self.assertEqual(rlist2.length, 3)
+
+        rlist_res = rlist1 + rlist2
+        self.assertEqual(len(rlist_res), 5)
+        self.assertEqual(len(set(rlist_res.ids)), 5)
+
+        rlist_res = rlist_res + rec
+        self.assertEqual(len(rlist_res), 6)
+        self.assertEqual(len(set(rlist_res.ids)), 6)
+        self.assertIn(rec, rlist_res)
+
+    def test_operator_iadd(self):
+        rlist1 = self.object.search_records([], limit=2)
+        rlist2 = self.object.search_records([], offset=2, limit=3)
+        rec = self.object.search_records([], offset=5, limit=1)[0]
+
+        self.assertEqual(rlist1.length, 2)
+        self.assertEqual(rlist2.length, 3)
+
+        rlist1 += rlist2
+        self.assertEqual(len(rlist1), 5)
+        self.assertEqual(len(set(rlist1.ids)), 5)
+
+        rlist1 += rec
+        self.assertEqual(len(rlist1), 6)
+        self.assertEqual(len(set(rlist1.ids)), 6)
+        self.assertIn(rec, rlist1)
 
     def test_refresh(self):
         # save cache pointers to local namespase to simplify access to it

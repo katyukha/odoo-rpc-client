@@ -444,10 +444,6 @@ def get_record_list(obj, ids=None, fields=None, cache=None, context=None):
                                      context=context)
 
 
-# TODO:  impelment additional operators
-#    - operator: +
-#    - operator: +=
-#
 # TODO: implement correct bechavior of cache when adding new records to record
 # list with diferent cache
 @six.python_2_unicode_compatible
@@ -583,6 +579,24 @@ class RecordList(six.with_metaclass(RecordListMeta,
         if isinstance(item, Record):
             return item in self._records
         return False
+
+    def __add__(self, other):
+        if isinstance(other, Record) and self._object == other._object:
+            return get_record_list(self._object,
+                                   self.ids + [other.id],
+                                   cache=self._cache)
+
+        if isinstance(other, RecordList) and self._object == other._object:
+            return get_record_list(self._object,
+                                   self.ids + other.ids,
+                                   cache=self._cache)
+        return NotImplemented
+
+    def __iadd__(self, other):
+        if isinstance(other, Record) and self._object == other._object:
+            self.append(other.id)
+            return self
+        return super(RecordList, self).__iadd__(other)
 
     def insert(self, index, item):
         """ Insert record to list

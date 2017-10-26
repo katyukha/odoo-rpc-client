@@ -9,6 +9,7 @@ Release 0.9.0
 - Added *search_count* method to objects (models)
 - Added *create_record* method to objects (models)
 - Added tests for Odoo 11
+- Added overloads of operators (+, +=) for recordlists
 - Removed *local* database connector, because it is difficult to test it,
   and it is not used so often as *xml-rpc* and *json-rpc* connectors
   May be in future it will have it's own python package.
