@@ -1,7 +1,7 @@
+import os
 import six
 import unittest
 from ..utils import AttrDict
-from ..connection.local import ConnectorLocal
 
 import logging
 _logger = logging.getLogger(__name__)
@@ -17,26 +17,14 @@ except ImportError:
 __all__ = ('BaseTestCase', 'mock')
 
 
-class ConnectorLocalTestExt(ConnectorLocal):
-    """ Extend local connector to get odoo options from environment
-    """
-
-    def _start_odoo_services(self):
-        if not self.odoo_args:
-            import os
-            self.odoo_args = eval(
-                os.environ.get('ODOO_TEST_LOCAL_ARGS', '[]'))
-        return super(ConnectorLocalTestExt, self)._start_odoo_services()
-
-
 class BaseTestCase(unittest.TestCase):
     """Instanciates an ``odoorpc.ODOO`` object, nothing more."""
     def setUp(self):
-        import os
         try:
             port = int(os.environ.get('ODOO_TEST_PORT', 8069))
         except ValueError:
             raise ValueError("The port must be an integer")
+
         self.env = AttrDict({
             'protocol': os.environ.get('ODOO_TEST_PROTOCOL', 'xml-rpc'),
             'host': os.environ.get('ODOO_TEST_HOST', 'localhost'),
@@ -47,7 +35,6 @@ class BaseTestCase(unittest.TestCase):
             'password': os.environ.get('ODOO_TEST_PASSWORD', 'admin'),
             'super_password': os.environ.get('ODOO_TEST_SUPER_PASSWORD',
                                              'admin'),
-            'local_args': eval(os.environ.get('ODOO_TEST_LOCAL_ARGS', 'None'))
         })
 
         self.test_db_service = os.environ.get('TEST_DB_SERVICE', False)

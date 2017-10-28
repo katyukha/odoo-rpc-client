@@ -121,7 +121,13 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
 
     @property
     def columns_info(self):
-        """ Reads information about fields available on model
+        """ Reads information about fields available on model.
+
+            Internaly this method uses *fields_get* method.
+
+            :return: dictionary with information about fields available on this
+                     model.
+            :rtype: odoo_rpc_client.utils.AttrDict
         """
         if self._columns_info is None:
             self._columns_info = self._get_columns_info()
@@ -283,3 +289,18 @@ class Object(six.with_metaclass(ObjectType, DirMixIn)):
             # reorder read
             index = dict((r['id'], r) for r in read)
             return [index[x] for x in ids if x in index]
+
+    def search_count(self, domain=None, context=None):
+        """ Returns the number of records matching the provided domain.
+
+            :return: number of recods
+            :rtype: int
+        """
+        if domain is None:
+            domain = []
+
+        if self.client.server_version >= parse_version('8.0'):
+            return self.service.execute(
+                self.name, 'search_count', domain, context=context)
+        else:
+            return self.search(domain, count=True, context=context)

@@ -1,8 +1,22 @@
 Last changes
 ============
 
+
+Release 0.9.0
+-------------
+
+- Removed old alias *odoo_rpc_client.orm.record.RecordRelations
+- Added *search_count* method to objects (models)
+- Added *create_record* method to objects (models)
+- Added tests for Odoo 11
+- Added overloads of operators (+, +=) for recordlists
+- Removed *local* database connector, because it is difficult to test it,
+  and it is not used so often as *xml-rpc* and *json-rpc* connectors
+  May be in future it will have it's own python package.
+
+
 Release 0.8.2
-=============
+-------------
 
 - Avoid unneccesary encode/decode in db dump/restore logic
 - Use simplejson for jsonrpc
@@ -10,26 +24,27 @@ Release 0.8.2
 
 
 Release 0.8.1
-=============
+-------------
 
 - Fix local connector for odoo-9.0 when odoo.py is on python path
 
 
 Big split: odoo_rpc_client 0.8.0
-=============================
+--------------------------------
 
 - Split openerp_proxy project to set of smaler project
   to avoid bringing lot of unneccessary dependencies.
 - This project contains core features, aiming to minimize dependencies.
 - Features, not included here, all this features will be still available
-  in openerp_proxy project, which will depend on this one in feature:
+  in openerp_proxy project, which will depend on this one in future:
     - Extensions (especialy repr extension)
     - Sessions
     - Shell
     - Experimental code (introduced in openerp_proxy 0.7.0)
     - Plugin - Diagraming
 - New features added:
-    - Connector: 'local'. It allows to connect to local odoo instalce, without http;
+    - Connector: 'local'. It allows to connect to local odoo instalce,
+                 without http;
 
 Release 0.7.1
 -------------

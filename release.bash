@@ -24,6 +24,8 @@ usage="
 
 "
 
+# Disable doc generation
+NO_DOCS=1;
 
 # process cmdline options
 while [[ $# -gt 0 ]]

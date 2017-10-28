@@ -15,99 +15,69 @@ cache:
 env:
   global:
     - TEST_DB_SERVICE=1
+    - ODOO_INST_PATH=/tmp/odoo-inst
   matrix:
     - ODOO_VERSION="7.0"
-      ODOO_RELEASE="7.0"
-      ODOO_PACKAGE="openerp"
-      ODOO_TEST_PROTOCOL='xml-rpc'
 
     - ODOO_VERSION="8.0"
-      ODOO_RELEASE="8.0"
-      ODOO_PACKAGE="odoo"
-      ODOO_TEST_PROTOCOL='json-rpc'
-
-    - ODOO_VERSION="8.0"
-      ODOO_RELEASE="8.0"
-      ODOO_PACKAGE="odoo"
-      ODOO_TEST_PROTOCOL='xml-rpc'
 
     - ODOO_VERSION="9.0"
-      ODOO_RELEASE="9.0"
-      ODOO_PACKAGE="odoo"
-      ODOO_TEST_PROTOCOL='json-rpc'
-
-    - ODOO_VERSION="9.0"
-      ODOO_RELEASE="9.0"
-      ODOO_PACKAGE="odoo"
-      ODOO_TEST_PROTOCOL='xml-rpc'
 
     - ODOO_VERSION="10.0"
-      ODOO_RELEASE="10.0"
-      ODOO_PACKAGE="odoo"
-      ODOO_TEST_PROTOCOL='xml-rpc'
 
-    - ODOO_VERSION="10.0"
-      ODOO_RELEASE="10.0"
-      ODOO_PACKAGE="odoo"
-      ODOO_TEST_PROTOCOL='json-rpc'
+    - ODOO_VERSION="11.0"
 
 matrix: 
-    include:
-        - python: 2.7
-          env: ODOO_VERSION="7.0"
-               ODOO_RELEASE="7.0"
-               ODOO_PACKAGE="openerp"
-               ODOO_TEST_PROTOCOL='local'
-               WITH_SUDO="sudo"
-               OPENERP_SERVER='/etc/openerp/openerp-server.conf'
+    fast_finish: true
 
-        - python: 2.7
-          env: ODOO_VERSION="8.0"
-               ODOO_RELEASE="8.0"
-               ODOO_PACKAGE="odoo"
-               ODOO_TEST_PROTOCOL='local'
-               WITH_SUDO="sudo"
-               OPENERP_SERVER='/etc/odoo/openerp-server.conf'
+    # TODO: set local connector deprecated
+    #include:
+        #- python: 2.7
+          #env: ODOO_VERSION="7.0"
+               #ODOO_TEST_PROTOCOL='local'
+               #WITH_SUDO="sudo"
+               #OPENERP_SERVER='/etc/openerp/openerp-server.conf'
 
-        - python: 2.7
-          env: ODOO_VERSION="9.0"
-               ODOO_RELEASE="9.0"
-               ODOO_PACKAGE="odoo"
-               ODOO_TEST_PROTOCOL='local'
-               WITH_SUDO="sudo"
-               OPENERP_SERVER='/etc/odoo/openerp-server.conf'
+        #- python: 2.7
+          #env: ODOO_VERSION="8.0"
+               #ODOO_TEST_PROTOCOL='local'
+               #WITH_SUDO="sudo"
+               #OPENERP_SERVER='/etc/odoo/openerp-server.conf'
 
-        - python: 2.7
-          env: ODOO_VERSION="10.0"
-               ODOO_RELEASE="10.0"
-               ODOO_PACKAGE="odoo"
-               ODOO_TEST_PROTOCOL='local'
-               WITH_SUDO="sudo"
-               OPENERP_SERVER='/etc/odoo/odoo.conf'
-               ODOO_RC='/etc/odoo/odoo.conf'
+        #- python: 2.7
+          #env: ODOO_VERSION="9.0"
+               #ODOO_TEST_PROTOCOL='local'
+               #WITH_SUDO="sudo"
+               #OPENERP_SERVER='/etc/odoo/openerp-server.conf'
+
+        #- python: 2.7
+          #env: ODOO_VERSION="10.0"
+               #ODOO_TEST_PROTOCOL='local'
+               #WITH_SUDO="sudo"
+               #OPENERP_SERVER='/etc/odoo/odoo.conf'
+               #ODOO_RC='/etc/odoo/odoo.conf'
 
 
 install:
-  - "sudo apt-get update && sudo apt-get install postgresql-client postgresql adduser python-support locate"
-  - "wget http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/${ODOO_PACKAGE}_${ODOO_RELEASE}.latest_all.deb -O odoo.deb"
-  - "! command -v wkhtmltopdf >/dev/null 2>&1 && wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-trusty-amd64.deb -O wkhtmltox.deb"
-  - "! command -v wkhtmltopdf >/dev/null 2>&1 && sudo dpkg --force-depends -i wkhtmltox.deb"
-  - "sudo dpkg --force-depends -i odoo.deb"
-  - "sudo apt-get install -f -y"
+  - "wget -O /tmp/odoo-helper-install.bash https://raw.githubusercontent.com/katyukha/odoo-helper-scripts/master/install-system.bash"
+  - "sudo bash /tmp/odoo-helper-install.bash"
+  - "sudo odoo-helper install pre-requirements -y"
+  - "sudo odoo-helper postgres user-create odoo odoo"
+  - "odoo-helper install sys-deps -y ${ODOO_VERSION}"
+  - "odoo-install -i $ODOO_INST_PATH --odoo-version ${ODOO_VERSION}"
 
   # Normal install
-  - "$WITH_SUDO pip install --upgrade 'coveralls>=1.1' 'setuptools>=18' pip pbr 'anyfield>=0.1.2' 'flake8>=3'"
-  - "$WITH_SUDO python setup.py develop"
+  - "pip install --upgrade 'coveralls>=1.1' 'setuptools>=18' pip pbr 'anyfield>=0.1.2' 'flake8>=3'"
+  - "python setup.py develop"
 
 
 before_script:
-  - "sudo invoke-rc.d ${ODOO_PACKAGE} restart"
+  - "CDIR42=$(pwd) && cd $ODOO_INST_PATH && odoo-helper start && cd $CDIR42"
   - "sleep 3"
 
 script:
-  - "$WITH_SUDO flake8 odoo_rpc_client --count --statistics;"  # test code style
-  - "$WITH_SUDO coverage run -p setup.py test"
-  - "$WITH_SUDO coverage combine"
+  - "flake8 odoo_rpc_client --count --statistics"  # test code style
+  - "bash ./scripts/ci_run_tests.bash"
 
 after_success:
-  - "$WITH_SUDO coveralls"
+  - "coveralls"

@@ -49,7 +49,7 @@ def stdcall(fn):
 
         If method supports call like
         ``method(ids, <args>, context=context, <kwargs>)``,
-        then it may be decrated by this decorator to appear in
+        then it may be decorated by this decorator to appear in
         dir(record) and dir(recordlist) calls, thus making it available
         for autocompletition in ipython or other python shells
     """
@@ -96,7 +96,7 @@ class UConverter(object):
                 # to binary, and that try diferent encoding to it
                 try:
                     value = six.binary_type(value)
-                except:
+                except Exception:
                     raise UnicodeError('unable to convert to unicode %r'
                                        '' % (value,))
             else:

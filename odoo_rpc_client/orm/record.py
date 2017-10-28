@@ -22,7 +22,6 @@ from extend_me import (ExtensibleType,
 
 __all__ = (
     'Record',
-    'RecordRelations',
     'ObjectRecords',
     'RecordList',
     'get_record',
@@ -445,10 +444,6 @@ def get_record_list(obj, ids=None, fields=None, cache=None, context=None):
                                      context=context)
 
 
-# TODO:  impelment additional operators
-#    - operator: +
-#    - operator: +=
-#
 # TODO: implement correct bechavior of cache when adding new records to record
 # list with diferent cache
 @six.python_2_unicode_compatible
@@ -584,6 +579,24 @@ class RecordList(six.with_metaclass(RecordListMeta,
         if isinstance(item, Record):
             return item in self._records
         return False
+
+    def __add__(self, other):
+        if isinstance(other, Record) and self._object == other._object:
+            return get_record_list(self._object,
+                                   self.ids + [other.id],
+                                   cache=self._cache)
+
+        if isinstance(other, RecordList) and self._object == other._object:
+            return get_record_list(self._object,
+                                   self.ids + other.ids,
+                                   cache=self._cache)
+        return NotImplemented
+
+    def __iadd__(self, other):
+        if isinstance(other, Record) and self._object == other._object:
+            self.append(other.id)
+            return self
+        return super(RecordList, self).__iadd__(other)
 
     def insert(self, index, item):
         """ Insert record to list
@@ -885,10 +898,6 @@ class RecordList(six.with_metaclass(RecordListMeta,
         return self.object.read(self.ids, *args, **kwargs)
 
 
-# For backward compatability
-RecordRelations = Record
-
-
 class ObjectRecords(Object):
     """ Adds support to use records from Object classes
     """
@@ -901,6 +910,9 @@ class ObjectRecords(Object):
     def model(self):
         """ Returns Record instance of model related to this object.
             Useful to get additional info on object.
+
+            :return: Record('ir.model')
+            :rtype: odoo_rpc_client.orm.record.Record
         """
         if self._model is None:
             model_obj = self.client.get_obj('ir.model')
@@ -1010,14 +1022,39 @@ class ObjectRecords(Object):
                         order.write({'note': 'order data is %s'%order.data})
         """
         if isinstance(ids, numbers.Integral):
-            record = get_record(self, ids, context=context)
+            record = get_record(self, ids, cache=cache, context=context)
             if fields is not None:
                 record.read(fields)  # read specified fields
             return record
         if isinstance(ids, collections.Iterable):
-            return get_record_list(self, ids, fields=fields, context=context)
+            return get_record_list(self, ids, fields=fields,
+                                   cache=cache, context=context)
 
         raise ValueError("Wrong type for ids argument: %s" % type(ids))
+
+    def create_record(self, vals, context=None, cache=None):
+        """ Create new record in database and return Record instance.
+            Same as *create* method, but returns Record instance instead of ID.
+
+            :param dict vals: values to create record with
+            :param dict context: extra context to pass to *create* method
+            :param Cache cache: cache to add created record to.
+                                if None is passed, then new cache
+                                will be created.
+            :return: Record instance of created record
+            :rtype: odoo_rpc_client.orm.record.Record
+
+            For example:
+
+            .. code:: python
+
+                >>> partner_obj = db['res.partner']
+                >>> john = partner_obj.create_record({'name': 'John'})
+                >>> john.name
+                John
+        """
+        record_id = self.create(vals, context=context)
+        return self.read_records(record_id, context=context, cache=cache)
 
     def browse(self, *args, **kwargs):
         """ Aliase to *read_records* method.
