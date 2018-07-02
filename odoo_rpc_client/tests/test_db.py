@@ -27,7 +27,7 @@ class Test_999_DB(BaseTestCase):
                                               self.env.dbname, demo=True,
                                               admin_password=self.env.password)
         else:
-            raise unittest.SkipTest("database already creaated. "
+            raise unittest.SkipTest("database already created. "
                                     "no need to create it")
 
     def test_10_to_dbname(self):

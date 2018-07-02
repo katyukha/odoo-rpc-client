@@ -8,8 +8,8 @@ from ..orm.record import Record
 from ..service.service import ServiceManager
 from ..plugin import Plugin
 
-VERSION_CLASSES = (pkg_resources.SetuptoolsLegacyVersion,
-                   pkg_resources.SetuptoolsVersion)
+VERSION_CLASSES = (pkg_resources.packaging.version.LegacyVersion,
+                   pkg_resources.packaging.version.Version)
 
 
 class Test_10_Client(BaseTestCase):
