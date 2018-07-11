@@ -11,6 +11,10 @@ import multiprocessing  # noqa
 version_file = os.path.join(os.path.dirname(__file__),
                             'odoo_rpc_client',
                             'version.py')
+requirements_file = os.path.join(os.path.dirname(__file__),
+                                 'requirements.txt')
+test_requirements_file = os.path.join(os.path.dirname(__file__),
+                                      'requirements-test.txt')
 readme_file = os.path.join(os.path.dirname(__file__), 'README.rst')
 
 if sys.version_info < (3,):
@@ -18,6 +22,12 @@ if sys.version_info < (3,):
 else:
     with open(version_file, 'rb') as f:
         exec(compile(f.read(), version_file, 'exec'))
+
+with open(requirements_file, 'rt') as f:
+    requirements = f.readlines()
+
+with open(test_requirements_file, 'rt') as f:
+    test_requirements = f.readlines()
 
 
 setup(name='odoo_rpc_client',
@@ -58,17 +68,7 @@ setup(name='odoo_rpc_client',
       extras_require={
           'all': ['anyfield'],
       },
-      install_requires=[
-          'six>=1.10',
-          'extend_me>=1.1.3',
-          'setuptools>=18',
-          'requests>=2.7',
-          'simplejson',
-      ],
-      tests_require=[
-          'mock',
-          'coverage',
-          'anyfield',
-      ],
+      install_requires=requirements,
+      tests_require=test_requirements,
       test_suite='odoo_rpc_client.tests.all',
 )
