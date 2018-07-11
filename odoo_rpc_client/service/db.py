@@ -86,6 +86,9 @@ class DBService(ServiceBase):
             Note, that from defined arguments, may be passed other arguments
             (for example odoo version 9.0 requires format arg to be passed)
 
+            Note, this method may consume huge amout of memory.
+            In production dump/restore have to be done by other means.
+
             :param str password: super admin password
             :param str|Client db: name of database or *Client* instance
                                   with *client.dbname is not None*
@@ -104,12 +107,15 @@ class DBService(ServiceBase):
 
         # Ensure returned data is not unicode, but bytes
         if isinstance(dump_data, six.text_type):
-            dump_data = dump_data.encode()
+            dump_data = dump_data
 
         return dump_data
 
     def restore_db(self, password, dbname, data, **kwargs):
         """ Restore database
+
+            Note, this method may consume huge amout of memory.
+            In production dump/restore have to be done by other means.
 
             :param str password: super admin password
             :param str dbname: name of database

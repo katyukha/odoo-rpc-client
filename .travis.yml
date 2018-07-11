@@ -30,34 +30,6 @@ env:
 matrix: 
     fast_finish: true
 
-    # TODO: set local connector deprecated
-    #include:
-        #- python: 2.7
-          #env: ODOO_VERSION="7.0"
-               #ODOO_TEST_PROTOCOL='local'
-               #WITH_SUDO="sudo"
-               #OPENERP_SERVER='/etc/openerp/openerp-server.conf'
-
-        #- python: 2.7
-          #env: ODOO_VERSION="8.0"
-               #ODOO_TEST_PROTOCOL='local'
-               #WITH_SUDO="sudo"
-               #OPENERP_SERVER='/etc/odoo/openerp-server.conf'
-
-        #- python: 2.7
-          #env: ODOO_VERSION="9.0"
-               #ODOO_TEST_PROTOCOL='local'
-               #WITH_SUDO="sudo"
-               #OPENERP_SERVER='/etc/odoo/openerp-server.conf'
-
-        #- python: 2.7
-          #env: ODOO_VERSION="10.0"
-               #ODOO_TEST_PROTOCOL='local'
-               #WITH_SUDO="sudo"
-               #OPENERP_SERVER='/etc/odoo/odoo.conf'
-               #ODOO_RC='/etc/odoo/odoo.conf'
-
-
 install:
   - "wget -O /tmp/odoo-helper-install.bash https://raw.githubusercontent.com/katyukha/odoo-helper-scripts/master/install-system.bash"
   - "sudo bash /tmp/odoo-helper-install.bash"
@@ -67,7 +39,7 @@ install:
   - "odoo-install -i $ODOO_INST_PATH --odoo-version ${ODOO_VERSION}"
 
   # Normal install
-  - "pip install --upgrade 'coveralls>=1.1' 'setuptools>=18' pip pbr 'anyfield>=0.1.2' 'flake8>=3'"
+  - "pip install --upgrade 'coveralls>=1.1' 'setuptools>=18' pbr 'anyfield>=0.1.2' 'flake8>=3'"
   - "python setup.py develop"
 
 
