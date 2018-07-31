@@ -67,11 +67,13 @@ Quick example
 
     from odoo_rpc_client import Client
 
+    # assume that odoo server is listening localhost on standard 8069 port and
+    # have database 'my_db'.
     client = Client('localhost', 'my_db', 'user', 'password')
 
     # get current user
     client.user
-    print(user.name)
+    print(client.user.name)
 
     # simple rpc calls
     client.execute('res.partner', 'read', [user.partner_id.id])
