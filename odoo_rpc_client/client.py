@@ -487,3 +487,6 @@ class Client(Extensible):
             return self.get_url() == other.get_url()
         else:
             return False
+
+    def _ipython_key_completions_(self):
+        return self.services['object'].get_registered_objects()

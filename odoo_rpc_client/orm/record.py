@@ -136,6 +136,9 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
         res.extend(self._object.stdcall_methods)
         return list(set(res))
 
+    def _ipython_key_completions_(self):
+        return list(self._object.columns_info)
+
     @property
     def id(self):
         """ Record ID
