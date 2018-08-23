@@ -1,7 +1,7 @@
-
 stages:
     - lint
     - tests
+    - coverage
     - pages
 
 flake8:
@@ -52,34 +52,61 @@ flake8:
         - ODOO_TEST_HOST=odoo11 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
         - ODOO_TEST_HOST=odoo11 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
         - coverage combine
-        - coverage report --fail-under=85
-    coverage: '/COVERAGE:.*\s+(\d{1,3}\.\d{2}\%)/'
+        - coverage report --fail-under=90
+    after_script:
+        - mv .coverage .coverage_${CI_JOB_NAME}
+    coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\%)/'
     artifacts:
-        name: "$CI_JOB_NAME"
+        name: "coverage_${CI_JOB_NAME}"
         expire_in: 1 day
         paths:
-             - .coverage*
+             - .coverage_${CI_JOB_NAME}
 
-tests:py27:
+tests-py27:
     image: python:2.7
     <<: *test-default-definition
 
-tests:py33:
+tests-py33:
     image: python:3.3
     <<: *test-default-definition
 
-tests:py34:
+tests-py34:
     image: python:3.4
     <<: *test-default-definition
 
-tests:py35:
+tests-py35:
     image: python:3.5
     <<: *test-default-definition
 
-tests:py36:
+tests-py36:
     image: python:3.6
     <<: *test-default-definition
 
-tests:py37:
+tests-py37:
     image: python:3.7
     <<: *test-default-definition
+
+coverage:
+    image: python:3.7
+    stage: coverage
+    dependencies:
+        - tests-py27
+        - tests-py33
+        - tests-py34
+        - tests-py35
+        - tests-py36
+        - tests-py37
+    before_script:
+        - ls -la
+        - pip install coverage
+    script:
+        - coverage combine .coverage_tests-py27 .coverage_tests-py33 .coverage_tests-py34 .coverage_tests-py35 .coverage_tests-py36 .coverage_tests-py37
+        - coverage report --fail-under=95
+    after_script:
+        - coverage html
+    coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\%)/'
+    artifacts:
+        name: "$CI_JOB_NAME"
+        expire_in: 14 day
+        paths:
+             - htmlcov
