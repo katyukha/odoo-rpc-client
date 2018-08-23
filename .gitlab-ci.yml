@@ -28,12 +28,14 @@ flake8:
           alias: odoo9
         - name: registry.gitlab.com/katyukha/odoo-ci:10.0
           alias: odoo10
-        - name: registry.gitlab.com/katyukha/odoo-ci:11.0
+        - name: registry.crnd.pro/crnd-opensource/docker/odoo-ci-x:11.0-ci
           alias: odoo11
-        - name: registry.gitlab.com/katyukha/odoo-ci:12.0
+        - name: registry.crnd.pro/crnd-opensource/docker/odoo-ci-x:12.0-ci
           alias: odoo12
-        - name: registry.gitlab.com/katyukha/odoo-ci:13.0
+        - name: registry.crnd.pro/crnd-opensource/docker/odoo-ci-x:13.0-ci
           alias: odoo13
+        - name: registry.crnd.pro/crnd-opensource/docker/odoo-ci-x:14.0-ci
+          alias: odoo14
     variables:
         ODOO_TEST_SUPER_PASSWORD: admin
         
@@ -59,6 +61,8 @@ flake8:
         - ODOO_TEST_HOST=odoo12 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
         - ODOO_TEST_HOST=odoo13 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
         - ODOO_TEST_HOST=odoo13 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo14 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo14 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
         - coverage combine
         - coverage report --fail-under=90
     after_script:
@@ -95,7 +99,7 @@ tests-py37:
     <<: *test-default-definition
 
 tests-py38:
-    image: python:3.7
+    image: python:3.8
     <<: *test-default-definition
 
 coverage:
@@ -111,10 +115,11 @@ coverage:
     before_script:
         - pip install coverage
     script:
-        - coverage combine .coverage_tests-py27 .coverage_tests-py33 .coverage_tests-py34 .coverage_tests-py35 .coverage_tests-py36 .coverage_tests-py37
+        - coverage combine .coverage_tests-py27 .coverage_tests-py33 .coverage_tests-py34 .coverage_tests-py35 .coverage_tests-py36 .coverage_tests-py37 .coverage_tests-py38
+        - coverage combine
         - coverage report --fail-under=95
     after_script:
-        - coverage html
+        - covarage html
     coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\%)/'
     artifacts:
         name: "$CI_JOB_NAME"
