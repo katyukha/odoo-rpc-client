@@ -253,3 +253,20 @@ class Test_10_Client(BaseTestCase):
     def test_222_ref_no_module_spec(self):
         with self.assertRaises(ValueError):
             self.client.ref('main_partner')  # no module specified
+
+
+class Test_10_Client_Timeout(BaseTestCase):
+
+    def setUp(self):
+        super(self.__class__, self).setUp()
+        self.client = Client(self.env.host,
+                             dbname=self.env.dbname,
+                             user=self.env.user,
+                             pwd=self.env.password,
+                             protocol=self.env.protocol,
+                             port=self.env.port,
+                             timeout=10.0)
+
+    def test_120_username(self):
+        self.assertEqual(self.client.username, self.env.user)
+        self.assertEqual(self.client.user.login, self.env.user)

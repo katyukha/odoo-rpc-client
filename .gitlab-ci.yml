@@ -101,7 +101,6 @@ coverage:
         - tests-py36
         - tests-py37
     before_script:
-        - ls -la
         - pip install coverage
     script:
         - coverage combine .coverage_tests-py27 .coverage_tests-py33 .coverage_tests-py34 .coverage_tests-py35 .coverage_tests-py36 .coverage_tests-py37

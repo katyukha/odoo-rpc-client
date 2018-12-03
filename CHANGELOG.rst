@@ -1,6 +1,11 @@
 Last changes
 ============
 
+Release 1.0.0
+-------------
+
+- Support for timeout in connections
+
 
 Release 0.9.0
 -------------

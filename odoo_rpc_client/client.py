@@ -62,7 +62,7 @@ from extend_me import Extensible
 from pkg_resources import parse_version
 
 # project imports
-from .connection import get_connector
+from .connection import get_connector, DEFAULT_TIMEOUT
 from .exceptions import LoginException
 from .service import ServiceManager
 from .plugin import PluginManager
@@ -94,12 +94,13 @@ class Client(Extensible):
        :param str protocol: protocol used to connect.
                             To get list of available protcols call:
                             ``odoo_rpc_client.connection.get_connector_names()``
+       :param float timeout: Connection timeout
 
        any other keyword arguments will be directly passed to connector
 
        Example::
 
-           >>> db = Client('host', 'dbname', 'user', pwd = 'Password')
+           >>> db = Client('host', 'dbname', 'user', pwd='Password')
            >>> cl = Client('host')
            >>> db2 = cl.login('dbname', 'user', 'password')
 
@@ -110,12 +111,13 @@ class Client(Extensible):
     """
 
     def __init__(self, host, dbname=None, user=None, pwd=None, port=8069,
-                 protocol='xml-rpc', **extra_args):
+                 protocol='xml-rpc', timeout=DEFAULT_TIMEOUT, **extra_args):
         self._dbname = dbname
         self._username = user
         self._pwd = pwd
 
-        self._connection = get_connector(protocol)(host, port, extra_args)
+        self._connection = get_connector(protocol)(
+            host, port, timeout, extra_args)
         self._services = ServiceManager(self)
         self._plugins = PluginManager(self)
 

@@ -5,7 +5,7 @@ import requests
 import logging
 
 # project imports
-from .connection import ConnectorBase
+from .connection import ConnectorBase, DEFAULT_TIMEOUT
 from .. import exceptions as exceptions
 from ..utils import ustr
 
@@ -79,9 +79,11 @@ class JSONRPCMethod(object):
 
         # Call rpc
         try:
-            res = requests.post(self.__url, data=data, headers={
-                "Content-Type": "application/json",
-            }, verify=self.__rpc_proxy.ssl_verify)
+            res = requests.post(
+                self.__url, data=data,
+                headers={"Content-Type": "application/json"},
+                verify=self.__rpc_proxy.ssl_verify,
+                timeout=self.__rpc_proxy.timeout)
         except requests.exceptions.RequestException as exc:
             msg = ("Cannot connect to url %s\n"
                    "Exception %s raised!" % (self.__url, exc))
@@ -115,7 +117,8 @@ class JSONRPCMethod(object):
 class JSONRPCProxy(object):
     """ Simple Odoo service proxy wrapper
     """
-    def __init__(self, host, port, service, ssl=False, ssl_verify=True):
+    def __init__(self, host, port, service, ssl=False, ssl_verify=True,
+                 timeout=DEFAULT_TIMEOUT):
         self.host = host
         self.port = port
         self.service = service
@@ -127,6 +130,7 @@ class JSONRPCProxy(object):
 
         # request parametrs
         self.ssl_verify = ssl_verify
+        self.timeout = timeout
 
         # variable to cach methods
         self._methods = {}
@@ -162,6 +166,7 @@ class ConnectorJSONRPC(ConnectorBase):
                             self.port,
                             name,
                             ssl=self.Meta.use_ssl,
+                            timeout=self.timeout,
                             **self.extra_args)
 
 
