@@ -50,7 +50,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'odoo_rpc_client'
+project = u'Odoo RPC Client'
 copyright = u'2015, Dmytro Katyukha'
 
 # The version info for the project you're documenting, acts as replacement for

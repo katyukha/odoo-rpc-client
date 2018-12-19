@@ -1,15 +1,15 @@
-OpenERP / Odoo proxy
-====================
+Odoo RPC Client
+===============
 
 
-.. image:: https://travis-ci.org/katyukha/odoo-rpc-client.svg?branch=master
-    :target: https://travis-ci.org/katyukha/odoo-rpc-client
+.. image:: https://gitlab.com/katyukha/odoo-rpc-client/badges/master/pipeline.svg
+    :target: https://gitlab.com/katyukha/odoo-rpc-client/commits/master
 
-.. image:: https://coveralls.io/repos/github/katyukha/odoo-rpc-client/badge.svg?branch=master
- :target: https://coveralls.io/github/katyukha/odoo-rpc-client?branch=master
+.. image:: https://gitlab.com/katyukha/odoo-rpc-client/badges/master/coverage.svg
+    :target: https://gitlab.com/katyukha/odoo-rpc-client/commits/master
 
-
-..
+.. image:: https://img.shields.io/readthedocs/odoo-rpc-client.svg
+    :target: https://odoo-rpc-client.readthedocs.io/en/latest/
 
 -------------------
 
@@ -24,15 +24,8 @@ This is core part of `OpenERP Proxy <https://github.com/katyukha/openerp-proxy>`
 
 This project is just **RPC client** for Odoo.
 This project provides interface similar to
-Odoo internal code to perform operations on **OpenERP** / **Odoo** objects hiding
+Odoo internal code to perform operations on **Odoo** objects hiding
 **XML-RPC** or **JSON-RPC** behind.
-
-
-***Note***: documentation now is "Work in Progress" state,
-so here is documentation from *openerp_proxy* project.
-In most cases it is compatible, except extensions, which are not part of this project.
-Thats why there are a lot of links to *openerp_proxy* documentation.
-
 
 
 Features
@@ -48,16 +41,16 @@ Features
    models too. Supports `browse` method.
    Also adds method `search_records` to simplify
    search-and-read operations.
--  *Extension support*. You can easily modify most of components of this app/lib
+-  *Extension support*. You can easily modify most of components of this lib
    creating Your own extensions and plugins. It is realy simple. See for examples in
    `openerp_proxy/ext/ <https://github.com/katyukha/openerp-proxy/tree/master/openerp_proxy/ext>`__ directory.
 -  *Plugin Support*. Plugins are same as extensions, but aimed to implement additional logic.
-   For example look at `odoo_rpc_client/plugins <https://github.com/katyukha/odoo-rpc-client/tree/master/odoo_rpc_client/plugins>`__
-   and `odoo_rpc_client/plugin.py <https://github.com/katyukha/odoo-rpc-client/blob/master/odoo_rpc_client/plugin.py>`__ 
+   For example look at `odoo_rpc_client/plugins <https://gitlab.com/katyukha/odoo-rpc-client/tree/master/odoo_rpc_client/plugins>`__
+   and `odoo_rpc_client/plugin.py <https://gitlab.com/katyukha/odoo-rpc-client/blob/master/odoo_rpc_client/plugin.py>`__ 
 -  Support of **JSON-RPC** for *version 8+* of Odoo
 -  Support of using **named parametrs** in RPC method calls (server version 6.1 and higher).
 -  *Experimental* integration with `AnyField <https://pypi.python.org/pypi/anyfield>`__
--  Missed feature? ask in `Project Issues <https://github.com/katyukha/odoo-rpc-client/issues>`__
+-  Missed feature? fill and issue on `GitHub <https://github.com/katyukha/odoo-rpc-client/issues>`__ or `GitLab  <https://gitlab.com/katyukha/odoo-rpc-client/issues>`__
 
 
 Quick example
@@ -67,11 +60,13 @@ Quick example
 
     from odoo_rpc_client import Client
 
+    # assume that odoo server is listening localhost on standard 8069 port and
+    # have database 'my_db'.
     client = Client('localhost', 'my_db', 'user', 'password')
 
     # get current user
     client.user
-    print(user.name)
+    print(client.user.name)
 
     # simple rpc calls
     client.execute('res.partner', 'read', [user.partner_id.id])
@@ -91,14 +86,14 @@ Supported Odoo server versions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tested with:
-- Odoo versions: *7.0*, *8.0*, *9.0*, *10.0*
-- Python versions: *2.7*, *3.3*, *3.4*, *3.5*, *3.6*
+- Odoo versions: *7.0*, *8.0*, *9.0*, *10.0*, *11.0*, *12.0*
+- Python versions: *2.7*, *3.3*, *3.4*, *3.5*, *3.6*, *3.7*
 
 
 Install
 -------
 
-This project is present on `PyPI <https://pypi.python.org/pypi/odoo_rpc_client/>`_
+This project is present on `PyPI <https://pypi.python.org/pypi/odoo_rpc_client/>`__
 so it could be installed via PIP::
 
     pip install odoo_rpc_client
@@ -190,7 +185,7 @@ to lazily fetch related fields.
     9
     >>> so.name
     SO0011
-    >>> so.partner_id 
+    >>> so.partner_id
     R(res.partner, 9)[Better Corp]
     >>>
     >>> so.partner_id.name
@@ -206,7 +201,7 @@ Plugins
 ~~~~~~~
 
 In version 0.4 plugin system was completly refactored. At this version
-we start using `extend_me <https://pypi.python.org/pypi/extend_me>`_
+we start using `extend_me <https://pypi.python.org/pypi/extend_me>`__
 library to build extensions and plugins easily.
 
 Plugins are usual classes that provides functionality that should be available
@@ -215,9 +210,5 @@ at ``db.plugins.*`` point, implementing logic not related to core system.
 --------------
 
 For more information see `source
-code <https://github.com/katyukha/odoo-rpc-client>`_
-
-Documentation for this project, is in "Work in progress state", so look for
-`openerp_proxy documentation <http://pythonhosted.org/openerp_proxy/>`__,
-In basic things this project is compatible. For more compatability info
-look in `CHANGELOG <https://github.com/katyukha/odoo-rpc-client/blob/master/CHANGELOG.rst>`__
+code <https://gitlab.com/katyukha/odoo-rpc-client>`__ and
+`documentation <https://odoo-rpc-client.readthedocs.io/en/latest/>`__

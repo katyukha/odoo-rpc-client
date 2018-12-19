@@ -1,7 +1,7 @@
 .. _package-odoo_rpc_client:
 
 :mod:`odoo_rpc_client` Package
-============================
+==============================
 
 .. automodule:: odoo_rpc_client.__init__
     :members:
@@ -9,7 +9,7 @@
     :show-inheritance:
 
 :mod:`client` Module
-------------------
+--------------------
 
 .. automodule:: odoo_rpc_client.client
     :members:

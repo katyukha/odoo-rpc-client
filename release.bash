@@ -106,9 +106,8 @@ function release_implementation {
     # Build [and upload to pypi] project
     python $SCRIPTPATH/setup.py $setup_options;
 
-    if [ -z $DRY_RUN ] && [ -z $TEST_PYPI_INDEX ] && [ -z $NO_DOCS ]; then
+    if [ -z $NO_DOCS ]; then
         build_docs;
-        python setup.py upload_docs;
     fi
 }
 
