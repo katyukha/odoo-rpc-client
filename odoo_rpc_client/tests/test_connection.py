@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright © 2014-2018 Dmytro Katyukha <dmytro.katyukha@gmail.com>
 
 #######################################################################
