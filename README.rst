@@ -17,6 +17,12 @@ Odoo RPC Client
    :depth: 2
 
 
+Canonical source
+----------------
+
+The canonical source of *odoo-rpc-client* is hosted on `GitLab <https://gitlab.com/katyukha/odoo-rpc-client>`__.
+
+
 Overview
 --------
 
