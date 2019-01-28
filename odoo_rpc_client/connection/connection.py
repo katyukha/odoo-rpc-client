@@ -1,5 +1,16 @@
+# -*- coding: utf-8 -*-
+# Copyright © 2014-2018 Dmytro Katyukha <dmytro.katyukha@gmail.com>
+
+#######################################################################
+# This Source Code Form is subject to the terms of the Mozilla Public #
+# License, v. 2.0. If a copy of the MPL was not distributed with this #
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.            #
+#######################################################################
+
 import six
 from extend_me import ExtensibleByHashType
+
+DEFAULT_TIMEOUT = None
 
 __all__ = ('get_connector', 'get_connector_names', 'ConnectorBase')
 
@@ -26,9 +37,10 @@ class ConnectorBase(six.with_metaclass(ConnectorType)):
         :param dict extra_args: extra arguments for specific connector.
     """
 
-    def __init__(self, host, port, extra_args=None):
+    def __init__(self, host, port, timeout=DEFAULT_TIMEOUT, extra_args=None):
         self._host = host
         self._port = port
+        self._timeout = timeout
         self._extra_args = {} if extra_args is None else extra_args
 
         self.__services = {}
@@ -44,6 +56,12 @@ class ConnectorBase(six.with_metaclass(ConnectorType)):
         """ Connector port
         """
         return self._port
+
+    @property
+    def timeout(self):
+        """ Connector timeout
+        """
+        return self._timeout
 
     @property
     def extra_args(self):

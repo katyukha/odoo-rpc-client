@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+# Copyright © 2014-2018 Dmytro Katyukha <dmytro.katyukha@gmail.com>
+
+#######################################################################
+# This Source Code Form is subject to the terms of the Mozilla Public #
+# License, v. 2.0. If a copy of the MPL was not distributed with this #
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.            #
+#######################################################################
+
 import six
 import re
 from pkg_resources import parse_version
@@ -86,6 +95,9 @@ class DBService(ServiceBase):
             Note, that from defined arguments, may be passed other arguments
             (for example odoo version 9.0 requires format arg to be passed)
 
+            Note, this method may consume huge amout of memory.
+            In production dump/restore have to be done by other means.
+
             :param str password: super admin password
             :param str|Client db: name of database or *Client* instance
                                   with *client.dbname is not None*
@@ -104,12 +116,15 @@ class DBService(ServiceBase):
 
         # Ensure returned data is not unicode, but bytes
         if isinstance(dump_data, six.text_type):
-            dump_data = dump_data.encode()
+            dump_data = dump_data
 
         return dump_data
 
     def restore_db(self, password, dbname, data, **kwargs):
         """ Restore database
+
+            Note, this method may consume huge amout of memory.
+            In production dump/restore have to be done by other means.
 
             :param str password: super admin password
             :param str dbname: name of database

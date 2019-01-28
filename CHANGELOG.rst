@@ -1,6 +1,12 @@
 Last changes
 ============
 
+Release 1.0.0
+-------------
+
+- Support for timeout in connections
+- Changed license to `MPL 2.0 <http://mozilla.org/MPL/2.0/>`__
+
 
 Release 0.9.0
 -------------
@@ -64,7 +70,7 @@ Release 0.7.0
 - Drop support of OpenERP 6.0
 - ``ext.repr``: Added ability to pass table format to .as_table method
   tablefmt arg must be suitable for tabulate.tabulate method from
-  [Tabulate](https://pypi.python.org/pypi/tabulate) package
+  `Tabulate <https://pypi.python.org/pypi/tabulate>`__ package
 - Added ``openerp_proxy.experimental`` subpackage.
 - Refactored session logic. Logic related to database / client connection
   management moved to separate class ``openerp_proxy.session.ClientManager``
@@ -196,11 +202,11 @@ Release 0.6.2
 -------------
 
 - **experimental** Added integration with
-  `AnyField <https://pypi.python.org/pypi/anyfield>`_
+  `AnyField <https://pypi.python.org/pypi/anyfield>`__
 - Added ``RecordList.mapped`` method,
   similar to Odoo's ``RecordSet.mapped`` method.
 - Partial fix related to changes in Odoo versioning.
-  See `Issue #9799 <https://github.com/odoo/odoo/issues/9799>`_
+  See `Issue #9799 <https://github.com/odoo/odoo/issues/9799>`__
 - To ``module_utils`` plugin added ``update_module_list`` method.
 - A bit of renaming (usualy used internaly)
   (may affect custom plugins and extensions)
@@ -209,7 +215,7 @@ Release 0.6.2
 - Added ``tabulate`` integration. Now when app is running under IPython
   shell, it is posible to print ``RecordList``, and single ``Record``
   as normal readable tables.
-  Thanks to `Tabulate <https://pypi.python.org/pypi/tabulate>`_ project
+  Thanks to `Tabulate <https://pypi.python.org/pypi/tabulate>`__ project
 - Added ability to extend Record of specific models.
   This allows records of diferent models (objects) to behave specificaly
   This may be used for example to add virtual fields in client sripts

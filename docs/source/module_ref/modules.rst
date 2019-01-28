@@ -1,5 +1,5 @@
-OpenERP Proxy Modules
-=====================
+Odoo RPC Client Modules
+=======================
 
 .. toctree::
    :maxdepth: 2

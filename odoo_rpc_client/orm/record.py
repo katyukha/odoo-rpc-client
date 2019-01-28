@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+# Copyright © 2014-2018 Dmytro Katyukha <dmytro.katyukha@gmail.com>
+
+#######################################################################
+# This Source Code Form is subject to the terms of the Mozilla Public #
+# License, v. 2.0. If a copy of the MPL was not distributed with this #
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.            #
+#######################################################################
+
 """ This module contains classes and logic to handle operations on records
 """
 
@@ -135,6 +144,9 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
         res.extend(self._columns_info.keys())
         res.extend(self._object.stdcall_methods)
         return list(set(res))
+
+    def _ipython_key_completions_(self):
+        return list(self._object.columns_info)
 
     @property
     def id(self):

@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+# Copyright © 2014-2018 Dmytro Katyukha <dmytro.katyukha@gmail.com>
+
+#######################################################################
+# This Source Code Form is subject to the terms of the Mozilla Public #
+# License, v. 2.0. If a copy of the MPL was not distributed with this #
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.            #
+#######################################################################
+
 import unittest
 import pkg_resources
 
@@ -8,8 +17,8 @@ from ..orm.record import Record
 from ..service.service import ServiceManager
 from ..plugin import Plugin
 
-VERSION_CLASSES = (pkg_resources.SetuptoolsLegacyVersion,
-                   pkg_resources.SetuptoolsVersion)
+VERSION_CLASSES = (pkg_resources.packaging.version.LegacyVersion,
+                   pkg_resources.packaging.version.Version)
 
 
 class Test_10_Client(BaseTestCase):
@@ -253,3 +262,20 @@ class Test_10_Client(BaseTestCase):
     def test_222_ref_no_module_spec(self):
         with self.assertRaises(ValueError):
             self.client.ref('main_partner')  # no module specified
+
+
+class Test_10_Client_Timeout(BaseTestCase):
+
+    def setUp(self):
+        super(self.__class__, self).setUp()
+        self.client = Client(self.env.host,
+                             dbname=self.env.dbname,
+                             user=self.env.user,
+                             pwd=self.env.password,
+                             protocol=self.env.protocol,
+                             port=self.env.port,
+                             timeout=10.0)
+
+    def test_120_username(self):
+        self.assertEqual(self.client.username, self.env.user)
+        self.assertEqual(self.client.user.login, self.env.user)

@@ -1,0 +1,115 @@
+stages:
+    - lint
+    - tests
+    - coverage
+    - pages
+
+flake8:
+    image: python:3.6
+    stage: lint
+    variables:
+        PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
+    cache:
+        key: "$CI_JOB_NAME"
+        paths:
+            - .cache
+    before_script:
+        - pip install flake8
+    script:
+        - flake8 --count --statistics odoo_rpc_client
+
+.tests-default: &test-default-definition
+    services:
+        - name: registry.gitlab.com/katyukha/odoo-ci:7.0
+          alias: odoo7
+        - name: registry.gitlab.com/katyukha/odoo-ci:8.0
+          alias: odoo8
+        - name: registry.gitlab.com/katyukha/odoo-ci:9.0
+          alias: odoo9
+        - name: registry.gitlab.com/katyukha/odoo-ci:10.0
+          alias: odoo10
+        - name: registry.gitlab.com/katyukha/odoo-ci:11.0
+          alias: odoo11
+        - name: registry.gitlab.com/katyukha/odoo-ci:12.0
+          alias: odoo12
+    variables:
+        ODOO_TEST_SUPER_PASSWORD: admin
+        
+        PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
+    cache:
+        key: "$CI_JOB_NAME"
+        paths:
+            - .cache
+    stage: tests
+    before_script:
+        - pip install -r requirements.txt -r requirements-test.txt
+    script:
+        - ODOO_TEST_HOST=odoo7 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo8 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo8 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo9 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo9 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo10 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo10 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo11 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo11 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo12 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo12 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
+        - coverage combine
+        - coverage report --fail-under=90
+    after_script:
+        - mv .coverage .coverage_${CI_JOB_NAME}
+    coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\%)/'
+    artifacts:
+        name: "coverage_${CI_JOB_NAME}"
+        expire_in: 1 day
+        paths:
+             - .coverage_${CI_JOB_NAME}
+
+tests-py27:
+    image: python:2.7
+    <<: *test-default-definition
+
+tests-py33:
+    image: python:3.3
+    <<: *test-default-definition
+
+tests-py34:
+    image: python:3.4
+    <<: *test-default-definition
+
+tests-py35:
+    image: python:3.5
+    <<: *test-default-definition
+
+tests-py36:
+    image: python:3.6
+    <<: *test-default-definition
+
+tests-py37:
+    image: python:3.7
+    <<: *test-default-definition
+
+coverage:
+    image: python:3.7
+    stage: coverage
+    dependencies:
+        - tests-py27
+        - tests-py33
+        - tests-py34
+        - tests-py35
+        - tests-py36
+        - tests-py37
+    before_script:
+        - pip install coverage
+    script:
+        - coverage combine .coverage_tests-py27 .coverage_tests-py33 .coverage_tests-py34 .coverage_tests-py35 .coverage_tests-py36 .coverage_tests-py37
+        - coverage report --fail-under=95
+    after_script:
+        - coverage html
+    coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\%)/'
+    artifacts:
+        name: "$CI_JOB_NAME"
+        expire_in: 14 day
+        paths:
+             - htmlcov

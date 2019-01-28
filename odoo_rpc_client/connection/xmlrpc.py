@@ -1,8 +1,19 @@
+# -*- coding: utf-8 -*-
+# Copyright © 2014-2018 Dmytro Katyukha <dmytro.katyukha@gmail.com>
+
+#######################################################################
+# This Source Code Form is subject to the terms of the Mozilla Public #
+# License, v. 2.0. If a copy of the MPL was not distributed with this #
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.            #
+#######################################################################
+
 # python imports
+import six
 from six.moves import xmlrpc_client as xmlrpclib
+from six.moves import http_client as httplib
 
 # project imports
-from .connection import ConnectorBase
+from .connection import ConnectorBase, DEFAULT_TIMEOUT
 from ..utils import ustr
 from .. import exceptions as exceptions
 
@@ -48,10 +59,59 @@ class XMLRPCMethod(object):
         return res
 
 
+if six.PY2:
+    class _TimeoutTransport(xmlrpclib.Transport):
+        def __init__(self, timeout=DEFAULT_TIMEOUT, *args, **kwargs):
+            xmlrpclib.Transport.__init__(self, *args, **kwargs)
+            self.timeout = timeout
+
+        def make_connection(self, host):
+            # -- Based on original python code --
+            #
+            # return an existing connection if possible.  This allows
+            # HTTP/1.1 keep-alive.
+            if self._connection and host == self._connection[0]:
+                return self._connection[1]
+
+            # create a HTTP connection object from a host descriptor
+            chost, self._extra_headers, x509 = self.get_host_info(host)
+            # store the host argument along with the connection object
+            self._connection = host, httplib.HTTPConnection(
+                chost, timeout=self.timeout)
+            return self._connection[1]
+elif six.PY3:
+    class _TimeoutTransport(xmlrpclib.Transport):
+        def __init__(self, timeout=DEFAULT_TIMEOUT, *args, **kwargs):
+            super(_TimeoutTransport, self).__init__(*args, **kwargs)
+            self.timeout = timeout
+
+        def make_connection(self, host):
+            # -- Based on original python code --
+            #
+            # return an existing connection if possible.  This allows
+            # HTTP/1.1 keep-alive.
+            if self._connection and host == self._connection[0]:
+                return self._connection[1]
+
+            # create a HTTP connection object from a host descriptor
+            chost, self._extra_headers, x509 = self.get_host_info(host)
+            # store the host argument along with the connection object
+            self._connection = host, httplib.HTTPConnection(
+                chost, timeout=self.timeout)
+            return self._connection[1]
+else:
+    _TimeoutTransport = xmlrpclib.Transport
+
+
 class XMLRPCProxy(xmlrpclib.ServerProxy):
     """ Wrapper class around XML-RPC's ServerProxy to wrap method's errors
         into XMLRPCError class
     """
+    def __init__(self, uri, timeout=DEFAULT_TIMEOUT, *args, **kwargs):
+        transport = _TimeoutTransport(timeout=timeout, *args, **kwargs)
+        kwargs['transport'] = transport
+        xmlrpclib.ServerProxy.__init__(self, uri, *args, **kwargs)
+
     def __getattr__(self, name):
         res = xmlrpclib.ServerProxy.__getattr__(self, name)
         if isinstance(res, xmlrpclib._Method):
@@ -76,7 +136,10 @@ class ConnectorXMLRPC(ConnectorBase):
         return '%s://%s/xmlrpc/%s' % (proto, addr, service_name)
 
     def _get_service(self, name):
-        return XMLRPCProxy(self.get_service_url(name), **self.extra_args)
+        return XMLRPCProxy(
+            self.get_service_url(name),
+            timeout=self.timeout,
+            **self.extra_args)
 
 
 class ConnectorXMLRPCS(ConnectorXMLRPC):

@@ -78,7 +78,7 @@ function make_venv {
         virtualenv -p $py_version $dest_dir;
     fi
 
-    $dest_dir/bin/easy_install --upgrade setuptools pip;
+    $dest_dir/bin/easy_install --upgrade setuptools pip twine;
 }
 
 function build_docs {
@@ -94,21 +94,19 @@ function release_implementation {
 
     # Build options. if no dry run, then upload to pypi
     local setup_options=" sdist bdist_wheel ";
-    if [ -z $DRY_RUN ]; then
-        setup_options="$setup_options upload";
-    fi
-
-    # If using test index, add it to upload options
-    if [ ! -z $TEST_PYPI_INDEX ]; then
-        setup_options="$setup_options -r https://testpypi.python.org/pypi";
-    fi
 
     # Build [and upload to pypi] project
     python $SCRIPTPATH/setup.py $setup_options;
 
-    if [ -z $DRY_RUN ] && [ -z $TEST_PYPI_INDEX ] && [ -z $NO_DOCS ]; then
+    # If using test index, add it to upload options
+    if [ -z "$TEST_PYPI_INDEX" ]; then
+        python -m twine upload dist/*;
+    else
+        python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*;
+    fi
+
+    if [ -z $NO_DOCS ]; then
         build_docs;
-        python setup.py upload_docs;
     fi
 }
 
