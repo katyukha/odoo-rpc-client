@@ -11,6 +11,10 @@ Odoo RPC Client
 .. image:: https://img.shields.io/readthedocs/odoo-rpc-client.svg
     :target: https://odoo-rpc-client.readthedocs.io/en/latest/
 
+.. image:: https://img.shields.io/pypi/dm/odoo-rpc-client.svg
+    :target: https://pypi.org/project/odoo-rpc-client/
+    :alt: PyPI - Downloads
+
 -------------------
 
 .. contents::
