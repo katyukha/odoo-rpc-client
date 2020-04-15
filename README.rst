@@ -79,7 +79,7 @@ Quick example
     print(client.user.name)
 
     # simple rpc calls
-    client.execute('res.partner', 'read', [user.partner_id.id])
+    client.execute('res.partner', 'read', [client.user.partner_id.id])
 
     # Model browsing
     SaleOrder = client['sale.order']
