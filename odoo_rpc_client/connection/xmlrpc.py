@@ -140,9 +140,13 @@ class ConnectorXMLRPC(ConnectorBase):
 
     def get_service_url(self, service_name):
         addr = self.host
-        if self.port not in (None, 80):
-            addr += ':%s' % self.port
         proto = 'https' if self.Meta.ssl else 'http'
+
+        if proto == 'https' and self.port not in (None, 443):
+            addr += ':%s' % self.port
+        elif proto == 'http' and self.port not in (None, 80):
+            addr += ':%s' % self.port
+
         return '%s://%s/xmlrpc/%s' % (proto, addr, service_name)
 
     def _get_service(self, name):
