@@ -443,7 +443,7 @@ class Client(Extensible):
             :return: generated URL
             :rtype: str
         """
-        url_tmpl = "%(protocol)s://%(user)s@%(host)s:%(port)s/%(dbname)s"
+        url_tmpl = "%(protocol)s://%(host)s:%(port)s/%(dbname)s"
         if isinstance(inst, Client):
             return url_tmpl % inst.get_init_args()
         elif isinstance(inst, dict):
