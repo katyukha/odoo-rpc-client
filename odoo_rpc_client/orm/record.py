@@ -9,6 +9,15 @@
 
 """ This module contains classes and logic to handle operations on records
 """
+import six
+import abc
+import numbers
+import functools
+import collections
+from extend_me import (ExtensibleType,
+                       ExtensibleByHashType)
+from six import collections_abc
+
 
 from ..utils import (wpartial,
                      normalizeSField,
@@ -18,15 +27,6 @@ from ..utils import (wpartial,
 from .object import Object
 from .cache import (empty_cache,
                     Cache)
-
-
-import six
-import abc
-import numbers
-import functools
-import collections
-from extend_me import (ExtensibleType,
-                       ExtensibleByHashType)
 
 
 __all__ = (
@@ -246,7 +246,7 @@ class Record(six.with_metaclass(RecordMeta, DirMixIn)):
             if rel_data:
                 # Do not forged about relations in form [id, name]
                 rel_id = (rel_data[0]
-                          if isinstance(rel_data, collections.Iterable)
+                          if isinstance(rel_data, collections_abc.Iterable)
                           else rel_data)
 
                 rel_obj = self._service.get_obj(
@@ -460,7 +460,7 @@ def get_record_list(obj, ids=None, fields=None, cache=None, context=None):
 # list with diferent cache
 @six.python_2_unicode_compatible
 class RecordList(six.with_metaclass(RecordListMeta,
-                                    collections.MutableSequence,
+                                    collections_abc.MutableSequence,
                                     DirMixIn)):
     """Class to hold list of records with some extra functionality
 
@@ -644,7 +644,8 @@ class RecordList(six.with_metaclass(RecordListMeta,
         return str(self)
 
     def refresh(self):
-        """ Cleanup data caches. next try to get data will cause rereading of it
+        """ Cleanup data caches.
+            Next try to get data will cause rereading of it
 
            :returns: self
            :rtype: instance of RecordList
@@ -1038,7 +1039,7 @@ class ObjectRecords(Object):
             if fields is not None:
                 record.read(fields)  # read specified fields
             return record
-        if isinstance(ids, collections.Iterable):
+        if isinstance(ids, collections_abc.Iterable):
             return get_record_list(self, ids, fields=fields,
                                    cache=cache, context=context)
 
@@ -1053,8 +1054,9 @@ class ObjectRecords(Object):
             :param Cache cache: cache to add created record to.
                                 if None is passed, then new cache
                                 will be created.
-            :return: Record instance of created record
+            :return: Record or RecordList instance of created records
             :rtype: odoo_rpc_client.orm.record.Record
+            :rtype: odoo_rpc_client.orm.record.RecordList
 
             For example:
 

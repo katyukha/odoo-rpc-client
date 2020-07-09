@@ -10,6 +10,9 @@
 import six
 import numbers
 import collections
+import unittest
+
+from pkg_resources import parse_version as V
 
 from . import (BaseTestCase,
                mock)
@@ -215,6 +218,27 @@ class Test_20_Object(BaseTestCase):
                                             count=True),
                          0)
 
+    def test_create_unlink_multi(self):
+        if self.client.server_version <= V('11.0'):
+            raise unittest.SkipTest(
+                'Batch create is not supported in Odoo versions '
+                'less than 11.0')
+        new_partner_ids = self.object.create([
+            {'name': 'New Partner'},
+            {'name': 'New Partner2'},
+        ])
+
+        self.assertIsInstance(new_partner_ids, list)
+        self.assertEqual(len(new_partner_ids), 2)
+
+        self.assertEqual(
+            self.object.search([('id', 'in', new_partner_ids)], count=True),
+            2)
+        self.object.unlink(new_partner_ids)
+        self.assertEqual(
+            self.object.search([('id', 'in', new_partner_ids)], count=True),
+            0)
+
     def test_create_record(self):
         john = self.object.create_record({'name': 'John'})
 
@@ -224,6 +248,23 @@ class Test_20_Object(BaseTestCase):
         # remove john
         john.unlink()
         self.assertFalse(john.exists())
+
+    def test_create_records(self):
+        if self.client.server_version <= V('11.0'):
+            raise unittest.SkipTest(
+                'Batch create is not supported in Odoo versions '
+                'less than 11.0')
+        contacts = self.object.create_record([
+            {'name': 'John'},
+            {'name': 'Peter'},
+        ])
+
+        self.assertIsInstance(contacts, RecordList)
+        self.assertEqual(len(contacts), 2)
+
+        # remove john
+        contacts.unlink()
+        self.assertFalse(contacts.exists())
 
 
 class Test_21_Record(BaseTestCase):

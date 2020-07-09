@@ -96,8 +96,8 @@ Supported Odoo server versions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tested with:
-- Odoo versions: *7.0*, *8.0*, *9.0*, *10.0*, *11.0*, *12.0*
-- Python versions: *2.7*, *3.3*, *3.4*, *3.5*, *3.6*, *3.7*
+- Odoo versions: *7.0*, *8.0*, *9.0*, *10.0*, *11.0*, *12.0*, *13.0*
+- Python versions: *2.7*, *3.3*, *3.4*, *3.5*, *3.6*, *3.7*, *3.8*
 
 
 Install

@@ -1,6 +1,12 @@
 Last changes
 ============
 
+Release 1.0.1
+-------------
+
+- Added support (tests) of Odoo 13.0 and python3.8
+- Added tests for batch create in Odoo 12.0+
+
 Release 1.0.0
 -------------
 
