@@ -32,6 +32,8 @@ flake8:
           alias: odoo11
         - name: registry.gitlab.com/katyukha/odoo-ci:12.0
           alias: odoo12
+        - name: registry.gitlab.com/katyukha/odoo-ci:13.0
+          alias: odoo13
     variables:
         ODOO_TEST_SUPER_PASSWORD: admin
         
@@ -55,6 +57,8 @@ flake8:
         - ODOO_TEST_HOST=odoo11 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
         - ODOO_TEST_HOST=odoo12 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
         - ODOO_TEST_HOST=odoo12 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo13 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo13 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
         - coverage combine
         - coverage report --fail-under=90
     after_script:
@@ -87,6 +91,10 @@ tests-py36:
     <<: *test-default-definition
 
 tests-py37:
+    image: python:3.7
+    <<: *test-default-definition
+
+tests-py38:
     image: python:3.7
     <<: *test-default-definition
 
