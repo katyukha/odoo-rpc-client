@@ -16,7 +16,7 @@ import functools
 import collections
 from extend_me import (ExtensibleType,
                        ExtensibleByHashType)
-from six import collections_abc
+from six.moves import collections_abc
 
 
 from ..utils import (wpartial,
