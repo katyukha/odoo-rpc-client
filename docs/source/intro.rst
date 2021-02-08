@@ -31,7 +31,7 @@ Odoo internal code to perform operations on **Odoo** objects hiding
 Features
 ~~~~~~~~
 
--  *Python 3.3+* support
+-  *Python 3.5+* support
 -  You can call any public method on any OpenERP / Odoo object including:
    *read*, *search*, *write*, *unlink* and others
 -  Have *a lot of speed optimizations* (caching, read only requested fields,
@@ -86,8 +86,8 @@ Supported Odoo server versions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tested with:
-- Odoo versions: *7.0*, *8.0*, *9.0*, *10.0*, *11.0*, *12.0*, *13.0*, *14.0*
-- Python versions: *2.7*, *3.3*, *3.4*, *3.5*, *3.6*, *3.7*, *3.8*
+- Odoo versions: *10.0*, *11.0*, *12.0*, *13.0*, *14.0*
+- Python versions: *2.7*, *3.5*, *3.6*, *3.7*, *3.8*, *3.9*
 
 
 Install

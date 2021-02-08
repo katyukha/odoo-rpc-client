@@ -14,6 +14,8 @@ import unittest
 
 from pkg_resources import parse_version as V
 
+from six.moves import collections_abc
+
 from . import (BaseTestCase,
                mock)
 from ..client import Client
@@ -713,7 +715,7 @@ class Test_22_RecordList(BaseTestCase):
             country_id = record._data['country_id']
 
             # if data is in form [id, <name_get result>]
-            if isinstance(country_id, collections.Iterable):
+            if isinstance(country_id, collections_abc.Iterable):
                 country_id = country_id[0]
                 country_is_list = True
 
