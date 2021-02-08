@@ -96,7 +96,7 @@ Supported Odoo server versions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tested with:
-- Odoo versions: *7.0*, *8.0*, *9.0*, *10.0*, *11.0*, *12.0*, *13.0*
+- Odoo versions: *7.0*, *8.0*, *9.0*, *10.0*, *11.0*, *12.0*, *13.0*, *14.0*
 - Python versions: *2.7*, *3.3*, *3.4*, *3.5*, *3.6*, *3.7*, *3.8*
 
 
@@ -107,6 +107,31 @@ This project is present on `PyPI <https://pypi.python.org/pypi/odoo_rpc_client/>
 so it could be installed via PIP::
 
     pip install odoo_rpc_client
+
+Yodoo Cockpit - Manage your odoo infrastructure via odoo
+--------------------------------------------------------
+
+.. image:: https://crnd.pro/web/image/18846/banner_2_4_gif_animation_cut.gif
+  :target: https://crnd.pro/yodoo-cockpit
+  :alt: Yodoo Cockpit - Manage your odoo infrastructure via odoo
+
+Take a look at `Yodoo Cockpit <https://crnd.pro/yodoo-cockpit>`__ project, and discover the easiest way to manage your odoo installation.
+Just short notes about `Yodoo Cockpit <https://crnd.pro/yodoo-cockpit`__:
+- start new production-ready odoo instance in 1-2 minutes.
+- add custom addons to your odoo instances in 5-10 minutes.
+- out-of-the-box email configuration: just press button and add some records to your DNS, and get a working email
+- make your odoo instance available to external world (internet) in 30 seconds (just add single record in your DNS)
+
+If you have any questions, then contact us at `info@crnd.pro <mailto:info@crnd.pro>`__, so we could schedule online-demonstration.
+
+Level up your service quality
+-----------------------------
+
+Level up your service with our `Helpdesk <https://crnd.pro/solutions/helpdesk>`__ / `Service Desk <https://crnd.pro/solutions/service-desk>`__ / `ITSM <https://crnd.pro/itsm>`__ solution.
+
+Just test it at `yodoo.systems <https://yodoo.systems/saas/templates>`__: choose template you like, and start working.
+
+Test all available features of `Bureaucrat ITSM <https://crnd.pro/itsm>`__ with `this template <https://yodoo.systems/saas/template/bureaucrat-itsm-demo-data-95>`__.
     
 
 Usage

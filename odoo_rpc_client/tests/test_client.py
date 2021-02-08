@@ -9,6 +9,7 @@
 
 import unittest
 import pkg_resources
+from pkg_resources import parse_version as V
 
 from . import BaseTestCase
 from ..client import Client
@@ -38,6 +39,11 @@ class Test_10_Client(BaseTestCase):
         self.assertEqual(self.client.user.login, self.env.user)
 
     def test_122_user_context(self):
+        if (self.client.server_version >= V('14.0') and
+                self.client.protocol == 'xml-rpc'):
+            raise unittest.SkipTest(
+                'In Odoo 14.0 user context is frozen_dict and cannot be '
+                'marshaled in XML-RPC')
         uctx = self.client.user_context
         self.assertDictEqual(
             uctx,
@@ -64,23 +70,12 @@ class Test_10_Client(BaseTestCase):
         self.assertEqual(self.client.server_version,
                          self.client.database_version)
 
-    def test_130_get_obj(self):
-        self.assertIn('res.partner', self.client.registered_objects)
+    def test_130_get_obj_v_less_then_14(self):
         obj = self.client.get_obj('res.partner')
         self.assertIsInstance(obj, Object)
 
         # Check object access in dictionary style
         self.assertIs(obj, self.client['res.partner'])
-
-    def test_142_get_obj_wrong(self):
-        self.assertNotIn(
-            'bad.object.name',
-            self.client.registered_objects)
-        with self.assertRaises(ValueError):
-            self.client.get_obj('bad.object.name')
-
-        with self.assertRaises(KeyError):
-            self.client['bad.object.name']
 
     def test_150_to_url(self):
         url_tmpl = "%(protocol)s://%(user)s@%(host)s:%(port)s/%(dbname)s"
@@ -222,6 +217,11 @@ class Test_10_Client(BaseTestCase):
         self.assertNotEqual(self.client, 42)
 
     def test_200_clean_caches(self):
+        if (self.client.server_version >= V('14.0') and
+                self.client.protocol == 'xml-rpc'):
+            raise unittest.SkipTest(
+                'In Odoo 14.0 user context is frozen_dict and cannot be '
+                'marshaled in XML-RPC')
         self.assertIsNotNone(self.client.user_context)
         self.assertIn('lang', self.client.user_context)
 

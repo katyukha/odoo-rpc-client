@@ -278,6 +278,12 @@ class Test_21_Record(BaseTestCase):
                              protocol=self.env.protocol,
                              port=self.env.port)
         self.object = self.client.get_obj('res.partner')
+
+        # Write country for partner. This is required for tests
+        country_id = self.client.get_obj('res.country').search(
+            [('code', '=ilike', 'us')], limit=1)[0]
+        self.object.write([1], {'country_id': country_id})
+
         self.record = self.object.browse(1)
 
     def test_dir(self):
@@ -380,7 +386,7 @@ class Test_21_Record(BaseTestCase):
         self.record.read()
 
         # read company_id field
-        self.record.company_id.name
+        self.record.country_id.name
 
         # check that data had been loaded
         self.assertGreater(len(self.record._data.keys()), 5)
@@ -388,13 +394,13 @@ class Test_21_Record(BaseTestCase):
         # test before refresh
         self.assertEqual(len(self.record._cache.keys()), 2)
         self.assertIn('res.partner', self.record._cache)
-        self.assertIn('res.company', self.record._cache)
+        self.assertIn('res.country', self.record._cache)
         self.assertIn(
-            len(list(self.record._cache['res.company'].values())[0]), [2, 3])
+            len(list(self.record._cache['res.country'].values())[0]), [2, 3])
         self.assertIn(
             'name',
             list(
-                self.record._cache['res.company'].values())[0])
+                self.record._cache['res.country'].values())[0])
 
         # refresh record
         self.record.refresh()
@@ -404,13 +410,13 @@ class Test_21_Record(BaseTestCase):
         self.assertItemsEqual(list(self.record._data), ['id'])
         self.assertEqual(len(self.record._cache.keys()), 2)
         self.assertIn('res.partner', self.record._cache)
-        self.assertIn('res.company', self.record._cache)
+        self.assertIn('res.country', self.record._cache)
         self.assertEqual(
-            len(list(self.record._cache['res.company'].values())[0]), 1)
+            len(list(self.record._cache['res.country'].values())[0]), 1)
         self.assertNotIn(
             'name',
             list(
-                self.record._cache['res.company'].values())[0])
+                self.record._cache['res.country'].values())[0])
 
     def test_record_specific_extension(self):
         class MyProductRecord(Record):
@@ -953,15 +959,6 @@ class Test_23_Cache(BaseTestCase):
 
     def test_client(self):
         self.assertIs(self.cache.client, self.client)
-
-    def test_missing(self):
-        obj_cache = self.cache['res.partner']
-        self.assertIsInstance(obj_cache, ObjectCache)
-
-        # Test that KeyError is raised on attempt to get cache for object that
-        # does not exist in client database
-        with self.assertRaises(KeyError):
-            self.cache['unexisting.object']
 
     def test_missing_local(self):
         obj_cache = self.cache['res.partner']

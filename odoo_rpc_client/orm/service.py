@@ -36,9 +36,6 @@ class Service(ObjectService):
         if object_name in self.__objects:
             return self.__objects[object_name]
 
-        if object_name not in self.get_registered_objects():
-            raise ValueError("There is no object named '%s'" % object_name)
-
         obj = get_object(self, object_name)
         self.__objects[object_name] = obj
         return obj
