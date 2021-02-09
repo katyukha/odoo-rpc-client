@@ -106,7 +106,8 @@ Yodoo Cockpit - Manage your odoo infrastructure via odoo
   :alt: Yodoo Cockpit - Manage your odoo infrastructure via odoo
 
 Take a look at `Yodoo Cockpit <https://crnd.pro/yodoo-cockpit>`__ project, and discover the easiest way to manage your odoo installation.
-Just short notes about `Yodoo Cockpit <https://crnd.pro/yodoo-cockpit`__:
+Just short notes about `Yodoo Cockpit <https://crnd.pro/yodoo-cockpit>`__:
+
 - start new production-ready odoo instance in 1-2 minutes.
 - add custom addons to your odoo instances in 5-10 minutes.
 - out-of-the-box email configuration: just press button and add some records to your DNS, and get a working email
