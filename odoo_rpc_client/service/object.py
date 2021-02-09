@@ -62,7 +62,15 @@ class ObjectService(ServiceBase):
     def _get_registered_objects(self):
         """ Implementation of get registered models (objects)
             Could be overridden by extensions
+
+            WARNING: This method is deprecated, and will not be working
+                     for Odoo 14.0+
         """
+        if self.client.server_version >= parse_version('14.0'):
+            # Starting from Odoo 14.0 this method will not work, because they
+            # have blocked access to ir.model model
+            return []
+
         if self.client.server_version > parse_version('8.0'):
             read = self.execute('ir.model', 'search_read',
                                 domain=[], fields=['model'])
@@ -73,6 +81,9 @@ class ObjectService(ServiceBase):
 
     def get_registered_objects(self):
         """ Returns list of registered objects in database
+
+            WARNING: This method is deprecated, and will not be working
+                     for Odoo 14.0+
         """
         if self._registered_objects is not None:
             return self._registered_objects

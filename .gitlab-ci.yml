@@ -20,18 +20,16 @@ flake8:
 
 .tests-default: &test-default-definition
     services:
-        - name: registry.gitlab.com/katyukha/odoo-ci:7.0
-          alias: odoo7
-        - name: registry.gitlab.com/katyukha/odoo-ci:8.0
-          alias: odoo8
-        - name: registry.gitlab.com/katyukha/odoo-ci:9.0
-          alias: odoo9
         - name: registry.gitlab.com/katyukha/odoo-ci:10.0
           alias: odoo10
-        - name: registry.gitlab.com/katyukha/odoo-ci:11.0
+        - name: registry.crnd.pro/crnd-opensource/docker/odoo-ci-x:11.0-ci
           alias: odoo11
-        - name: registry.gitlab.com/katyukha/odoo-ci:12.0
+        - name: registry.crnd.pro/crnd-opensource/docker/odoo-ci-x:12.0-ci
           alias: odoo12
+        - name: registry.crnd.pro/crnd-opensource/docker/odoo-ci-x:13.0-ci
+          alias: odoo13
+        - name: registry.crnd.pro/crnd-opensource/docker/odoo-ci-x:14.0-ci
+          alias: odoo14
     variables:
         ODOO_TEST_SUPER_PASSWORD: admin
         
@@ -44,17 +42,16 @@ flake8:
     before_script:
         - pip install -r requirements.txt -r requirements-test.txt
     script:
-        - ODOO_TEST_HOST=odoo7 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
-        - ODOO_TEST_HOST=odoo8 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
-        - ODOO_TEST_HOST=odoo8 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
-        - ODOO_TEST_HOST=odoo9 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
-        - ODOO_TEST_HOST=odoo9 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
         - ODOO_TEST_HOST=odoo10 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
         - ODOO_TEST_HOST=odoo10 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
         - ODOO_TEST_HOST=odoo11 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
         - ODOO_TEST_HOST=odoo11 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
         - ODOO_TEST_HOST=odoo12 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
         - ODOO_TEST_HOST=odoo12 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo13 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo13 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo14 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo14 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
         - coverage combine
         - coverage report --fail-under=90
     after_script:
@@ -70,14 +67,6 @@ tests-py27:
     image: python:2.7
     <<: *test-default-definition
 
-tests-py33:
-    image: python:3.3
-    <<: *test-default-definition
-
-tests-py34:
-    image: python:3.4
-    <<: *test-default-definition
-
 tests-py35:
     image: python:3.5
     <<: *test-default-definition
@@ -90,21 +79,29 @@ tests-py37:
     image: python:3.7
     <<: *test-default-definition
 
+tests-py38:
+    image: python:3.8
+    <<: *test-default-definition
+
+tests-py39:
+    image: python:3.9
+    <<: *test-default-definition
+
 coverage:
     image: python:3.7
     stage: coverage
     dependencies:
         - tests-py27
-        - tests-py33
-        - tests-py34
         - tests-py35
         - tests-py36
         - tests-py37
+        - tests-py38
+        - tests-py39
     before_script:
         - pip install coverage
     script:
-        - coverage combine .coverage_tests-py27 .coverage_tests-py33 .coverage_tests-py34 .coverage_tests-py35 .coverage_tests-py36 .coverage_tests-py37
-        - coverage report --fail-under=95
+        - coverage combine .coverage_tests-py27 .coverage_tests-py35 .coverage_tests-py36 .coverage_tests-py37 .coverage_tests-py38 .coverage_tests-py39
+        - coverage report --fail-under=90
     after_script:
         - coverage html
     coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\%)/'

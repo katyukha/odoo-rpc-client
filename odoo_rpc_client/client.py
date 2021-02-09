@@ -280,6 +280,9 @@ class Client(Extensible):
     def registered_objects(self):
         """ List of registered in Odoo database objects
 
+            WARNING: This method is deprecated, and will not be working
+                     for Odoo 14.0+
+
             :rtype: list
         """
         return self.services['object'].get_registered_objects()

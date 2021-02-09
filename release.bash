@@ -78,7 +78,7 @@ function make_venv {
         virtualenv -p $py_version $dest_dir;
     fi
 
-    $dest_dir/bin/easy_install --upgrade setuptools pip twine;
+    $dest_dir/bin/pip install --upgrade setuptools pip twine;
 }
 
 function build_docs {

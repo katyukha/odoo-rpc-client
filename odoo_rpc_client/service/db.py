@@ -116,7 +116,7 @@ class DBService(ServiceBase):
 
         # Ensure returned data is not unicode, but bytes
         if isinstance(dump_data, six.text_type):
-            dump_data = dump_data
+            dump_data = dump_data.encode('utf-8')
 
         return dump_data
 

@@ -1,6 +1,15 @@
 Last changes
 ============
 
+Release 1.1.0
+-------------
+
+- Added support (tests) of Odoo 13.0, Odoo 14.0 and python3.8
+- Added tests for batch create in Odoo 12.0+
+- Support for Odoo 7.0 is now deprecated and will be completely removed in one
+  of next versions
+- Odoo 8.0 and 9.0 now supported, but not tested.
+
 Release 1.0.0
 -------------
 

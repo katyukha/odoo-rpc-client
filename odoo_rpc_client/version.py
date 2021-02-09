@@ -7,4 +7,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.            #
 #######################################################################
 
-version = "1.0.0"  # pragma: no cover
+version = "1.1.0"  # pragma: no cover
