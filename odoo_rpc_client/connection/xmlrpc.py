@@ -61,9 +61,11 @@ class XMLRPCMethod(object):
 
 if six.PY2:
     class _TimeoutTransport(xmlrpclib.Transport):
-        def __init__(self, timeout=DEFAULT_TIMEOUT, *args, **kwargs):
+        def __init__(self, timeout=DEFAULT_TIMEOUT,
+                     ssl=False, *args, **kwargs):
             xmlrpclib.Transport.__init__(self, *args, **kwargs)
             self.timeout = timeout
+            self.ssl = ssl
 
         def make_connection(self, host):
             # -- Based on original python code --
@@ -76,14 +78,20 @@ if six.PY2:
             # create a HTTP connection object from a host descriptor
             chost, self._extra_headers, x509 = self.get_host_info(host)
             # store the host argument along with the connection object
-            self._connection = host, httplib.HTTPConnection(
-                chost, timeout=self.timeout)
+            if self.ssl:
+                self._connection = host, httplib.HTTPSConnection(
+                    chost, timeout=self.timeout, **(x509 or {}))
+            else:
+                self._connection = host, httplib.HTTPConnection(
+                    chost, timeout=self.timeout)
             return self._connection[1]
 elif six.PY3:
     class _TimeoutTransport(xmlrpclib.Transport):
-        def __init__(self, timeout=DEFAULT_TIMEOUT, *args, **kwargs):
+        def __init__(self, timeout=DEFAULT_TIMEOUT,
+                     ssl=False, *args, **kwargs):
             super(_TimeoutTransport, self).__init__(*args, **kwargs)
             self.timeout = timeout
+            self.ssl = ssl
 
         def make_connection(self, host):
             # -- Based on original python code --
@@ -96,8 +104,12 @@ elif six.PY3:
             # create a HTTP connection object from a host descriptor
             chost, self._extra_headers, x509 = self.get_host_info(host)
             # store the host argument along with the connection object
-            self._connection = host, httplib.HTTPConnection(
-                chost, timeout=self.timeout)
+            if self.ssl:
+                self._connection = host, httplib.HTTPSConnection(
+                    chost, timeout=self.timeout, **(x509 or {}))
+            else:
+                self._connection = host, httplib.HTTPConnection(
+                    chost, timeout=self.timeout)
             return self._connection[1]
 else:
     _TimeoutTransport = xmlrpclib.Transport
@@ -107,8 +119,10 @@ class XMLRPCProxy(xmlrpclib.ServerProxy):
     """ Wrapper class around XML-RPC's ServerProxy to wrap method's errors
         into XMLRPCError class
     """
-    def __init__(self, uri, timeout=DEFAULT_TIMEOUT, *args, **kwargs):
-        transport = _TimeoutTransport(timeout=timeout, *args, **kwargs)
+    def __init__(self, uri, timeout=DEFAULT_TIMEOUT,
+                 ssl=False, *args, **kwargs):
+        transport = _TimeoutTransport(
+            timeout=timeout, ssl=ssl, *args, **kwargs)
         kwargs['transport'] = transport
         xmlrpclib.ServerProxy.__init__(self, uri, *args, **kwargs)
 
@@ -130,7 +144,7 @@ class ConnectorXMLRPC(ConnectorBase):
 
     def get_service_url(self, service_name):
         addr = self.host
-        if self.port not in (None, 80):
+        if self.port:
             addr += ':%s' % self.port
         proto = 'https' if self.Meta.ssl else 'http'
         return '%s://%s/xmlrpc/%s' % (proto, addr, service_name)
@@ -139,6 +153,7 @@ class ConnectorXMLRPC(ConnectorBase):
         return XMLRPCProxy(
             self.get_service_url(name),
             timeout=self.timeout,
+            ssl=self.Meta.ssl,
             **self.extra_args)
 
 

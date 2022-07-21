@@ -468,7 +468,7 @@ class Client(Extensible):
         if m:
             data = dict(m.groupdict())
             data['protocol'] = data.get('protocol', None) or 'xml-rpc'
-            data['port'] = int(data.get('port', None) or '80')
+            data['port'] = int(data['port']) if data.get('port') else None
             return Client(**data)
         raise ValueError("Cannot parse url")
 
