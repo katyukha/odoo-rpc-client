@@ -60,7 +60,7 @@ class XMLRPCMethod(object):
 
 
 if six.PY2:
-    class _TimeoutTransport(xmlrpclib.Transport):
+    class _XMLRPCTransport(xmlrpclib.Transport):
         def __init__(self, timeout=DEFAULT_TIMEOUT,
                      ssl=False, *args, **kwargs):
             xmlrpclib.Transport.__init__(self, *args, **kwargs)
@@ -86,10 +86,10 @@ if six.PY2:
                     chost, timeout=self.timeout)
             return self._connection[1]
 elif six.PY3:
-    class _TimeoutTransport(xmlrpclib.Transport):
+    class _XMLRPCTransport(xmlrpclib.Transport):
         def __init__(self, timeout=DEFAULT_TIMEOUT,
                      ssl=False, *args, **kwargs):
-            super(_TimeoutTransport, self).__init__(*args, **kwargs)
+            super(_XMLRPCTransport, self).__init__(*args, **kwargs)
             self.timeout = timeout
             self.ssl = ssl
 
@@ -112,7 +112,7 @@ elif six.PY3:
                     chost, timeout=self.timeout)
             return self._connection[1]
 else:
-    _TimeoutTransport = xmlrpclib.Transport
+    _XMLRPCTransport = xmlrpclib.Transport
 
 
 class XMLRPCProxy(xmlrpclib.ServerProxy):
@@ -121,7 +121,7 @@ class XMLRPCProxy(xmlrpclib.ServerProxy):
     """
     def __init__(self, uri, timeout=DEFAULT_TIMEOUT,
                  ssl=False, *args, **kwargs):
-        transport = _TimeoutTransport(
+        transport = _XMLRPCTransport(
             timeout=timeout, ssl=ssl, *args, **kwargs)
         kwargs['transport'] = transport
         xmlrpclib.ServerProxy.__init__(self, uri, *args, **kwargs)
