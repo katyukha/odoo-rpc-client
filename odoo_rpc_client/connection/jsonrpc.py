@@ -133,7 +133,7 @@ class JSONRPCProxy(object):
         self.service = service
 
         addr = host
-        if port not in (None, 80):
+        if port:
             addr += ':%s' % self.port
         self.url = '%s://%s/jsonrpc' % (ssl and 'https' or 'http', addr)
 

@@ -1,6 +1,13 @@
 Last changes
 ============
 
+Release 1.2.0
+-------------
+
+- Fix regression with SSL support for XML-RPC.
+  Still, it is recommended to use JSON-RPC, because it is more reliable.
+- Added auto tests for Odoo 15.0 and python 3.10
+
 Release 1.1.0
 -------------
 

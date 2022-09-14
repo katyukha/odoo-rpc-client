@@ -30,6 +30,8 @@ flake8:
           alias: odoo13
         - name: registry.crnd.pro/crnd-opensource/docker/odoo-ci-x:14.0-ci
           alias: odoo14
+        - name: registry.crnd.pro/crnd-opensource/docker/odoo-ci-x:15.0-ci
+          alias: odoo15
     variables:
         ODOO_TEST_SUPER_PASSWORD: admin
         
@@ -52,6 +54,8 @@ flake8:
         - ODOO_TEST_HOST=odoo13 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
         - ODOO_TEST_HOST=odoo14 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
         - ODOO_TEST_HOST=odoo14 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo15 ODOO_TEST_PROTOCOL="xml-rpc" coverage run -p setup.py test
+        - ODOO_TEST_HOST=odoo15 ODOO_TEST_PROTOCOL="json-rpc" coverage run -p setup.py test
         - coverage combine
         - coverage report --fail-under=90
     after_script:
@@ -63,44 +67,49 @@ flake8:
         paths:
              - .coverage_${CI_JOB_NAME}
 
-tests-py27:
+tests-py2.7:
     image: python:2.7
     <<: *test-default-definition
 
-tests-py35:
+tests-py3.5:
     image: python:3.5
     <<: *test-default-definition
 
-tests-py36:
+tests-py3.6:
     image: python:3.6
     <<: *test-default-definition
 
-tests-py37:
+tests-py3.7:
     image: python:3.7
     <<: *test-default-definition
 
-tests-py38:
+tests-py3.8:
     image: python:3.8
     <<: *test-default-definition
 
-tests-py39:
+tests-py3.9:
     image: python:3.9
+    <<: *test-default-definition
+
+tests-py3.10:
+    image: python:3.10
     <<: *test-default-definition
 
 coverage:
     image: python:3.7
     stage: coverage
     dependencies:
-        - tests-py27
-        - tests-py35
-        - tests-py36
-        - tests-py37
-        - tests-py38
-        - tests-py39
+        - tests-py2.7
+        - tests-py3.5
+        - tests-py3.6
+        - tests-py3.7
+        - tests-py3.8
+        - tests-py3.9
+        - tests-py3.10
     before_script:
         - pip install coverage
     script:
-        - coverage combine .coverage_tests-py27 .coverage_tests-py35 .coverage_tests-py36 .coverage_tests-py37 .coverage_tests-py38 .coverage_tests-py39
+        - coverage combine .coverage_tests-py2.7 .coverage_tests-py3.5 .coverage_tests-py3.6 .coverage_tests-py3.7 .coverage_tests-py3.8 .coverage_tests-py3.9 .coverage_tests-py3.10
         - coverage report --fail-under=90
     after_script:
         - coverage html
